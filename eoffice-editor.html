@@ -224,6 +224,13 @@ body.grid-on .editor-box{background-image:linear-gradient(to right,rgba(59,130,2
 .ls-menu .chip:hover{background:#e3edff}
 .ls-menu .chip[aria-checked="true"],.ls-menu .chip.primary{background:linear-gradient(90deg,#3b82f6,#6366f1);border-color:transparent;color:#fff}
 .ls-menu .ls-note,.ls-menu #lsPt{display:none}
+.ls-menu .menu-title{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.ls-pin{flex:none;height:20px;padding:0 7px;border:1px solid rgba(255,255,255,.55);border-radius:10px;background:rgba(255,255,255,.18);color:#fff;font-size:11px;cursor:pointer}
+.ls-pin:hover{background:rgba(255,255,255,.32)}
+.ls-pin[aria-pressed="true"]{background:#fff;color:#4338ca;font-weight:600}
+.ls-preview{margin:3px 8px 2px;padding:4px 8px;border-radius:8px;background:rgba(255,255,255,.7);border:1px dashed rgba(99,102,241,.45);font:16px/1.3 "TH Sarabun PSK","TH SarabunPSK","TH Sarabun New",Tahoma,sans-serif;color:#1f2a44;white-space:nowrap;overflow:hidden;text-overflow:clip}
+body.ls-docked .desk{padding-left:240px}
+@media (max-width:900px){body.ls-docked .desk{padding-left:16px}}
 .ls-menu .ls-steps{flex-wrap:nowrap}
 .ls-menu .ls-steps input{width:54px;height:24px;background:rgba(255,255,255,.85)}
 .ls-menu .ls-steps .chip{min-width:24px;padding:0 5px}
@@ -435,9 +442,10 @@ body.grid-on .editor-box{background-image:linear-gradient(to right,rgba(59,130,2
 
 <!-- เมนูแบบเลื่อนลง -->
 <div class="menu ls-menu" id="m-charspace" role="dialog" aria-label="ช่องไฟตัวอักษร" hidden>
-  <div class="menu-title">ช่องไฟตัวอักษร ⠿ ลากย้ายได้</div>
+  <div class="menu-title"><span>ช่องไฟตัวอักษร</span><button type="button" class="ls-pin" id="lsPin" aria-pressed="false" title="ล็อกแผงไว้ด้านซ้ายของกระดาษ ไม่บังหน้าจอ">📌 ล็อกซ้าย</button></div>
   <div class="menu-row"><label>ใช้กับ <select id="lsScope"><option value="sel">ข้อความที่เลือก</option><option value="para">ทั้งย่อหน้า</option><option value="page">ทั้งหน้า</option></select></label></div>
   <div class="ls-value" aria-live="polite"><strong id="lsVal">0.000</strong> em <span id="lsHint" class="ls-hint">ปกติ</span><small id="lsPt"></small></div>
+  <div class="ls-preview" id="lsPreview" aria-hidden="true">การจัดหน้าหนังสือราชการ</div>
   <div class="ls-slider"><span>แคบ</span><input type="range" id="lsRange" min="-0.2" max="0.5" step="0.005" value="0" list="lsTicks" aria-label="ช่องไฟตัวอักษร (em) ตั้งแต่ −0.2 ถึง +0.5"><span>กว้าง</span></div>
   <datalist id="lsTicks"><option value="-0.2"></option><option value="-0.1"></option><option value="0"></option><option value="0.1"></option><option value="0.2"></option><option value="0.3"></option><option value="0.4"></option><option value="0.5"></option></datalist>
   <div class="menu-row ls-steps">
@@ -975,6 +983,7 @@ ${listCss}
       $('#lsVal').textContent = mixed ? 'หลายค่า' : lsSigned(v);
       $('#lsHint').textContent = mixed ? 'ปนกัน' : lsLabel(v);
       $('#lsPt').textContent = mixed ? '' : `≈ ${lsSigned(v * parseFloat(DEFAULTS.size)).replace(/0+$/, '').replace(/\.$/, '')} pt ที่ ${DEFAULTS.size}`;
+      $('#lsPreview').style.letterSpacing = `${mixed ? 0 : v}em`;
       $('#lsRange').value = mixed ? 0 : v;
       if (document.activeElement !== $('#lsCustom')) $('#lsCustom').value = mixed ? '' : lsRound(v);
       for (const c of $$('#m-charspace [data-ls-set]')) c.setAttribute('aria-checked', String(!mixed && Math.abs(+c.dataset.lsSet - v) < 1e-6));
@@ -1344,7 +1353,20 @@ ${body}
       m.style.top = `${top}px`;
     }
     // แผงช่องไฟต้องไม่บังข้อความที่กำลังปรับ: ถ้าทับกัน ให้ย้ายไปไว้ใต้ (หรือเหนือ) ข้อความที่เลือก
+    let lsDock = store.get('eoffice-editor:lsdock') === '1';
+    function applyDock(open) {
+      const on = open && lsDock && innerWidth > 900;
+      document.body.classList.toggle('ls-docked', on);
+      $('#lsPin').setAttribute('aria-pressed', String(lsDock));
+      return on;
+    }
     function keepSelectionVisible(m) {
+      if (applyDock(true)) {
+        const sr = $('.sheet').getBoundingClientRect();
+        m.style.left = `${Math.max(8, Math.min(sr.left - m.offsetWidth - 8, 12))}px`;
+        m.style.top = `${clamp($('.topbar').getBoundingClientRect().bottom + 8, 8, Math.max(8, innerHeight - m.offsetHeight - 8))}px`;
+        return;
+      }
       // วางไว้ในพื้นที่สีเทาข้างกระดาษ (ไม่บังกระดาษ) ถ้ามีที่พอ
       const sr = $('.sheet').getBoundingClientRect(), mw = m.offsetWidth, mh = m.offsetHeight;
       const top = clamp($('.topbar').getBoundingClientRect().bottom + 8, 8, Math.max(8, innerHeight - mh - 8));
@@ -1374,7 +1396,7 @@ ${body}
     }
     function closeMenu() {
       if (!openMenu) return;
-      if (openMenu.id === 'm-charspace') lsClose();
+      if (openMenu.id === 'm-charspace') { lsClose(); applyDock(false); }
       openMenu.m.hidden = true;
       openMenu.btn.setAttribute('aria-expanded', 'false');
       openMenu = null;
@@ -1464,7 +1486,7 @@ ${body}
     // ปุ่มในแถบเครื่องมือ/เมนูไม่ดึงโฟกัสออกจากกล่องพิมพ์ ทำให้ส่วนที่เลือกไว้ไม่หาย
     document.addEventListener('mousedown', e => {
       if (openMenu && !openMenu.m.contains(e.target) && !openMenu.btn.contains(e.target)) closeMenu();
-      if (e.target.closest('.tb, .mi, .chip, .sw, .tgrid')) e.preventDefault();
+      if (e.target.closest('.tb, .mi, .chip, .sw, .tgrid, .ls-pin')) e.preventDefault();
     });
     // เลื่อนหน้าแล้วปิดเมนู ยกเว้นแผงช่องไฟ (การปรับอาจทำให้หน้าเลื่อนเอง)
     addEventListener('scroll', () => { if (openMenu?.id !== 'm-charspace') closeMenu(); }, { passive: true });
@@ -1475,7 +1497,13 @@ ${body}
       if (openMenu.id === 'm-charspace') keepSelectionVisible(openMenu.m);
     });
     // ลากย้ายแผงช่องไฟด้วยแถบหัวได้
+    $('#lsPin').addEventListener('click', () => {
+      lsDock = !lsDock; store.set('eoffice-editor:lsdock', lsDock ? '1' : '0');
+      if (openMenu?.id === 'm-charspace') keepSelectionVisible(openMenu.m);
+      say(lsDock ? 'ล็อกแผงช่องไฟไว้ด้านซ้ายของกระดาษ' : 'เลิกล็อกแผงช่องไฟ');
+    });
     $('#m-charspace .menu-title').addEventListener('pointerdown', e => {
+      if (e.target.closest('button')) return;
       const m = $('#m-charspace'), r = m.getBoundingClientRect(), dx = e.clientX - r.left, dy = e.clientY - r.top;
       e.preventDefault();
       const move = ev => {
