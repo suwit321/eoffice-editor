@@ -215,8 +215,9 @@ body.grid-on .editor-box{background-image:linear-gradient(to right,rgba(59,130,2
 .mi:disabled{color:#a8aeb8;background:none;cursor:default}
 .mi small{margin-left:auto;color:var(--muted)}
 .tb-more{position:relative}
-.head.tb-tint{background:transparent}
-.head.tb-tint .toolbar{background:var(--tb-bg);backdrop-filter:blur(8px) saturate(1.2);-webkit-backdrop-filter:blur(8px) saturate(1.2)}
+.tb-tint .head{background:transparent}
+.tb-tint .topbar{background:var(--tb-bg);backdrop-filter:blur(8px) saturate(1.2);-webkit-backdrop-filter:blur(8px) saturate(1.2)}
+.tb-tint .toolbar{background:var(--tb-bg);backdrop-filter:blur(8px) saturate(1.2);-webkit-backdrop-filter:blur(8px) saturate(1.2)}
 .tbc-pop{position:absolute;right:0;top:calc(100% + 4px);z-index:56;width:210px;display:flex;flex-direction:column;gap:6px;padding:8px;background:rgba(255,255,255,.92);border:1px solid #c5cad3;border-radius:8px;box-shadow:0 6px 20px rgba(20,30,50,.2);font-size:12px}
 .tbc-pop[hidden]{display:none}
 .tbc-title{font-weight:600;color:var(--muted)}
@@ -478,9 +479,9 @@ body.ls-docked .desk{padding-left:240px}
           </div>
           <div class="grp tb-more">
             <button type="button" class="tb" id="btnMore" aria-haspopup="true" aria-expanded="false" aria-label="เครื่องมือเพิ่มเติม" title="เพิ่มเติม: ขีดฆ่า, Tab, ตัวห้อย/ตัวยก, ตัด/คัดลอก, รูปภาพ, เปิดไฟล์, ล้างรูปแบบ" style="padding:0 6px;font-size:13px">เพิ่มเติม ▾</button>
-            <button type="button" class="tb" id="btnTbColor" aria-haspopup="true" aria-expanded="false" aria-label="สีพื้นแถบเครื่องมือ" title="สีพื้นแถบเครื่องมือ (เลือกสีและความโปร่งแสงได้)" style="padding:0 5px;font-size:13px">🎨</button>
+            <button type="button" class="tb" id="btnTbColor" aria-haspopup="true" aria-expanded="false" aria-label="สีพื้นแถบเครื่องมือ" title="สีพื้นแถบบนสุดและแถบเครื่องมือ (เลือกสีและความโปร่งแสงได้)" style="padding:0 5px;font-size:13px">🎨</button>
             <div class="tbc-pop" id="tbcPop" hidden>
-              <div class="tbc-title">สีพื้นแถบเครื่องมือ</div>
+              <div class="tbc-title">สีพื้นแถบบนสุด + แถบเครื่องมือ</div>
               <div class="tbc-sw" id="tbcSw"></div>
               <div class="tbc-row"><span>สีเอง</span><input type="color" id="tbcColor" aria-label="สีพื้นแถบเครื่องมือ"></div>
               <div class="tbc-row"><span>โปร่งแสง</span><input type="range" id="tbcAlpha" min="10" max="100" step="1" aria-label="ความทึบของสีพื้น"><b id="tbcAv"></b></div>
@@ -4670,7 +4671,7 @@ ${body}
     })();
     // ---------- สีพื้นแถบเครื่องมือ (เลือกสี + โปร่งแสงได้) ----------
     (() => {
-      const KEYT = 'eoffice-editor:tbcolor', head = $('.head'), pop = $('#tbcPop'), btn = $('#btnTbColor');
+      const KEYT = 'eoffice-editor:tbcolor', head = document.body, pop = $('#tbcPop'), btn = $('#btnTbColor');
       const PRESETS = [['#ffffff', 'ขาว'], ['#bae6fd', 'ฟ้า'], ['#bbf7d0', 'เขียว'], ['#fecdd3', 'ชมพู'], ['#ddd6fe', 'ม่วง'], ['#fef08a', 'เหลือง'], ['#fed7aa', 'ส้ม'], ['#e2e8f0', 'เทา'], ['#0f172a', 'กรมท่า']];
       let st = null;
       try { st = JSON.parse(store.get(KEYT) || 'null'); } catch { st = null; }
