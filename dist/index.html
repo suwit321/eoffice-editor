@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'sha256-XKldTrvNHsBkKd4zBgWsgq0j2UIlNOgdCva5EhenFnA=' 'sha256-bjNbvI8tl8y+bAasiIIyVXON/+FsTDSS9qAipExqFpE=' 'sha256-Hn7GQqdNixzI78BdyFzK+WR0oDXcEhZYu6zS914Zyvs=' 'sha256-vA/P2cIo3O2c+k59otL3qQKsSddm7z+5w6UAijUkoq8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.anthropic.com https://api.openai.com https://generativelanguage.googleapis.com http://localhost:* http://127.0.0.1:*; base-uri 'none'; form-action 'none'; object-src 'none'; manifest-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'sha256-XKldTrvNHsBkKd4zBgWsgq0j2UIlNOgdCva5EhenFnA=' 'sha256-bjNbvI8tl8y+bAasiIIyVXON/+FsTDSS9qAipExqFpE=' 'sha256-Hn7GQqdNixzI78BdyFzK+WR0oDXcEhZYu6zS914Zyvs=' 'sha256-ghh8YxajyHM05IZSrRQuZto/elcxTiEWFTDlsSqmGGA='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.anthropic.com https://api.openai.com https://generativelanguage.googleapis.com http://localhost:* http://127.0.0.1:*; base-uri 'none'; form-action 'none'; object-src 'none'; manifest-src 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="robots" content="noindex,nofollow">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -182,7 +182,7 @@ body.grid-on .editor-box{background-image:linear-gradient(to right,rgba(59,130,2
 /* เลขที่บรรทัด (เทา ชิดขอบข้อความ) และเลขที่ย่อหน้า (ป้ายสีม่วง อยู่ถัดออกไปทางซ้าย) */
 .mk-ln{position:absolute;transform:translate(-100%,-50%);font:10.5px/1 Consolas,"Segoe UI",monospace;color:#94a3b8;font-variant-numeric:tabular-nums}
 .mk-pn{position:absolute;transform:translate(-100%,-50%);min-width:18px;padding:1px 5px;border-radius:8px;background:#f3e8ff;color:#7e22ce;font:600 10.5px/1.3 Consolas,"Segoe UI",monospace;text-align:center}
-.mk-sp{position:absolute;display:flex;align-items:center;padding-left:3px;border-left:3px solid rgba(220,38,38,.7);font:600 9px/1 Consolas,"Segoe UI",monospace;color:rgba(185,28,28,.9);white-space:nowrap;overflow:hidden;pointer-events:none}
+.mk-sp{position:absolute;transform:translate(0,-50%);padding:1px 4px;border-radius:8px;background:#fee2e2;color:#b91c1c;font:600 9px/1.3 Consolas,"Segoe UI",monospace;white-space:nowrap;pointer-events:none}
 .mk-spb{position:absolute;box-sizing:border-box;border-top:1px dashed rgba(220,38,38,.55);pointer-events:none}
 .mk-spb.a{background:rgba(239,68,68,.13)}
 .mk-spb.b{background:rgba(244,63,94,.05)}
@@ -511,12 +511,13 @@ body.ls-docked .desk{padding-left:240px}
 </div>
 
 <div class="menu" id="m-numbers" role="menu" aria-label="เลขที่ย่อหน้าและเลขที่บรรทัด" hidden>
-  <div class="menu-title">แสดงตัวเลขที่ขอบซ้าย (บนจอเท่านั้น)</div>
+  <div class="menu-title">แสดงตัวเลขบนกระดาษ (บนจอเท่านั้น)</div>
   <button type="button" class="mi" role="menuitemcheckbox" data-act="numbers" data-val="paraNumbers">เลขที่ย่อหน้า<small>ตรงกับ “ย่อหน้า N” ในแท็บจัดหน้า</small></button>
   <button type="button" class="mi" role="menuitemcheckbox" data-act="numbers" data-val="lineNumbers">เลขที่บรรทัด<small>นับทุกบรรทัดในหน้านี้</small></button>
+  <button type="button" class="mi" role="menuitemcheckbox" data-act="numbers" data-val="showSpacing">ระยะห่างบรรทัด (สีแดง)<small>แถบแดง + ป้ายระยะที่ขอบขวา</small></button>
 </div>
 <div class="menu ls-menu lh-menu" id="m-lineheight" role="dialog" aria-label="ระยะห่างบรรทัด" hidden>
-  <div class="menu-title"><span>ระยะห่างบรรทัด</span><span aria-hidden="true">⠿ ลากย้าย</span></div>
+  <div class="menu-title"><span>ระยะห่างบรรทัด</span><button type="button" class="ls-pin" id="lhPin" aria-pressed="false" title="ล็อกแผงไว้ด้านซ้ายของกระดาษ ไม่บังหน้าจอ">📌 ล็อกซ้าย</button></div>
   <div class="menu-row"><label>ใช้กับ <select id="lhScope"><option value="para">ย่อหน้าที่เลือก</option><option value="page">ทั้งหน้า</option></select></label></div>
   <div class="ls-value" aria-live="polite"><strong id="lhVal">150</strong> % <span id="lhHint" class="ls-hint">ปกติ</span></div>
   <div class="lh-pt" id="lhPt"></div>
@@ -4252,19 +4253,23 @@ ${body}
     }
     // แผงช่องไฟต้องไม่บังข้อความที่กำลังปรับ: ถ้าทับกัน ให้ย้ายไปไว้ใต้ (หรือเหนือ) ข้อความที่เลือก
     let lsDock = store.get('eoffice-editor:lsdock') === '1';
-    function applyDock(open) {
-      const on = open && lsDock && innerWidth > 900;
+    let lhDock = store.get('eoffice-editor:lhdock') === '1';
+    function applyDock() {
+      const on = innerWidth > 900 && (lsPersist || lhPersist);
       document.body.classList.toggle('ls-docked', on);
       $('#lsPin').setAttribute('aria-pressed', String(lsDock));
+      $('#lhPin').setAttribute('aria-pressed', String(lhDock));
       return on;
     }
+    // แผงที่ล็อกซ้าย: ช่องไฟอยู่บน ระยะบรรทัดซ้อนอยู่ใต้ช่องไฟ (ถ้าล็อกทั้งคู่)
+    function placeDocked(m) {
+      let top = $('.topbar').getBoundingClientRect().bottom + 8;
+      if (m.id === 'm-lineheight' && lsPersist) top = $('#m-charspace').getBoundingClientRect().bottom + 8;
+      m.style.left = '12px';
+      m.style.top = `${clamp(top, 8, Math.max(8, innerHeight - m.offsetHeight - 8))}px`;
+    }
     function keepSelectionVisible(m) {
-      if (m.id === 'm-charspace' && applyDock(true)) {
-        const sr = $('.sheet').getBoundingClientRect();
-        m.style.left = `${Math.max(8, Math.min(sr.left - m.offsetWidth - 8, 12))}px`;
-        m.style.top = `${clamp($('.topbar').getBoundingClientRect().bottom + 8, 8, Math.max(8, innerHeight - m.offsetHeight - 8))}px`;
-        return;
-      }
+      if ((m.id === 'm-charspace' ? lsPersist : m.id === 'm-lineheight' && lhPersist) && applyDock()) { placeDocked(m); return; }
       // วางไว้ในพื้นที่สีเทาข้างกระดาษ (ไม่บังกระดาษ) ถ้ามีที่พอ
       const sr = $('.sheet').getBoundingClientRect(), mw = m.offsetWidth, mh = m.offsetHeight;
       const top = clamp($('.topbar').getBoundingClientRect().bottom + 8, 8, Math.max(8, innerHeight - mh - 8));
@@ -4281,7 +4286,7 @@ ${body}
       else m.style.left = `${clamp(sel.right + 16, 8, innerWidth - r.width - 8)}px`;
     }
     // โหมดล็อก: แผงช่องไฟอยู่ถาวรด้านซ้าย ไม่ปิดเมื่อคลิกที่อื่น และย้ายไปปรับย่อหน้าที่เลือกใหม่อัตโนมัติ
-    let lsPersist = false;
+    let lsPersist = false, lhPersist = false;
     const lsBtn = () => $('[data-menu=m-charspace]');
     function lsPersistShow() {
       if (!lsDock || innerWidth <= 900) return false;
@@ -4292,6 +4297,7 @@ ${body}
       m.hidden = false;
       lsPersist = true;
       keepSelectionVisible(m);
+      if (lhPersist) keepSelectionVisible($('#m-lineheight'));
       lsBtn().setAttribute('aria-expanded', 'true');
       return true;
     }
@@ -4300,7 +4306,8 @@ ${body}
       lsClose();
       $('#m-charspace').hidden = true;
       lsPersist = false;
-      applyDock(false);
+      applyDock();
+      if (lhPersist) keepSelectionVisible($('#m-lineheight'));
       lsBtn().setAttribute('aria-expanded', 'false');
     }
     function lsRetarget(r) {
@@ -4309,11 +4316,40 @@ ${body}
       lsOpen();
       $('#lsAiOut').hidden = true;
     }
+    function lhPersistShow() {
+      if (!lhDock || innerWidth <= 900) return false;
+      closeMenu();
+      menuRange = currentRange();
+      const m = $('#m-lineheight');
+      lhOpen();
+      m.hidden = false;
+      lhPersist = true;
+      keepSelectionVisible(m);
+      $('[data-menu=m-lineheight]').setAttribute('aria-expanded', 'true');
+      return true;
+    }
+    function lhPersistHide() {
+      if (!lhPersist) return;
+      lhClose();
+      $('#m-lineheight').hidden = true;
+      lhPersist = false;
+      applyDock();
+      $('[data-menu=m-lineheight]').setAttribute('aria-expanded', 'false');
+    }
+    function lhRetarget(r) {
+      lhClose();
+      menuRange = { ...r };
+      lhOpen();
+    }
+    quill.on('selection-change', r => {
+      if (lhPersist && r && !(lhSession && r.index === lhSession.r.index && r.length === lhSession.r.length)) lhRetarget(r);
+    });
     quill.on('selection-change', r => {
       if (!lsPersist || !r || (lsSession && r.index === lsSession.r.index && r.length === lsSession.r.length)) return;
       lsRetarget(r);
     });
     function toggleMenu(id, btn) {
+      if (id === 'm-lineheight' && lhDock && innerWidth > 900) { if (lhPersist) lhPersistHide(); else lhPersistShow(); return; }
       if (id === 'm-charspace' && lsDock && innerWidth > 900) { if (lsPersist) lsPersistHide(); else lsPersistShow(); return; }
       if (openMenu?.id === id) { closeMenu(); return; }
       closeMenu();
@@ -4328,7 +4364,7 @@ ${body}
     }
     function closeMenu() {
       if (!openMenu) return;
-      if (openMenu.id === 'm-charspace') { lsClose(); applyDock(false); }
+      if (openMenu.id === 'm-charspace') lsClose();
       if (openMenu.id === 'm-lineheight') lhClose();
       openMenu.m.hidden = true;
       openMenu.btn.setAttribute('aria-expanded', 'false');
@@ -4429,9 +4465,19 @@ ${body}
       placeMenu(openMenu.m, openMenu.btn);
       if (openMenu.id === 'm-charspace' || openMenu.id === 'm-lineheight') keepSelectionVisible(openMenu.m);
     });
-    addEventListener('resize', () => { if (!lsPersist) return; if (innerWidth <= 900) lsPersistHide(); else keepSelectionVisible($('#m-charspace')); });
+    addEventListener('resize', () => {
+      if (innerWidth <= 900) { lsPersistHide(); lhPersistHide(); return; }
+      if (lsPersist) keepSelectionVisible($('#m-charspace'));
+      if (lhPersist) keepSelectionVisible($('#m-lineheight'));
+    });
     // ลากย้ายแผงช่องไฟด้วยแถบหัวได้
-    setTimeout(() => { $('#lsPin').setAttribute('aria-pressed', String(lsDock)); if (lsDock) lsPersistShow(); }, 400);
+    setTimeout(() => { $('#lsPin').setAttribute('aria-pressed', String(lsDock)); if (lsDock) lsPersistShow(); $('#lhPin').setAttribute('aria-pressed', String(lhDock)); if (lhDock) lhPersistShow(); }, 400);
+    $('#lhPin').addEventListener('click', () => {
+      lhDock = !lhDock; store.set('eoffice-editor:lhdock', lhDock ? '1' : '0');
+      $('#lhPin').setAttribute('aria-pressed', String(lhDock));
+      if (lhDock) { if (openMenu?.id === 'm-lineheight') closeMenu(); lhPersistShow(); } else { lhPersistHide(); }
+      say(lhDock ? 'ล็อกแผงระยะบรรทัดไว้ด้านซ้ายของกระดาษ — แผงจะอยู่ถาวรจนกว่าจะเลิกล็อก' : 'เลิกล็อกแผงระยะบรรทัด');
+    });
     $('#lsPin').addEventListener('click', () => {
       lsDock = !lsDock; store.set('eoffice-editor:lsdock', lsDock ? '1' : '0');
       $('#lsPin').setAttribute('aria-pressed', String(lsDock));
@@ -4484,7 +4530,7 @@ ${body}
     });
     $('#lhRange').addEventListener('input', e => lhSet(+e.target.value));
     $('#lhCustom').addEventListener('input', e => { const v = parseFloat(e.target.value); if (Number.isFinite(v) && v >= 80 && v <= 400) lhSet(v); });
-    $('#lhCustom').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); closeMenu(); useRange(menuRange); } });
+    $('#lhCustom').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); if (lhPersist) lhRetarget(menuRange || currentRange()); else { closeMenu(); useRange(menuRange); } } });
     $('#lhScope').addEventListener('change', () => lhShow(lhCurrent(lhTarget($('#lhScope').value, lhSession?.r || currentRange()))));
     $('#m-lineheight').addEventListener('click', e => {
       const b = e.target.closest('button');
@@ -4499,7 +4545,7 @@ ${body}
         lhShow(lhCurrent(t));
         scheduleOverlay();
         say('ยกเลิกการปรับระยะบรรทัดในรอบนี้แล้ว');
-      } else if (b.hasAttribute('data-lh-done')) { closeMenu(); useRange(menuRange); }
+      } else if (b.hasAttribute('data-lh-done')) { if (lhPersist) { lhRetarget(menuRange || currentRange()); say('บันทึกขั้นการปรับระยะบรรทัดแล้ว (ย้อนกลับได้ครั้งเดียว)'); } else { closeMenu(); useRange(menuRange); } }
     });
     $('#lsRange').addEventListener('input', e => lsSet(+e.target.value));
     $('#lsCustom').addEventListener('input', e => { const v = parseFloat(e.target.value); if (Number.isFinite(v)) lsSet(v); });
@@ -4938,7 +4984,7 @@ ${body}
           const lh = br.height / z / count, top = Y(br.top), fs = parseFloat(getComputedStyle(dom).fontSize) || 16;
           for (let k = 0; k < count; k++) {
             put(`mk-spb ${band++ % 2 ? 'b' : 'a'}`, { left: px(textLeft), top: px(top + k * lh), width: px(textRight - textLeft), height: px(lh) });
-            put('mk-sp', { left: px(textRight + 3), top: px(top + k * lh), height: px(lh) }, `${fmt(lh * 0.75)}pt·${Math.round(lh / fs * 100) / 100}×`);
+            put('mk-sp', { left: px(textRight + 3), top: px(top + (k + 0.5) * lh) }, `${fmt(lh * 0.75)}pt·${Math.round(lh / fs * 100) / 100}×`);
           }
         }
       }
@@ -5159,6 +5205,8 @@ ${body}
     }
     function toggleSetting(key) {
       settings[key] = !settings[key];
+      for (const b of $$('[data-act=numbers]')) b.setAttribute('aria-checked', String(!!settings[b.dataset.val]));
+      $('#btnNumbers').classList.toggle('on', !!(settings.paraNumbers || settings.lineNumbers || settings.showSpacing));
       document.body.classList.toggle('numbers-on', !!(settings.paraNumbers || settings.lineNumbers));
       saveSettings();
       scheduleOverlay();
@@ -5186,7 +5234,7 @@ ${body}
       $('#btnBg').style.setProperty('--swatch', typeof f.background === 'string' ? f.background : 'transparent');
       press($('#btnMarks'), settings.showMarks);
       press($('#btnLines'), settings.lineGuides);
-      $('#btnNumbers').classList.toggle('on', !!(settings.paraNumbers || settings.lineNumbers));
+      $('#btnNumbers').classList.toggle('on', !!(settings.paraNumbers || settings.lineNumbers || settings.showSpacing));
       for (const b of $$('#m-lineheight [data-act=numbers], #m-numbers [data-act=numbers]')) b.setAttribute('aria-checked', String(!!settings[b.dataset.val]));
       updateLineInfo(r);
       $('#btnUndo').disabled = !quill.history.stack.undo.length;
