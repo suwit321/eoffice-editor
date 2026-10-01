@@ -296,10 +296,32 @@ body.ls-docked .desk{padding-left:240px}
   .topbar{padding:0 8px}
   .desk{padding:12px 8px 16px}
 }
+.fruler{position:fixed;z-index:45;display:flex;flex-direction:column;pointer-events:none;background:var(--fr-fill,rgba(56,189,248,.28));border:1px solid var(--fr-edge,rgba(56,189,248,.7));border-radius:4px;box-shadow:0 2px 10px rgba(0,0,0,.12);backdrop-filter:blur(1px)}
+.fruler[hidden]{display:none}
+.fruler.v{flex-direction:row}
+.fr-bar{pointer-events:auto;display:flex;align-items:center;gap:2px;height:18px;padding:0 3px;cursor:move;user-select:none;background:rgba(255,255,255,.35);border-radius:3px 3px 0 0;touch-action:none;color:var(--fr-ink,#0f172a)}
+.fruler.v .fr-bar{flex-direction:column;width:18px;height:auto;padding:3px 0;border-radius:3px 0 0 3px}
+.fr-bar:focus-visible{outline:2px solid #2563eb}
+.fr-grip{font-size:12px;line-height:1;margin-right:auto}
+.fruler.v .fr-grip{margin:0 0 auto}
+.fr-bar button{pointer-events:auto;width:16px;height:14px;padding:0;border:0;border-radius:3px;background:rgba(255,255,255,.5);font-size:10px;line-height:1;cursor:pointer;color:inherit}
+.fr-bar button:hover{background:rgba(255,255,255,.9)}
+.fr-scale{display:block;flex:none;stroke:var(--fr-ink,#0f172a);stroke-width:1;fill:var(--fr-ink,#0f172a);font:9px Consolas,"Segoe UI",monospace;overflow:visible}
+.fr-scale text{stroke:none}
+.fr-cur{position:absolute;pointer-events:none;background:#0f172a;color:#fff;font:600 10px/1 Consolas,monospace;padding:2px 4px;border-radius:3px;white-space:nowrap}
+.fr-resize{position:absolute;right:0;bottom:0;width:14px;height:14px;pointer-events:auto;cursor:nwse-resize;background:linear-gradient(135deg,transparent 50%,var(--fr-ink,#0f172a) 50% 56%,transparent 56% 70%,var(--fr-ink,#0f172a) 70% 76%,transparent 76%);opacity:.7}
+.fr-pop{position:absolute;left:0;top:calc(100% + 6px);width:224px;pointer-events:auto;padding:8px;display:flex;flex-direction:column;gap:6px;background:rgba(255,255,255,.92);border:1px solid #c5cad3;border-radius:8px;box-shadow:0 6px 20px rgba(20,30,50,.2);font-size:12px;color:#1f2933}
+.fr-pop[hidden]{display:none}
+.fr-row{display:flex;align-items:center;gap:6px}
+.fr-row>span:first-child{width:46px;flex:none}
+.fr-row input[type=range]{flex:1;min-width:0}
+.fr-row input[type=color]{width:34px;height:22px;padding:0;border:1px solid #c5cad3;border-radius:4px;background:#fff}
+.fr-sw{display:flex;gap:3px}
+.fr-sw i{width:16px;height:16px;border-radius:50%;border:1px solid rgba(0,0,0,.25);cursor:pointer}
 @media print{
   @page{size:A4;margin:2.5cm 2cm 2cm 3cm}
   body{background:#fff}
-  .topbar,.desk,.statusbar,.menu{display:none!important}
+  .topbar,.desk,.statusbar,.menu,.fruler{display:none!important}
   #printArea{display:block!important;color:#000}
   #printArea img{max-width:100%}
 }
@@ -362,12 +384,32 @@ body.ls-docked .desk{padding-left:240px}
         <button type="button" class="btn" id="btnPrint">พิมพ์ / PDF</button>
       </div>
     </div>
+    <button type="button" class="btn" id="btnRuler" aria-pressed="false" title="ไม้บรรทัดลอย: โปร่งใส ลากย้าย ปรับสี/ความโปร่ง/ความยาวได้">📏</button>
     <label class="zoom"><select id="zoomSel" aria-label="ซูม" title="ซูม">
       <option value="100">100%</option><option value="125">125%</option><option value="150">150%</option><option value="175">175%</option><option value="200">200%</option>
     </select></label>
     <button type="button" class="btn primary" id="btnCopy">คัดลอกไป e-Office</button>
   </div>
 </header>
+
+<div class="fruler" id="fruler" hidden role="group" aria-label="ไม้บรรทัดลอย">
+  <div class="fr-bar" id="frBar" title="ลากเพื่อย้ายไม้บรรทัด (ใช้ลูกศรเมื่อโฟกัสที่แถบ)" tabindex="0">
+    <span class="fr-grip" aria-hidden="true">⠿</span>
+    <button type="button" id="frRot" title="หมุน แนวนอน/แนวตั้ง">↻</button>
+    <button type="button" id="frSet" title="สี / ความโปร่ง / จุด 0" aria-expanded="false">🎨</button>
+    <button type="button" id="frClose" title="ซ่อนไม้บรรทัด">✕</button>
+  </div>
+  <svg class="fr-scale" id="frScale" aria-hidden="true"></svg>
+  <div class="fr-cur" id="frCur" hidden></div>
+  <div class="fr-resize" id="frResize" title="ลากเพื่อปรับความยาว"></div>
+  <div class="fr-pop" id="frPop" hidden>
+    <div class="fr-row"><span>สีพื้น</span><input type="color" id="frFill" aria-label="สีพื้นไม้บรรทัด"><span class="fr-sw" id="frSw"></span></div>
+    <div class="fr-row"><span>โปร่ง</span><input type="range" id="frOp" min="5" max="85" step="1" aria-label="ความทึบของสีพื้น"><span id="frOpv"></span></div>
+    <div class="fr-row"><span>สีขีด</span><input type="color" id="frInk" aria-label="สีขีดและตัวเลข"></div>
+    <div class="fr-row"><span>ความยาว</span><input type="range" id="frLen" min="3" max="40" step="0.5" aria-label="ความยาว (ซม.)"><span id="frLenv"></span></div>
+    <div class="fr-row"><button type="button" class="chip" id="frZero">ตั้งจุด 0 (คลิกบนจอ)</button><button type="button" class="chip" id="frZeroReset">รีเซ็ต 0</button></div>
+  </div>
+</div>
 
 <main class="desk" id="desk">
   <div class="sheet">
@@ -4505,6 +4547,108 @@ ${body}
     });
     // ลากย้ายแผงช่องไฟด้วยแถบหัวได้
     setTimeout(() => { $('#lsPin').setAttribute('aria-pressed', String(lsDock)); if (lsDock) lsPersistShow(); $('#lhPin').setAttribute('aria-pressed', String(lhDock)); if (lhDock) lhPersistShow(); }, 400);
+    // ---------- ไม้บรรทัดลอย: โปร่งใส ลากย้ายได้ ปรับสี/ความโปร่ง/ความยาว ตัวเลขตามเมาส์ และตั้งจุด 0 เองได้ ----------
+    (() => {
+      const el = $('#fruler'), scale = $('#frScale'), pop = $('#frPop'), cur = $('#frCur'), KEYR = 'eoffice-editor:fruler';
+      const def = { show: false, x: 80, y: 150, len: 16, v: false, fill: '#38bdf8', op: 0.28, ink: '#0f172a', o: 0 };
+      let st = { ...def };
+      try { st = { ...def, ...JSON.parse(store.get(KEYR) || '{}') }; } catch { /* ใช้ค่าเริ่มต้น */ }
+      const save = () => store.set(KEYR, JSON.stringify(st));
+      const pxcm = () => CM * ((parseFloat($('#zoomSel').value) || 100) / 100);
+      const rgba = (h, a) => { const n = parseInt(h.slice(1), 16); return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`; };
+      const SW = ['#38bdf8', '#fde047', '#f87171', '#4ade80', '#c084fc', '#ffffff'];
+      $('#frSw').innerHTML = SW.map(c => `<i data-c="${c}" style="background:${c}" title="${c}"></i>`).join('');
+      const T = 30;
+      function draw() {
+        const k = pxcm(), L = st.len * k, o = st.o;
+        el.classList.toggle('v', st.v);
+        el.style.left = `${st.x}px`; el.style.top = `${st.y}px`;
+        el.style.setProperty('--fr-fill', rgba(st.fill, st.op));
+        el.style.setProperty('--fr-edge', rgba(st.fill, Math.min(1, st.op + 0.45)));
+        el.style.setProperty('--fr-ink', st.ink);
+        scale.setAttribute('width', st.v ? T : L); scale.setAttribute('height', st.v ? L : T);
+        const parts = [];
+        const a = Math.ceil((-o / k) * 10), b = Math.floor(((L - o) / k) * 10);
+        for (let mm = a; mm <= b; mm++) {
+          const pos = (o + (mm / 10) * k).toFixed(2), big = mm % 10 === 0, len = big ? 14 : mm % 5 === 0 ? 9 : 5;
+          parts.push(st.v ? `<line x1="0" y1="${pos}" x2="${len}" y2="${pos}"/>` : `<line x1="${pos}" y1="0" x2="${pos}" y2="${len}"/>`);
+          if (big) parts.push(st.v ? `<text x="17" y="${(+pos + 3.5).toFixed(2)}">${mm / 10}</text>` : `<text x="${(+pos + 2).toFixed(2)}" y="25">${mm / 10}</text>`);
+        }
+        scale.innerHTML = parts.join('');
+        $('#frFill').value = st.fill; $('#frInk').value = st.ink; $('#frOp').value = Math.round(st.op * 100); $('#frOpv').textContent = `${Math.round(st.op * 100)}%`;
+        $('#frLen').value = st.len; $('#frLenv').textContent = `${st.len} ซม.`;
+        $('#btnRuler').setAttribute('aria-pressed', String(st.show));
+        el.hidden = !st.show;
+      }
+      function clampPos() {
+        const r = el.getBoundingClientRect();
+        st.x = clamp(st.x, 0, Math.max(0, innerWidth - 60));
+        st.y = clamp(st.y, 38, Math.max(38, innerHeight - 40));
+        void r;
+      }
+      const setShow = v => { st.show = v; if (!v) pop.hidden = true; clampPos(); draw(); save(); };
+      $('#btnRuler').addEventListener('click', () => { setShow(!st.show); say(st.show ? 'เปิดไม้บรรทัดลอย — ลากแถบด้านบนเพื่อย้าย' : 'ซ่อนไม้บรรทัดลอย'); });
+      $('#frClose').addEventListener('click', () => setShow(false));
+      $('#frRot').addEventListener('click', () => { st.v = !st.v; clampPos(); draw(); save(); });
+      $('#frSet').addEventListener('click', () => { pop.hidden = !pop.hidden; $('#frSet').setAttribute('aria-expanded', String(!pop.hidden)); });
+      const upd = (key, v) => { st[key] = v; draw(); save(); };
+      $('#frFill').addEventListener('input', e => upd('fill', e.target.value));
+      $('#frInk').addEventListener('input', e => upd('ink', e.target.value));
+      $('#frOp').addEventListener('input', e => upd('op', e.target.value / 100));
+      $('#frLen').addEventListener('input', e => upd('len', +e.target.value));
+      $('#frSw').addEventListener('click', e => { const c = e.target.closest('i')?.dataset.c; if (c) upd('fill', c); });
+      $('#frZeroReset').addEventListener('click', () => upd('o', 0));
+      $('#frZero').addEventListener('click', e => {
+        e.stopPropagation();
+        say('คลิกตำแหน่งบนจอที่ต้องการให้เป็นจุด 0 ของไม้บรรทัด');
+        const pick = ev => {
+          ev.preventDefault(); ev.stopPropagation();
+          const rc = scale.getBoundingClientRect();
+          st.o = Math.round((st.v ? ev.clientY - rc.top : ev.clientX - rc.left) * 100) / 100;
+          removeEventListener('click', pick, true); draw(); save();
+        };
+        setTimeout(() => addEventListener('click', pick, true), 0);
+      });
+      // ย้ายด้วยแถบบน / ลูกศร
+      $('#frBar').addEventListener('pointerdown', e => {
+        if (e.target.closest('button')) return;
+        const dx = e.clientX - st.x, dy = e.clientY - st.y;
+        e.preventDefault();
+        const move = ev => { st.x = ev.clientX - dx; st.y = ev.clientY - dy; clampPos(); draw(); };
+        const up = () => { removeEventListener('pointermove', move); removeEventListener('pointerup', up); save(); };
+        addEventListener('pointermove', move); addEventListener('pointerup', up);
+      });
+      $('#frBar').addEventListener('keydown', e => {
+        const d = e.shiftKey ? 10 : 1, m = { ArrowLeft: [-d, 0], ArrowRight: [d, 0], ArrowUp: [0, -d], ArrowDown: [0, d] }[e.key];
+        if (!m) return;
+        e.preventDefault(); st.x += m[0]; st.y += m[1]; clampPos(); draw(); save();
+      });
+      // ปรับความยาวด้วยมุมล่างขวา (ปัดทีละ 0.5 ซม.)
+      $('#frResize').addEventListener('pointerdown', e => {
+        e.preventDefault(); e.stopPropagation();
+        const move = ev => {
+          const rc = el.getBoundingClientRect(), k = pxcm();
+          st.len = clamp(Math.round(((st.v ? ev.clientY - rc.top : ev.clientX - rc.left) / k) * 2) / 2, 3, 40);
+          draw();
+        };
+        const up = () => { removeEventListener('pointermove', move); removeEventListener('pointerup', up); save(); };
+        addEventListener('pointermove', move); addEventListener('pointerup', up);
+      });
+      // ตัวเลข ซม. ตามเมาส์ที่ผ่านไม้บรรทัด
+      addEventListener('pointermove', e => {
+        if (!st.show) return;
+        const rc = scale.getBoundingClientRect();
+        if (e.clientX < rc.left || e.clientX > rc.right || e.clientY < rc.top || e.clientY > rc.bottom) { cur.hidden = true; return; }
+        const k = pxcm(), px = st.v ? e.clientY - rc.top : e.clientX - rc.left, er = el.getBoundingClientRect();
+        cur.hidden = false;
+        cur.textContent = `${(Math.round(((px - st.o) / k) * 10) / 10).toFixed(1)} ซม.`;
+        if (st.v) { cur.style.left = `${rc.left - er.left + 20}px`; cur.style.top = `${rc.top - er.top + px - 6}px`; }
+        else { cur.style.left = `${rc.left - er.left + px + 6}px`; cur.style.top = `${rc.top - er.top + 16}px`; }
+      }, { passive: true });
+      $('#zoomSel').addEventListener('change', draw);
+      addEventListener('resize', () => { clampPos(); draw(); });
+      clampPos(); draw();
+    })();
     $('#lhPin').addEventListener('click', () => {
       lhDock = !lhDock; store.set('eoffice-editor:lhdock', lhDock ? '1' : '0');
       $('#lhPin').setAttribute('aria-pressed', String(lhDock));
