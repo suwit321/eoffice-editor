@@ -178,6 +178,8 @@ body.grid-on .editor-box{background-image:linear-gradient(to right,rgba(59,130,2
 .mk-gap0{position:absolute;height:0;border-top:2px solid rgba(234,88,12,.65);pointer-events:none}
 .mk-gp.zero{background:#fff7ed;color:#9a3412;opacity:.9}
 .mk-gp{position:absolute;transform:translate(-100%,-50%);padding:1px 5px;border-radius:8px;background:#ffedd5;color:#c2410c;font:600 9.5px/1.3 Consolas,"Segoe UI",monospace;white-space:nowrap;pointer-events:none}
+.mk-lsn{position:absolute;transform:translate(-100%,-50%);padding:1px 5px;border-radius:8px;background:#ede9fe;color:#6d28d9;font:600 9.5px/1.3 Consolas,"Segoe UI",monospace;white-space:nowrap;pointer-events:none}
+.mk-lsn.zero{background:transparent;color:#c4b5fd;font-weight:400}
 .mk-pn.blank{background:transparent;color:#d8b4fe;font-weight:400}
 .st-ln{background:#ecfeff;color:#0e7490;font-variant-numeric:tabular-nums}
 .tb.menu-btn.on{background:linear-gradient(#fff,#e9edf2);border-color:#b3bac4}
@@ -266,6 +268,8 @@ body.grid-on .editor-box{background-image:linear-gradient(to right,rgba(59,130,2
 .lh-menu .ls-slider input{accent-color:#ef4444}
 .lh-pt{padding:0 10px 2px;font-size:11.5px;color:#9f1239}
 .lh-preview{border-color:rgba(239,68,68,.45);line-height:1.5;white-space:normal;text-overflow:clip;font-size:15px}
+.ls-menu .lh-show{margin:2px 4px;font-size:12px;border-radius:8px}
+.ls-menu .lh-show[aria-checked="true"]{background:rgba(99,102,241,.14)}
 .lh-menu .lh-show{margin:2px 4px;font-size:12px;border-radius:8px}
 .lh-menu .lh-show[aria-checked="true"]{background:rgba(239,68,68,.14)}
 body.ls-docked .desk{padding-left:240px}
@@ -546,6 +550,7 @@ body.ls-docked .desk{padding-left:240px}
   <div class="chips">
     <button type="button" class="chip" data-ls-set="-0.05">แคบมาก</button><button type="button" class="chip" data-ls-set="-0.03">แคบ</button><button type="button" class="chip" data-ls-set="-0.015">แคบเล็กน้อย</button><button type="button" class="chip" data-ls-set="0">ปกติ</button><button type="button" class="chip" data-ls-set="0.015">กว้างเล็กน้อย</button><button type="button" class="chip" data-ls-set="0.03">กว้าง</button><button type="button" class="chip" data-ls-set="0.05">กว้างมาก</button><button type="button" class="chip" data-ls-set="0.1">กว้างพิเศษ</button><button type="button" class="chip" data-ls-set="0.2">ห่างมาก</button>
   </div>
+  <button type="button" class="mi lh-show" role="menuitemcheckbox" data-act="numbers" data-val="showLsNum">แสดงช่องไฟบนกระดาษ<small>ป้ายสีม่วงทุกย่อหน้า</small></button>
   <div class="menu-row"><button type="button" class="chip ai" id="lsAi" title="ให้ AI วิเคราะห์ช่องไฟของย่อหน้า (ต้องตั้งค่าในแท็บผู้ช่วย AI ของเครื่องมือเสริม)">🤖 AI วิเคราะห์ช่องไฟ</button></div>
   <div class="ls-ai-out" id="lsAiOut" hidden></div>
   <div class="menu-row end"><button type="button" class="chip" data-ls-revert title="กลับเป็นค่าก่อนเปิดแผงนี้">ยกเลิกการปรับ</button><button type="button" class="chip primary" data-ls-done>เสร็จ</button></div>
@@ -571,6 +576,7 @@ body.ls-docked .desk{padding-left:240px}
   <button type="button" class="mi" role="menuitemcheckbox" data-act="numbers" data-val="paraNumbers">เลขที่ย่อหน้า<small>ตรงกับ “ย่อหน้า N” ในแท็บจัดหน้า</small></button>
   <button type="button" class="mi" role="menuitemcheckbox" data-act="numbers" data-val="lineNumbers">เลขที่บรรทัด<small>นับทุกบรรทัดในหน้านี้</small></button>
   <button type="button" class="mi" role="menuitemcheckbox" data-act="numbers" data-val="showSpacing">ระยะห่างบรรทัด (สีแดง)<small>แถบแดง + ป้ายระยะที่ขอบขวา</small></button>
+  <button type="button" class="mi" role="menuitemcheckbox" data-act="numbers" data-val="showLsNum">ช่องไฟตัวอักษร (em สีม่วง)<small>ป้ายค่าช่องไฟของแต่ละย่อหน้าที่ขอบซ้าย</small></button>
   <button type="button" class="mi" role="menuitemcheckbox" data-act="numbers" data-val="showParaSpace">ระยะก่อน/หลังย่อหน้า (pt สีส้ม)<small>แถบส้มในช่องว่างระหว่างย่อหน้า</small></button>
 </div>
 <div class="menu ls-menu lh-menu" id="m-lineheight" role="dialog" aria-label="ระยะห่างบรรทัด" hidden>
@@ -658,7 +664,7 @@ body.ls-docked .desk{padding-left:240px}
       marks: { space: true, nbsp: true, tab: true, para: true, zw: true, dup: true, wj: true },
       markColors: { space: '#2563eb', nbsp: '#d97706', tab: '#16a34a', para: '#7c3aed', zw: '#dc2626', dup: '#fecaca', wj: '#0d9488' },
       lineGuides: false,
-      paraNumbers: false, lineNumbers: false, showSpacing: false, showParaSpace: false,
+      paraNumbers: false, lineNumbers: false, showSpacing: false, showParaSpace: false, showLsNum: false,
       lineColors: ['#3b82f6', '#f59e0b', '#10b981'],
     };
     try {
@@ -1101,6 +1107,7 @@ ${listCss}
             say(`ช่องไฟ ${lsSigned(v)} em (${lsLabel(v)}) — ${$('#lsScope').selectedOptions[0].textContent}`);
     }
     function lsOpen() {
+      if (lsSession) { lsShow(lsCurrent(lsTarget($('#lsScope').value, lsSession.r))); return; }
       const r = menuRange || currentRange();
       lsSession = { start: quill.history.stack.undo.length, r: { ...r } };
       quill.history.cutoff();
@@ -2268,7 +2275,7 @@ ${body}
       layer.textContent = '';
       const pageGuides = settings.paper === 'a4' && settings.pageBreaks;
       lineTops = [];
-      if (!settings.showMarks && !settings.lineGuides && !pageGuides && !settings.paraNumbers && !settings.lineNumbers && !settings.showSpacing && !settings.showParaSpace) { updateLineInfo(); return; }
+      if (!settings.showMarks && !settings.lineGuides && !pageGuides && !settings.paraNumbers && !settings.lineNumbers && !settings.showSpacing && !settings.showParaSpace && !settings.showLsNum) { updateLineInfo(); return; }
       const box = editorBox.getBoundingClientRect();
       const z = box.width / (editorBox.offsetWidth || box.width) || 1;   // อัตราซูมจริง (CSS zoom)
       const X = v => (v - box.left) / z, Y = v => (v - box.top) / z;
@@ -2376,6 +2383,27 @@ ${body}
             put(`mk-spb ${band++ % 2 ? 'b' : 'a'}`, { left: px(textLeft), top: px(top + k * lh), width: px(textRight - textLeft), height: px(lh) });
             put('mk-sp', { left: px(textRight + 3), top: px(top + (k + 0.5) * lh) }, `${fmt(lh * 0.75)}pt·${Math.round(lh / fs * 100) / 100}×`);
           }
+        }
+      }
+
+      if (settings.showLsNum) {
+        // ช่องไฟระหว่างตัวอักษร (em) ของแต่ละย่อหน้า แสดงเป็นป้ายม่วงที่ขอบซ้าย (เลื่อนหลบป้ายเลขที่ย่อหน้า/บรรทัดถ้าเปิดอยู่)
+        const sg = v => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toFixed(3).replace(/0+$/, '').replace(/\.$/, '');
+        const x0 = textLeft - 8 - (settings.paraNumbers ? 34 : 0) - (settings.lineNumbers ? 26 : 0);
+        for (const line of lines) {
+          if (line.statics.blotName === 'table') continue;
+          const dom = line.domNode, br = dom.getBoundingClientRect();
+          const len = line.length() - 1;
+          if (len <= 0 || !br.height) continue;
+          const vals = new Set();
+          for (const op of quill.getContents(quill.getIndex(line), len).ops) if (typeof op.insert === 'string' && op.insert.trim()) vals.add(parseFloat(op.attributes?.letterspacing) || 0);
+          if (!vals.size) continue;
+          const arr = [...vals].sort((a, b) => a - b);
+          const txt = arr.length === 1 ? (arr[0] === 0 ? 'ช่องไฟ 0' : `ช่องไฟ ${sg(arr[0])}em`) : `ช่องไฟ ${sg(arr[0])}…${sg(arr[arr.length - 1])}`;
+          range.selectNodeContents(dom);
+          const first = [...range.getClientRects()].find(q => q.height > 0) || br;
+          const e = put('mk-lsn', { left: px(Math.max(2, x0)), top: px(Y(first.top) + first.height / 2) }, txt);
+          if (arr.length === 1 && arr[0] === 0) e.classList.add('zero');
         }
       }
 
@@ -2616,7 +2644,7 @@ ${body}
     function toggleSetting(key) {
       settings[key] = !settings[key];
       for (const b of $$('[data-act=numbers]')) b.setAttribute('aria-checked', String(!!settings[b.dataset.val]));
-      $('#btnNumbers').classList.toggle('on', !!(settings.paraNumbers || settings.lineNumbers || settings.showSpacing || settings.showParaSpace));
+      $('#btnNumbers').classList.toggle('on', !!(settings.paraNumbers || settings.lineNumbers || settings.showSpacing || settings.showParaSpace || settings.showLsNum));
       document.body.classList.toggle('numbers-on', !!(settings.paraNumbers || settings.lineNumbers));
       saveSettings();
       scheduleOverlay();
@@ -2644,7 +2672,7 @@ ${body}
       $('#btnBg').style.setProperty('--swatch', typeof f.background === 'string' ? f.background : 'transparent');
       press($('#btnMarks'), settings.showMarks);
       press($('#btnLines'), settings.lineGuides);
-      $('#btnNumbers').classList.toggle('on', !!(settings.paraNumbers || settings.lineNumbers || settings.showSpacing || settings.showParaSpace));
+      $('#btnNumbers').classList.toggle('on', !!(settings.paraNumbers || settings.lineNumbers || settings.showSpacing || settings.showParaSpace || settings.showLsNum));
       for (const b of $$('[data-act=numbers]')) b.setAttribute('aria-checked', String(!!settings[b.dataset.val]));
       updateLineInfo(r);
       $('#btnUndo').disabled = !quill.history.stack.undo.length;
