@@ -445,6 +445,23 @@
           properties: { points: { type: 'array', items: { type: 'string' } } },
         },
       },
+      spacing: {
+        label: 'วิเคราะห์ช่องไฟตัวอักษร',
+        prompt: 'ต่อไปนี้คือข้อมูลย่อหน้าของหนังสือราชการภาษาไทยในรูป JSON ที่วัดจากหน้าจอจริง (n = ลำดับย่อหน้า, ls = ช่องไฟปัจจุบันเป็น em หรือ null ถ้าปนกัน, '
+          + 'metrics.stretch = ระยะที่ตัวอักษรถูกยืดเพิ่มต่อตัวเมื่อจัดเสมอหน้าหลังในบรรทัดที่ยืดมากที่สุด, stretchFix = ช่องไฟที่ระบบทดลองแล้วว่าลดการยืดได้โดยไม่เพิ่มจำนวนบรรทัด, '
+          + 'lastFill = ความยาวบรรทัดสุดท้ายเทียบความกว้าง, orphanFix = ช่องไฟที่ทดลองแล้วว่าดึงคำโดดกลับขึ้นบรรทัดบน) และ focus = รายการ n ที่ผู้ใช้ต้องการให้วิเคราะห์ '
+          + '(ถ้า focus ว่าง = ทุกย่อหน้า). ให้วิเคราะห์ช่องไฟตัวอักษรเฉพาะย่อหน้าใน focus ให้สวยงามตามหลักการจัดหน้าภาษาไทย: ลดช่องว่างที่ถูกยืดจนตัวอักษรห่างผิดปกติ, '
+          + 'ไม่ให้สระ/วรรณยุกต์ที่ซ้อนกันชิดหรือห่างเกินไป, ให้ย่อหน้าเนื้อความที่ใช้ฟอนต์เดียวกันมีช่องไฟใกล้เคียงกัน, และไม่ให้เกิดคำโดดท้ายย่อหน้า '
+          + 'ค่าที่เสนอต้องอยู่ระหว่าง -0.03em ถึง +0.05em (ใช้ stretchFix/orphanFix เป็นหลักถ้ามี) และ "0em" = ปกติ ใส่เฉพาะย่อหน้าที่ควรเปลี่ยนจริง '
+          + 'summary = สรุปการวิเคราะห์สั้น ๆ 1-3 ประโยคเป็นภาษาไทย reason = เหตุผลสั้น ๆ ต่อย่อหน้า',
+        schema: {
+          type: 'object', additionalProperties: false, required: ['summary', 'items'],
+          properties: {
+            summary: { type: 'string' },
+            items: { type: 'array', items: { type: 'object', additionalProperties: false, required: ['n', 'letterspacing', 'reason'], properties: { n: { type: 'integer' }, letterspacing: { type: 'string' }, reason: { type: 'string' } } } },
+          },
+        },
+      },
     };
     // ผู้ให้บริการ AI: Claude ใช้ SDK ทางการของ Anthropic ส่วนเจ้าอื่นเรียก REST API ของแต่ละเจ้า
     // ชื่อรุ่นของ OpenAI/Gemini/เซิร์ฟเวอร์อื่นแก้ได้ในแผง เพราะแต่ละเจ้าเปลี่ยนรุ่นบ่อย
@@ -1974,6 +1991,32 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
       if (!staysLocal() && !aiConsent.checked) return 'ติ๊กยืนยันในแท็บผู้ช่วย AI ก่อนว่าข้อความส่งออกนอกเครื่องได้';
       return null;
     }
+    // ผู้ช่วย AI วิเคราะห์ช่องไฟ: เรียกจากแผงช่องไฟตัวอักษร (scope = sel | para | page, r = ช่วงที่เลือก)
+    ed.aiSpacing = async (scope, r) => {
+      const err = aiPrecheck();
+      if (err) return { error: err };
+      const paras = ed.paragraphs('page').filter(p => p.text.trim());
+      if (!paras.length) return { error: 'ยังไม่มีข้อความในหน้านี้' };
+      if (paras.length > 150) return { error: `มี ${paras.length} ย่อหน้า มากเกินไปสำหรับ AI ครั้งเดียว` };
+      const all = quill.getLines();
+      let focus = [];
+      if (scope !== 'page' && r) {
+        const ls = r.length ? quill.getLines(r.index, r.length) : [quill.getLine(r.index)[0]].filter(Boolean);
+        focus = ls.map(l => all.indexOf(l)).filter(n => n >= 0);
+      }
+      const payload = layoutPayload(paras);
+      payload.focus = focus;
+      delete payload.nobreakDictionary;
+      try {
+        const data = await askAiCached('spacing', JSON.stringify(payload));
+        const okN = new Set(paras.map(p => p.n));
+        const items = (Array.isArray(data.items) ? data.items : []).map(it => {
+          const v = parseFloat(String(it.letterspacing).replace('\u2212', '-'));
+          return { n: it.n, ls: Number.isFinite(v) ? Math.max(-0.03, Math.min(0.05, Math.round(v * 1000) / 1000)) : null, reason: String(it.reason || '') };
+        }).filter(it => it.ls != null && okN.has(it.n) && (!focus.length || focus.includes(it.n)));
+        return { summary: String(data.summary || ''), items, page: ed.currentPage(), model: PROVIDERS[provider].label };
+      } catch (e) { return { error: aiErrorText(e) }; }
+    };
     Object.assign(actions, {
       lyLocal() {
         const paras = ed.paragraphs($('#lyScope').value);
