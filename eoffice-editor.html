@@ -194,6 +194,9 @@ body.grid-on .editor-box{background-image:linear-gradient(to right,rgba(59,130,2
 .mi:hover,.mi:focus-visible{background:var(--hover)}
 .mi:disabled{color:#a8aeb8;background:none;cursor:default}
 .mi small{margin-left:auto;color:var(--muted)}
+.tb-more{position:relative}
+.more-pop{position:absolute;left:0;top:calc(100% + 4px);z-index:55;display:flex;flex-wrap:wrap;gap:2px;width:max-content;max-width:230px;padding:5px;background:#fff;border:1px solid #c5cad3;border-radius:6px;box-shadow:0 6px 20px rgba(20,30,50,.18)}
+.more-pop[hidden]{display:none}
 .sep{height:1px;background:var(--line);margin:5px 2px}
 .menu-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:4px 8px}
 .menu-row.end{justify-content:flex-end}
@@ -313,7 +316,6 @@ body.grid-on .editor-box{background-image:linear-gradient(to right,rgba(59,130,2
             <button type="button" class="tb" data-cmd="bold" aria-pressed="false" aria-label="ตัวหนา" title="ตัวหนา (Ctrl+B)"><svg aria-hidden="true"><use href="#i-bold"/></svg></button>
             <button type="button" class="tb" data-cmd="italic" aria-pressed="false" aria-label="ตัวเอียง" title="ตัวเอียง (Ctrl+I)"><svg aria-hidden="true"><use href="#i-italic"/></svg></button>
             <button type="button" class="tb" data-cmd="underline" aria-pressed="false" aria-label="ขีดเส้นใต้" title="ขีดเส้นใต้ (Ctrl+U)"><svg aria-hidden="true"><use href="#i-underline"/></svg></button>
-            <button type="button" class="tb" data-cmd="strike" aria-pressed="false" aria-label="ขีดฆ่า" title="ขีดฆ่า"><svg aria-hidden="true"><use href="#i-strike"/></svg></button>
           </div>
           <div class="grp">
             <button type="button" class="tb" data-cmd="align" data-val="left" aria-pressed="false" aria-label="ชิดซ้าย" title="ชิดซ้าย"><svg aria-hidden="true"><use href="#i-left"/></svg></button>
@@ -327,9 +329,6 @@ body.grid-on .editor-box{background-image:linear-gradient(to right,rgba(59,130,2
             <button type="button" class="tb menu-btn" data-menu="m-paraspace" aria-haspopup="true" aria-expanded="false" aria-label="ระยะก่อนและหลังย่อหน้า" title="ระยะก่อน/หลังย่อหน้า"><svg aria-hidden="true"><use href="#i-paraspace"/></svg></button>
           </div>
           <div class="grp">
-            <button type="button" class="tb" data-cmd="tab" aria-label="แทรกแท็บ" title="แทรก Tab"><svg aria-hidden="true"><use href="#i-tab"/></svg></button>
-          </div>
-          <div class="grp">
             <button type="button" class="tb" data-cmd="list" data-val="ordered" aria-pressed="false" aria-label="รายการลำดับเลข" title="รายการลำดับเลข"><svg aria-hidden="true"><use href="#i-ol"/></svg></button>
             <button type="button" class="tb" data-cmd="list" data-val="bullet" aria-pressed="false" aria-label="รายการสัญลักษณ์" title="รายการสัญลักษณ์"><svg aria-hidden="true"><use href="#i-ul"/></svg></button>
             <button type="button" class="tb menu-btn" data-menu="m-lineheight" aria-haspopup="true" aria-expanded="false" aria-label="ระยะห่างบรรทัด" title="ระยะห่างบรรทัด"><svg aria-hidden="true"><use href="#i-lineheight"/></svg></button>
@@ -337,10 +336,6 @@ body.grid-on .editor-box{background-image:linear-gradient(to right,rgba(59,130,2
           <div class="grp">
             <button type="button" class="tb" data-cmd="outdent" aria-label="ลดการเยื้อง" title="ลดการเยื้อง"><svg aria-hidden="true"><use href="#i-outdent"/></svg></button>
             <button type="button" class="tb" data-cmd="indent" aria-label="เพิ่มการเยื้อง" title="เพิ่มการเยื้อง"><svg aria-hidden="true"><use href="#i-indent"/></svg></button>
-          </div>
-          <div class="grp">
-            <button type="button" class="tb" data-cmd="sub" aria-pressed="false" aria-label="ตัวห้อย" title="ตัวห้อย"><svg aria-hidden="true"><use href="#i-sub"/></svg></button>
-            <button type="button" class="tb" data-cmd="sup" aria-pressed="false" aria-label="ตัวยก" title="ตัวยก"><svg aria-hidden="true"><use href="#i-sup"/></svg></button>
           </div>
           <div class="grp">
             <button type="button" class="tb menu-btn" id="btnColor" data-menu="m-color" aria-haspopup="true" aria-expanded="false" aria-label="สีตัวอักษร" title="สีตัวอักษร"><svg aria-hidden="true"><use href="#i-color"/></svg></button>
@@ -353,10 +348,6 @@ body.grid-on .editor-box{background-image:linear-gradient(to right,rgba(59,130,2
             <select id="sizeSel" class="sel" aria-label="ขนาดอักษร (พอยต์)" title="ขนาดอักษร (พอยต์)"></select>
           </div>
           <div class="grp">
-            <button type="button" class="tb" data-cmd="cut" aria-label="ตัด" title="ตัด (Ctrl+X)"><svg aria-hidden="true"><use href="#i-cut"/></svg></button>
-            <button type="button" class="tb" data-cmd="copy" aria-label="คัดลอก" title="คัดลอก (Ctrl+C)"><svg aria-hidden="true"><use href="#i-copy"/></svg></button>
-          </div>
-          <div class="grp">
             <button type="button" class="tb" id="btnUndo" data-cmd="undo" aria-label="ย้อนกลับ" title="ย้อนกลับ (Ctrl+Z)"><svg aria-hidden="true"><use href="#i-undo"/></svg></button>
             <button type="button" class="tb" id="btnRedo" data-cmd="redo" aria-label="ทำซ้ำ" title="ทำซ้ำ (Ctrl+Y)"><svg aria-hidden="true"><use href="#i-redo"/></svg></button>
           </div>
@@ -365,16 +356,24 @@ body.grid-on .editor-box{background-image:linear-gradient(to right,rgba(59,130,2
             <button type="button" class="tb" data-menu="m-link" aria-haspopup="true" aria-expanded="false" aria-label="ลิงก์" title="ลิงก์"><svg aria-hidden="true"><use href="#i-link"/></svg></button>
           </div>
           <div class="grp">
-            <button type="button" class="tb" data-cmd="image" aria-label="แทรกรูปภาพ" title="แทรกรูปภาพ"><svg aria-hidden="true"><use href="#i-image"/></svg></button>
-            <button type="button" class="tb" data-cmd="open" aria-label="เปิดไฟล์ร่าง" title="เปิดไฟล์ร่าง (.html / .txt)"><svg aria-hidden="true"><use href="#i-folder"/></svg></button>
-          </div>
-          <div class="grp">
-            <button type="button" class="tb" data-cmd="clean" aria-label="ล้างรูปแบบ" title="ล้างรูปแบบ"><svg aria-hidden="true"><use href="#i-clean"/></svg></button>
-          </div>
-          <div class="grp">
             <button type="button" class="tb" id="btnMarks" data-cmd="marks" aria-pressed="false" aria-label="แสดง/ซ่อนเครื่องหมาย" title="แสดง/ซ่อนเครื่องหมาย เว้นวรรค แท็บ ย่อหน้า (Ctrl+Shift+8)"><svg aria-hidden="true"><use href="#i-pilcrow"/></svg></button>
             <button type="button" class="tb" id="btnLines" data-cmd="lines" aria-pressed="false" aria-label="เส้นบรรทัด" title="เส้นบรรทัดแบบเส้นประ สลับสีตามย่อหน้า"><svg aria-hidden="true"><use href="#i-lines"/></svg></button>
             <button type="button" class="tb menu-btn" id="btnNumbers" data-menu="m-numbers" aria-haspopup="true" aria-expanded="false" aria-label="เลขที่ย่อหน้าและเลขที่บรรทัด" title="เลขที่ย่อหน้า / เลขที่บรรทัด"><svg aria-hidden="true"><use href="#i-numbers"/></svg></button>
+          </div>
+        </div>
+          <div class="grp tb-more">
+            <button type="button" class="tb" id="btnMore" aria-haspopup="true" aria-expanded="false" aria-label="เครื่องมือเพิ่มเติม" title="เพิ่มเติม: ขีดฆ่า, Tab, ตัวห้อย/ตัวยก, ตัด/คัดลอก, รูปภาพ, เปิดไฟล์, ล้างรูปแบบ" style="padding:0 6px;font-size:13px">เพิ่มเติม ▾</button>
+            <div class="more-pop" id="morePop" hidden>
+              <button type="button" class="tb" data-cmd="strike" aria-pressed="false" aria-label="ขีดฆ่า" title="ขีดฆ่า"><svg aria-hidden="true"><use href="#i-strike"/></svg></button>
+              <button type="button" class="tb" data-cmd="tab" aria-label="แทรกแท็บ" title="แทรก Tab"><svg aria-hidden="true"><use href="#i-tab"/></svg></button>
+              <button type="button" class="tb" data-cmd="sub" aria-pressed="false" aria-label="ตัวห้อย" title="ตัวห้อย"><svg aria-hidden="true"><use href="#i-sub"/></svg></button>
+              <button type="button" class="tb" data-cmd="sup" aria-pressed="false" aria-label="ตัวยก" title="ตัวยก"><svg aria-hidden="true"><use href="#i-sup"/></svg></button>
+              <button type="button" class="tb" data-cmd="cut" aria-label="ตัด" title="ตัด (Ctrl+X)"><svg aria-hidden="true"><use href="#i-cut"/></svg></button>
+              <button type="button" class="tb" data-cmd="copy" aria-label="คัดลอก" title="คัดลอก (Ctrl+C)"><svg aria-hidden="true"><use href="#i-copy"/></svg></button>
+              <button type="button" class="tb" data-cmd="image" aria-label="แทรกรูปภาพ" title="แทรกรูปภาพ"><svg aria-hidden="true"><use href="#i-image"/></svg></button>
+              <button type="button" class="tb" data-cmd="open" aria-label="เปิดไฟล์ร่าง" title="เปิดไฟล์ร่าง (.html / .txt)"><svg aria-hidden="true"><use href="#i-folder"/></svg></button>
+              <button type="button" class="tb" data-cmd="clean" aria-label="ล้างรูปแบบ" title="ล้างรูปแบบ"><svg aria-hidden="true"><use href="#i-clean"/></svg></button>
+            </div>
           </div>
         </div>
       </div>
@@ -1415,6 +1414,14 @@ ${body}
       numbers: key => { toggleSetting(key); return 'keep'; },
     };
 
+    (() => {
+      const mb = $('#btnMore'), mp = $('#morePop');
+      const set = open => { mp.hidden = !open; mb.setAttribute('aria-expanded', String(open)); };
+      mb.addEventListener('click', e => { e.stopPropagation(); set(mp.hidden); });
+      mp.addEventListener('click', () => set(false));
+      document.addEventListener('click', e => { if (!mp.hidden && !mp.contains(e.target)) set(false); });
+      document.addEventListener('keydown', e => { if (e.key === 'Escape' && !mp.hidden) set(false); });
+    })();
     $('#toolbar').addEventListener('click', e => {
       const b = e.target.closest('button');
       if (!b || b.disabled) return;
