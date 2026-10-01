@@ -1,0 +1,11 @@
+{
+  // ตั้งค่า Cloudflare (Workers Static Assets): เสิร์ฟโฟลเดอร์ dist เป็นเว็บสถิต
+  // คำสั่ง deploy คือ `npx wrangler deploy` ซึ่ง Cloudflare รันให้เองหลังเชื่อม GitHub
+  // dist/_headers (header ความปลอดภัย) และ dist/index.html จะถูกอ่านจากโฟลเดอร์นี้อัตโนมัติ
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "eoffice-editor",
+  "compatibility_date": "2025-09-01",
+  "assets": {
+    "directory": "./dist"
+  }
+}

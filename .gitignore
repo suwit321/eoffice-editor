@@ -14,3 +14,6 @@ desktop.ini
 # หมายเหตุ: dist/ และ vendor/ ตั้งใจให้เก็บใน git
 #   dist/   = ชุดไฟล์ที่ deploy (สร้างโดย node build-single.mjs) — เก็บไว้เพื่อให้ deploy ได้แม้โฮสต์ไม่มี Node
 #   vendor/ = SDK ของ Anthropic ที่ล็อกเวอร์ชัน
+
+# ??????????????? wrangler
+.wrangler/

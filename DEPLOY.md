@@ -22,15 +22,26 @@ node build-single.mjs
 
 ---
 
-## วิธีที่แนะนำ: Cloudflare Pages (ฟรี อัปเดตด้วย `git push`)
+## วิธีที่แนะนำ: Cloudflare (ฟรี อัปเดตด้วย `git push`)
 
 1. สร้าง repository บน GitHub (เลือก **Private** ได้ ฟรี) แล้ว push โฟลเดอร์โปรเจกต์นี้ขึ้นไป
    (`.gitignore` ตัดไฟล์ในเครื่องออกให้แล้ว)
-2. เข้า Cloudflare Dashboard → **Workers & Pages** → **Create** → **Pages** → **Connect to Git** → เลือก repository
-3. ตั้งค่า:
-   - **Build command:** `node build-single.mjs`  (เว้นว่างได้ ถ้า commit โฟลเดอร์ `dist` ที่ build แล้วไปด้วย)
-   - **Build output directory:** `dist`
-4. กด **Save and Deploy** จะได้ที่อยู่แบบ `ชื่อโปรเจกต์.pages.dev`
+2. เข้า Cloudflare Dashboard → **Workers & Pages** → **Create application** → **Connect to Git** → เลือก repository
+   (ตอนนี้ Cloudflare รวม Pages เข้ากับ Workers แล้ว หน้าจอที่เห็นจะเป็นแบบ Workers ซึ่งใช้ได้เหมือนกัน)
+3. ตั้งค่าตามนี้ — **ค่าอื่นปล่อยตามค่าเริ่มต้น**:
+
+   | ช่อง | ค่า |
+   |---|---|
+   | Build command | **เว้นว่าง** (โฟลเดอร์ `dist` ถูก build และ commit ไว้แล้ว) หรือ `node build-single.mjs` |
+   | Deploy command | `npx wrangler deploy` (ค่าเริ่มต้น ไม่ต้องแก้) |
+   | Root directory | `/` |
+
+   คำสั่ง deploy อ่านค่าจากไฟล์ **`wrangler.jsonc`** ในโปรเจกต์ (บอกว่าเสิร์ฟโฟลเดอร์ `dist`) ถ้าไม่มีไฟล์นี้ ขั้น Deploying จะล้มเหลว
+   และ **ชื่อ** ใน `wrangler.jsonc` (`"name"`) ต้องตรงกับชื่อโปรเจกต์ที่ตั้งใน Cloudflare
+4. กด **Deploy** จะได้ที่อยู่แบบ `ชื่อโปรเจกต์.บัญชี.workers.dev` (หรือ `.pages.dev` ถ้าสร้างเป็น Pages)
+
+> ถ้าสร้างเป็น **Pages** (ทางเลือกอยู่ที่ลิงก์เล็ก ๆ ใต้ปุ่มเลือกประเภทตอน Create) ให้ตั้ง Framework preset `None`,
+> Build command เว้นว่าง, Build output directory `dist` — ไม่ต้องใช้ `wrangler.jsonc`
 5. **อัปเดตภายหลัง:** แก้โค้ด → `node build-single.mjs` → `git commit` → `git push` เว็บจะอัปเดตเองใน 1–2 นาที
    (หน้าหลักตั้งให้ตรวจเวอร์ชันใหม่ทุกครั้ง ผู้ใช้ไม่ต้องกด Ctrl+F5)
 
