@@ -1,0 +1,14 @@
+{
+  "name": "eoffice-editor",
+  "version": "1.0.0",
+  "description": "เอดิเตอร์จัดหน้าหนังสือราชการภาษาไทย (ทำงานในเบราว์เซอร์ ไม่มีเซิร์ฟเวอร์)",
+  "private": true,
+  "license": "UNLICENSED",
+  "scripts": {
+    "build": "node build-single.mjs",
+    "serve": "python -m http.server 8080 --directory dist"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

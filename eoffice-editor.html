@@ -1,0 +1,2586 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>e-Office Editor</title>
+<link rel="stylesheet" href="./quill.snow.css" onerror="this.onerror=null;this.href='https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css'">
+<style>
+*{box-sizing:border-box}
+:root{
+  color-scheme:light;
+  --page:#eef0f3;--panel:#fff;--line:#dcdfe4;--line-strong:#b9bec6;
+  --ink:#1f2328;--muted:#5f6b7a;--icon:#454545;
+  --hover:#e9edf2;--press:#dfe6ef;--press-line:#aeb8c5;
+  --accent:#1b5fb4;--accent-hover:#154d93;--accent-ink:#fff;
+  --ruler:#d6d6d6;--ruler-scale:#f1f1f1;--ruler-ink:#5a5a5a;
+  --paper:#fff;--paper-ink:#000;
+  --z:1;--vr:20px; /* --vr = ความกว้างไม้บรรทัดแนวดิ่ง */
+}
+html,body{margin:0}
+/* ระยะขอบกระดาษ: โหมดกะทัดรัด = 8px รอบด้าน, โหมด A4 = ขอบพิมพ์ บน 2.5 ขวา 2 ล่าง 2 ซ้าย 3 ซม. (กระดาษกว้าง 21 ซม.)
+   --edge-x/--edge-y = ตำแหน่ง 0 ซม. ของไม้บรรทัด (ขอบกล่อง 1px + ระยะขอบ) */
+body{--pl:8px;--pr:8px;--pt:8px;--pb:8px;--min-h:18cm;
+  --edge-x:calc(1px + var(--pl));--edge-y:calc(1px + var(--pt));--paper-w:calc(16cm + var(--pl) + var(--pr) + 2px)}
+body.a4{--pl:3cm;--pr:2cm;--pt:2.5cm;--pb:2cm;--min-h:25.2cm}
+/* โหมดกะทัดรัดไม่มีขอบกระดาษ: เปิดเลขที่ย่อหน้า/บรรทัดแล้วเว้นที่ด้านซ้ายให้ตัวเลข */
+body.numbers-on:not(.a4){--pl:44px}
+body{background:var(--page);color:var(--ink);font:14px/1.45 "Segoe UI","Leelawadee UI",Tahoma,system-ui,sans-serif}
+button,select,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+
+/* แถบคำสั่งบนสุด */
+.topbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px;padding:10px 16px;background:var(--panel);border-bottom:1px solid var(--line)}
+.brand h1{margin:0;font-size:16px;font-weight:600;display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px}
+.docname{width:260px;max-width:100%;height:28px;padding:0 8px;border:1px solid transparent;border-radius:6px;background:#f3f5f8;font:inherit;font-size:14px;font-weight:400}
+.docname:hover{border-color:var(--line)}
+.docname:focus{background:#fff;border-color:var(--accent);outline:none}
+.brand p{margin:0;font-size:12px;color:var(--muted)}
+.actions{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.btn{height:32px;padding:0 12px;border:1px solid var(--line-strong);border-radius:6px;background:#fff;cursor:pointer;white-space:nowrap}
+.btn:hover{background:var(--hover)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.btn.primary:hover{background:var(--accent-hover)}
+.zoom{display:inline-flex;align-items:center;gap:6px;font-size:13px;white-space:nowrap}
+.btn:disabled{opacity:.5;cursor:default}
+.zoom select{height:32px;border:1px solid var(--line-strong);border-radius:6px;background:#fff;padding:0 6px}
+
+/* พื้นที่เอกสาร */
+.desk{padding:16px 16px 24px}
+.sheet{width:max-content;max-width:100%;margin:0 auto;background:var(--panel);border:1px solid var(--line);box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.head{position:sticky;top:0;z-index:5;background:var(--panel)}
+
+/* แถบเครื่องมือ */
+.toolbar{border-bottom:1px solid var(--line)}
+.tb-row{display:flex;flex-wrap:wrap;align-items:center;row-gap:2px;padding:3px 4px}
+.tb-row+.tb-row{border-top:1px solid #e6e6e6}
+.grp{display:flex;align-items:center;gap:1px;padding:0 3px;border-left:1px solid #dcdcdc}
+.grp:first-child{border-left:0;padding-left:0}
+.tb{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:26px;padding:0 2px;border:1px solid transparent;border-radius:2px;background:transparent;color:var(--icon);cursor:pointer}
+.tb svg{width:18px;height:18px;fill:currentColor;flex:none}
+.tb:hover{background:var(--hover);border-color:#cfd5dd}
+.tb[aria-pressed="true"]{background:linear-gradient(#fff,#e9edf2);border-color:#b3bac4}
+.tb[aria-expanded="true"]{background:var(--press);border-color:var(--press-line)}
+.tb:disabled{opacity:.35;cursor:default;background:transparent;border-color:transparent}
+.tb.menu-btn::after{content:"";margin-left:1px;border-left:3px solid transparent;border-right:3px solid transparent;border-top:4px solid currentColor;opacity:.7}
+.sel{height:26px;border:1px solid #9a9a9a;background:#fff;padding:0 2px;font-size:13px;cursor:pointer}
+#fontSel{width:150px}
+#sizeSel{width:52px;margin-left:-1px}
+
+/* แท็บหน้า */
+.pagebar{display:flex;flex-wrap:wrap;align-items:flex-end;gap:2px;padding:4px 4px 0;background:#eef1f5;border-bottom:1px solid var(--line)}
+.ptab{display:inline-flex;align-items:center;height:28px;border:1px solid transparent;border-bottom:0;border-radius:5px 5px 0 0;background:transparent;color:var(--muted)}
+.ptab[aria-selected="true"]{background:var(--panel);border-color:var(--line);color:var(--ink);font-weight:600;margin-bottom:-1px;height:29px}
+.ptab button{height:100%;padding:0 10px;border:0;background:none;color:inherit;font:inherit;cursor:pointer}
+.ptab:not([aria-selected="true"]):hover{background:#e2e7ee}
+.ptab .pclose{padding:0 8px 0 2px;font-size:15px;line-height:1;color:var(--muted)}
+.ptab .pclose:hover{color:#b42318}
+.padd{height:26px;margin:0 0 2px 4px;padding:0 10px;border:1px dashed var(--line-strong);border-radius:5px;background:#fff;color:var(--accent);cursor:pointer}
+.padd:hover{background:var(--hover)}
+.btn.linked{border-color:#2e7d32;color:#1e5e22;background:#eef8ef}
+.btn.linked:hover{background:#e0f1e2}
+.btn.warn{border-color:#b7791f;color:#7a4d0b;background:#fff7e6}
+#printArea section+section{break-before:page;page-break-before:always}
+/* ไม่ให้เหลือบรรทัดเดียวโดด ๆ ที่ท้าย/ต้นหน้า — Edge/Chrome ไม่ทำตามค่า 2 จึงใช้ 3 (ทดสอบแล้ว) */
+#printArea p,#printArea li{orphans:3;widows:3}
+
+/* ไม้บรรทัด */
+.rulerwrap{zoom:var(--z);width:calc(var(--paper-w) + var(--vr));display:flex}
+.ruler-corner{flex:none;width:var(--vr);background:var(--ruler);border-bottom:1px solid #c2c2c2;border-right:1px solid #c2c2c2}
+.ruler{flex:1;position:relative;height:24px;background:var(--ruler);border-bottom:1px solid #c2c2c2;user-select:none;touch-action:none}
+.ruler-scale,.ruler-marks{position:absolute;left:var(--edge-x);width:16cm}
+.ruler-scale{top:4px;bottom:4px;background:var(--ruler-scale)}
+.ruler-marks{top:0;bottom:0}
+.tick{position:absolute;top:50%;width:1px;background:var(--ruler-ink);transform:translate(-50%,-50%)}
+.tick.q{height:2px}.tick.h{height:6px}
+.num{position:absolute;top:50%;transform:translate(-50%,-50%);font:10px/1 Arial,sans-serif;color:var(--ruler-ink)}
+.mk{position:absolute;width:13px;margin-left:-6.5px;padding:0;border:0;background:none;cursor:ew-resize;touch-action:none}
+.mk svg{display:block;width:13px;height:100%;fill:#fff;stroke:#666;stroke-width:1}
+.mk:hover svg,.mk:focus-visible svg{fill:#d9e7fb;stroke:var(--accent)}
+.mk:focus-visible{outline:none}
+.mk-first{top:0;height:9px}
+.mk-hang,.mk-right{top:10px;height:8px}
+.mk-box{top:17px;height:7px}
+.ruler.off .mk{visibility:hidden}
+.ruler-marks{cursor:crosshair}
+.ruler-tip{position:absolute;z-index:6;bottom:calc(100% + 3px);transform:translateX(-50%);background:#1f2328;color:#fff;font-size:12px;line-height:1;padding:4px 6px;border-radius:4px;white-space:nowrap;pointer-events:none}
+.ruler-band{position:absolute;top:4px;bottom:4px;background:rgba(27,95,180,.25);border-left:1px solid var(--accent);border-right:1px solid var(--accent);pointer-events:none}
+
+/* ไม้บรรทัดแนวดิ่ง (0 ซม. = บรรทัดแรกของข้อความ) */
+.vruler{position:relative;flex:none;width:var(--vr);background:var(--ruler);border-right:1px solid #c2c2c2;overflow:hidden;user-select:none;touch-action:none;cursor:crosshair}
+.vruler-scale{position:absolute;left:3px;right:3px;top:var(--edge-y);bottom:0;background:var(--ruler-scale)}
+.vtick{position:absolute;left:50%;height:1px;background:var(--ruler-ink);transform:translate(-50%,-50%)}
+.vtick.q{width:2px}.vtick.h{width:6px}
+.vnum{position:absolute;left:50%;transform:translate(-50%,-50%);font:10px/1 Arial,sans-serif;color:var(--ruler-ink)}
+.vruler .ruler-band{top:auto;bottom:auto;left:0;right:0;border:0;border-top:1px solid var(--accent);border-bottom:1px solid var(--accent)}
+.vtip{position:absolute;z-index:6;left:calc(var(--vr) + 4px);transform:translateY(-50%);background:#1f2328;color:#fff;font-size:12px;line-height:1;padding:4px 6px;border-radius:4px;white-space:nowrap;pointer-events:none}
+.guide-h{position:absolute;left:var(--vr);right:0;border-top:1px dashed var(--accent);pointer-events:none}
+
+/* กล่องพิมพ์ */
+.editorwrap{position:relative;zoom:var(--z);width:calc(var(--paper-w) + var(--vr));display:flex;align-items:stretch}
+.editor-box{flex:1;min-width:0;border:1px solid #c9c9c9;border-top-color:#8f8f8f;border-left-color:#8f8f8f;background:var(--paper)}
+#editor.ql-container{border:0;height:auto;color:var(--paper-ink)}
+#editor .ql-editor{padding:var(--pt) var(--pr) var(--pb) var(--pl);min-height:var(--min-h);height:auto;overflow:visible;tab-size:8;-moz-tab-size:8}
+#editor .ql-editor p{margin:0;text-justify:inter-character}
+#editor .ql-editor.ql-blank::before{left:var(--pl);right:var(--pr);font-style:normal;color:#9aa3ad}
+#editor .ql-editor img{max-width:100%}
+.guide{position:absolute;top:0;bottom:0;border-left:1px dashed var(--accent);pointer-events:none}
+
+/* หน้ากระดาษ A4: ขอบกระดาษสีจาง + กรอบขอบพิมพ์เส้นประจาง */
+.editor-box{position:relative}
+body.a4 .editor-box{border:1px solid #d5d9df;box-shadow:0 1px 6px rgba(15,23,42,.10)}
+body.a4 .editor-box::before{content:"";position:absolute;top:var(--pt);right:var(--pr);bottom:var(--pb);left:var(--pl);border:1px dashed rgba(100,116,139,.28);pointer-events:none}
+/* กระดาษกราฟ: ตาราง 1 ซม. เริ่มที่มุมพื้นที่ข้อความ */
+body.grid-on .editor-box{background-image:linear-gradient(to right,rgba(59,130,246,.10) 1px,transparent 1px),linear-gradient(to bottom,rgba(59,130,246,.10) 1px,transparent 1px);
+  background-size:1cm 1cm;background-position:calc(var(--pl) - 1px) calc(var(--pt) - 1px)}
+/* ชั้นซ้อนทับ: เครื่องหมายซ่อน เส้นบรรทัด เส้นแบ่งหน้า (ไม่อยู่ในเนื้อหา Quill จึงไม่กระทบข้อความ) */
+.mark-layer{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:2}
+.mk-ch{position:absolute;font:600 11px/1 Arial,sans-serif;transform:translate(-50%,-50%);white-space:nowrap}
+.mk-dup{position:absolute;border-radius:2px;opacity:.55}
+.mk-zw{position:absolute;width:2px;margin-left:-1px}
+/* หน้าต่างอธิบายปัญหาการโหลด และแถบเตือนไฟล์ขาด */
+#loadGate{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(238,240,243,.96)}
+.gate-card{width:min(560px,100%);max-height:calc(100vh - 32px);overflow:auto;padding:20px 24px;border:1px solid var(--line-strong);border-radius:12px;background:#fff;box-shadow:0 12px 40px rgba(15,23,42,.18)}
+.gate-card h2{margin:0 0 10px;font-size:18px}
+.gate-card p{margin:6px 0}
+.gate-note{color:var(--muted)}
+.gate-list{margin:6px 0 10px;padding-left:20px;line-height:1.7}
+.gate-card code,.load-banner code{padding:0 5px;border-radius:4px;background:#f1f5f9;font:12.5px Consolas,monospace}
+.load-banner{display:flex;align-items:center;gap:10px;justify-content:space-between;padding:8px 16px;background:#fff7ed;border-bottom:1px solid #fdba74;color:#7c2d12;font-size:13px}
+.load-banner button{border:0;background:none;font-size:18px;line-height:1;color:inherit;cursor:pointer}
+.mk-wj{position:absolute;transform:translate(-50%,-35%);font:700 11px/1 Arial,sans-serif}
+.mk-zw::after{content:"⌀";position:absolute;top:-9px;left:-4px;font:10px/1 Arial,sans-serif;color:inherit}
+.mk-line{position:absolute;height:0;border-top:1px dashed}
+.mk-bar{position:absolute;width:3px;border-radius:2px;opacity:.55}
+.mk-page{position:absolute;left:0;right:0;height:0;border-top:1px dashed rgba(220,38,38,.45)}
+.mk-page span{position:absolute;right:6px;top:-9px;padding:0 5px;font:11px/16px "Segoe UI",Tahoma,sans-serif;color:#b91c1c;background:rgba(255,255,255,.85);border-radius:3px}
+/* เลขที่บรรทัด (เทา ชิดขอบข้อความ) และเลขที่ย่อหน้า (ป้ายสีม่วง อยู่ถัดออกไปทางซ้าย) */
+.mk-ln{position:absolute;transform:translate(-100%,-50%);font:10.5px/1 Consolas,"Segoe UI",monospace;color:#94a3b8;font-variant-numeric:tabular-nums}
+.mk-pn{position:absolute;transform:translate(-100%,-50%);min-width:18px;padding:1px 5px;border-radius:8px;background:#f3e8ff;color:#7e22ce;font:600 10.5px/1.3 Consolas,"Segoe UI",monospace;text-align:center}
+.mk-pn.blank{background:transparent;color:#d8b4fe;font-weight:400}
+.st-ln{background:#ecfeff;color:#0e7490;font-variant-numeric:tabular-nums}
+.tb.menu-btn.on{background:linear-gradient(#fff,#e9edf2);border-color:#b3bac4}
+
+/* แถบสถานะ */
+.statusbar{position:sticky;bottom:0;z-index:4;display:flex;flex-wrap:nowrap;align-items:center;gap:4px;height:26px;padding:0 8px;background:#f8f9fb;border-top:1px solid var(--line);font-size:11.5px;line-height:18px;white-space:nowrap;overflow:hidden}
+/* ป้ายข้อมูลแต่ละชนิดคนละสี ป้ายว่างถูกซ่อน ข้อความยาวถูกตัดท้าย (ชี้เมาส์ดูเต็ม) */
+.st{flex:none;max-width:260px;padding:0 7px;border-radius:9px;overflow:hidden;text-overflow:ellipsis}
+.st:empty{display:none}
+.st-msg{flex:1 1 auto;min-width:0;max-width:none;padding-left:2px;border-radius:0;color:#1e3a5f}
+.st-pos{background:#f1f5f9;color:#475569;font-variant-numeric:tabular-nums}
+.st-para{background:#ecfdf5;color:#047857;font-variant-numeric:tabular-nums}
+.st-ls{background:#f5f3ff;color:#6d28d9;font-variant-numeric:tabular-nums}
+.st-count{background:#fff7ed;color:#c2410c;font-variant-numeric:tabular-nums}
+.st-save{background:#eff6ff;color:#1d4ed8}
+.st-save.warn{background:#fef2f2;color:#b91c1c}
+
+/* เมนูแบบเลื่อนลง */
+.menu{position:fixed;z-index:50;min-width:190px;max-width:calc(100vw - 16px);max-height:calc(100vh - 16px);overflow:auto;background:#fff;border:1px solid #c5cad3;border-radius:6px;box-shadow:0 6px 20px rgba(20,30,50,.18);padding:6px;font-size:13px}
+.menu[hidden]{display:none}
+.menu-title{font-size:12px;font-weight:600;color:var(--muted);padding:4px 8px}
+.mi{display:flex;align-items:center;gap:6px;width:100%;padding:5px 8px;border:0;border-radius:4px;background:none;text-align:left;cursor:pointer}
+.mi::before{content:"";width:12px;flex:none;font-size:12px;color:var(--accent)}
+.mi[aria-checked="true"]::before{content:"✓"}
+.mi:hover,.mi:focus-visible{background:var(--hover)}
+.mi:disabled{color:#a8aeb8;background:none;cursor:default}
+.mi small{margin-left:auto;color:var(--muted)}
+.sep{height:1px;background:var(--line);margin:5px 2px}
+.menu-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:4px 8px}
+.menu-row.end{justify-content:flex-end}
+.menu-row input[type=number]{width:70px;height:26px;border:1px solid var(--line-strong);border-radius:4px;padding:0 4px}
+.menu-field{display:grid;gap:4px;padding:4px 8px;font-size:12px;color:var(--muted)}
+.menu-field input{width:260px;max-width:100%;height:30px;border:1px solid var(--line-strong);border-radius:4px;padding:0 8px;color:var(--ink);font-size:14px}
+.chips{display:flex;flex-wrap:wrap;gap:4px;padding:2px 8px 6px}
+.chip{min-width:38px;height:26px;padding:0 9px;border:1px solid #c5cad3;border-radius:13px;background:#fff;cursor:pointer;white-space:nowrap}
+.chip:hover{background:var(--hover)}
+.chip[aria-checked="true"],.chip.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.chip:disabled{opacity:.45;cursor:default}
+.palette{display:grid;grid-template-columns:repeat(10,18px);gap:3px;padding:4px 8px}
+.sw{width:18px;height:18px;padding:0;border:1px solid rgba(0,0,0,.2);border-radius:2px;cursor:pointer}
+.sw:hover{outline:2px solid var(--accent);outline-offset:1px}
+.menu-row input[type=color]{width:34px;height:24px;padding:0;border:1px solid var(--line-strong);background:#fff;cursor:pointer}
+.ls-menu{width:330px}
+.ls-menu .menu-title{cursor:move;user-select:none}
+.ls-value{display:flex;align-items:baseline;gap:6px;padding:6px 8px 2px}
+.ls-value strong{font:600 22px/1 Consolas,"Segoe UI",monospace;color:#1e4f8a}
+.ls-hint{padding:1px 8px;border-radius:10px;background:#eef3fb;color:#1e4f8a;font-size:12px}
+.ls-value small{margin-left:auto;color:var(--muted)}
+.ls-slider{display:flex;align-items:center;gap:6px;padding:4px 8px;font-size:12px;color:var(--muted)}
+.ls-slider input{flex:1;accent-color:var(--accent);height:22px}
+.ls-steps{justify-content:center}
+.ls-steps .chip{min-width:34px;font-weight:600}
+.ls-steps input{width:84px;height:28px;text-align:center;border:1px solid var(--line-strong);border-radius:6px;font:14px Consolas,monospace}
+.ls-note{margin:4px 8px 2px;font-size:11.5px;line-height:1.5;color:var(--muted)}
+.tgrid{display:grid;grid-template-columns:repeat(8,17px);gap:2px;padding:4px 8px}
+.tgrid span{width:17px;height:17px;border:1px solid #c5cad3;background:#fff;cursor:pointer}
+.tgrid span.on{background:#cfe0f7;border-color:var(--accent)}
+.tgrid.off{opacity:.4;pointer-events:none}
+
+@media (max-width:640px){
+  .topbar{padding:8px 12px}
+  .desk{padding:12px 8px 16px}
+}
+@media print{
+  @page{size:A4;margin:2.5cm 2cm 2cm 3cm}
+  body{background:#fff}
+  .topbar,.desk,.statusbar,.menu{display:none!important}
+  #printArea{display:block!important;color:#000}
+  #printArea img{max-width:100%}
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-bold" viewBox="0 0 20 20"><text x="10" y="15.5" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="700" font-size="15">B</text></symbol>
+  <symbol id="i-italic" viewBox="0 0 20 20"><text x="10.5" y="15.5" text-anchor="middle" font-family="Georgia,'Times New Roman',serif" font-style="italic" font-size="16">I</text></symbol>
+  <symbol id="i-underline" viewBox="0 0 20 20"><text x="10" y="13.5" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="14">U</text><rect x="4.5" y="15.8" width="11" height="1.5"/></symbol>
+  <symbol id="i-strike" viewBox="0 0 20 20"><text x="10" y="15" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="15">S</text><rect x="3.5" y="9.4" width="13" height="1.4"/></symbol>
+  <symbol id="i-left" viewBox="0 0 20 20"><path d="M3 4h14v1.5H3zM3 7.5h9V9H3zM3 11h14v1.5H3zM3 14.5h9V16H3z"/></symbol>
+  <symbol id="i-center" viewBox="0 0 20 20"><path d="M3 4h14v1.5H3zM5.5 7.5h9V9h-9zM3 11h14v1.5H3zM5.5 14.5h9V16h-9z"/></symbol>
+  <symbol id="i-right" viewBox="0 0 20 20"><path d="M3 4h14v1.5H3zM8 7.5h9V9H8zM3 11h14v1.5H3zM8 14.5h9V16H8z"/></symbol>
+  <symbol id="i-justify" viewBox="0 0 20 20"><path d="M3 4h14v1.5H3zM3 7.5h14V9H3zM3 11h14v1.5H3zM3 14.5h14V16H3z"/></symbol>
+  <symbol id="i-distribute" viewBox="0 0 20 20"><path d="M2 3h1.2v14H2zM16.8 3H18v14h-1.2zM4.6 4.5h10.8V6H4.6zM4.6 8h10.8v1.5H4.6zM4.6 11.5h10.8V13H4.6zM4.6 15h3.2v1.5H4.6zM12.2 15h3.2v1.5h-3.2z"/></symbol>
+  <symbol id="i-charspace" viewBox="0 0 20 20"><text x="5" y="13.5" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="11">A</text><path d="M10 6.5h1v7h-1zM18 6.5h1v7h-1zM11.4 10l2-2v1.4h2.2V8l2 2-2 2v-1.4h-2.2V12z"/></symbol>
+  <symbol id="i-paraspace" viewBox="0 0 20 20"><path d="M4.5 2.2 7.6 6H5.3v2.6H3.7V6H1.4zM4.5 17.8 1.4 14h2.3v-2.6h1.6V14h2.3zM9 3h9v1.5H9zM9 6.5h9V8H9zM9 12h9v1.5H9zM9 15.5h9V17H9z"/></symbol>
+  <symbol id="i-tab" viewBox="0 0 20 20"><path d="M2.5 6.1h10V4.4L16 7l-3.5 2.6V7.9h-10zM16.8 3.5h1.3v7h-1.3z"/><text x="10" y="18.2" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="700" font-size="7.5">Tab</text></symbol>
+  <symbol id="i-ol" viewBox="0 0 20 20"><text x="3.8" y="7.2" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="700" font-size="6">1</text><text x="3.8" y="12.2" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="700" font-size="6">2</text><text x="3.8" y="17.2" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="700" font-size="6">3</text><path d="M8 4.5h10V6H8zM8 9.5h10V11H8zM8 14.5h10V16H8z"/></symbol>
+  <symbol id="i-ul" viewBox="0 0 20 20"><circle cx="4" cy="5.25" r="1.8"/><circle cx="4" cy="10.25" r="1.8"/><circle cx="4" cy="15.25" r="1.8"/><path d="M8 4.5h10V6H8zM8 9.5h10V11H8zM8 14.5h10V16H8z"/></symbol>
+  <symbol id="i-lineheight" viewBox="0 0 20 20"><path d="M4.5 2.2 7.6 6H5.3v8h2.3l-3.1 3.8L1.4 14h2.3V6H1.4zM9 4h9v1.5H9zM9 8h9v1.5H9zM9 12h9v1.5H9zM9 16h9v1.5H9z"/></symbol>
+  <symbol id="i-outdent" viewBox="0 0 20 20"><path d="M3 3h15v1.5H3zM9 7h9v1.5H9zM9 11h9v1.5H9zM3 15h15v1.5H3zM7 7.2v5.1L3.2 9.75z"/></symbol>
+  <symbol id="i-indent" viewBox="0 0 20 20"><path d="M3 3h15v1.5H3zM9 7h9v1.5H9zM9 11h9v1.5H9zM3 15h15v1.5H3zM3.2 7.2v5.1L7 9.75z"/></symbol>
+  <symbol id="i-sub" viewBox="0 0 20 20"><text x="7.5" y="13.5" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="14">x</text><text x="15" y="18" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="700" font-size="7.5">2</text></symbol>
+  <symbol id="i-sup" viewBox="0 0 20 20"><text x="7.5" y="16" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="14">x</text><text x="15" y="8" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="700" font-size="7.5">2</text></symbol>
+  <symbol id="i-color" viewBox="0 0 20 20"><text x="10" y="12.5" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="700" font-size="13">A</text><rect x="3" y="15" width="14" height="3" fill="var(--swatch,#000)"/></symbol>
+  <symbol id="i-highlight" viewBox="0 0 20 20"><path d="M13.6 2.4 17.4 6.2 9 14.6H5.2v-3.8zM11.5 4.5l3.8 3.8" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><rect x="3" y="16.2" width="14" height="2.4" fill="var(--swatch,transparent)"/></symbol>
+  <symbol id="i-cut" viewBox="0 0 20 20"><g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="14.6" r="2.6"/><circle cx="14" cy="14.6" r="2.6"/><path d="M7.5 12.5 14 2.5M12.5 12.5 6 2.5"/></g></symbol>
+  <symbol id="i-copy" viewBox="0 0 20 20"><g fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M7.5 6.3V2.8h6.2l3.1 3.1v8.4h-4.3"/><path d="M3.2 6.3h6.2l3.1 3.1v7.8H3.2z"/></g></symbol>
+  <symbol id="i-undo" viewBox="0 0 20 20"><path d="M8.2 4.2 3 9l5.2 4.8v-3.1c3.4-.2 6.1.8 8.3 3.8-.6-4.4-3.4-7.3-8.3-7.6z"/></symbol>
+  <symbol id="i-redo" viewBox="0 0 20 20"><path transform="matrix(-1 0 0 1 20 0)" d="M8.2 4.2 3 9l5.2 4.8v-3.1c3.4-.2 6.1.8 8.3 3.8-.6-4.4-3.4-7.3-8.3-7.6z"/></symbol>
+  <symbol id="i-table" viewBox="0 0 20 20"><g fill="none" stroke="currentColor" stroke-width="1.3"><rect x="2.8" y="3.3" width="14.4" height="13.4"/><path d="M2.8 7.8h14.4M2.8 12.2h14.4M7.6 3.3v13.4M12.4 3.3v13.4"/></g></symbol>
+  <symbol id="i-link" viewBox="0 0 20 20"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M8.6 11.4a3 3 0 0 0 4.2 0l3-3a3 3 0 0 0-4.2-4.2l-1.2 1.2"/><path d="M11.4 8.6a3 3 0 0 0-4.2 0l-3 3a3 3 0 0 0 4.2 4.2l1.2-1.2"/></g></symbol>
+  <symbol id="i-image" viewBox="0 0 20 20"><rect x="2.5" y="3.5" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.3"/><circle cx="7" cy="7.6" r="1.5"/><path d="M3.8 15.2 8 10.6l2.6 2.7 2.4-2.5 3.2 4.4z"/></symbol>
+  <symbol id="i-folder" viewBox="0 0 20 20"><path d="M2 5.2C2 4.5 2.5 4 3.2 4h4.3l1.7 1.8h7.6c.7 0 1.2.5 1.2 1.2V7H2zM2 8h16v7.8c0 .7-.5 1.2-1.2 1.2H3.2c-.7 0-1.2-.5-1.2-1.2z"/></symbol>
+  <symbol id="i-pilcrow" viewBox="0 0 20 20"><path d="M8.2 3.5h7.3v1.6h-1.7v11.4h-1.6V5.1h-1.4v11.4H9.2V11a3.75 3.75 0 0 1-1-7.5z"/></symbol>
+  <symbol id="i-numbers" viewBox="0 0 20 20"><text x="3.6" y="7" text-anchor="middle" font-family="Consolas,monospace" font-weight="700" font-size="5.6">1</text><text x="3.6" y="12" text-anchor="middle" font-family="Consolas,monospace" font-weight="700" font-size="5.6">2</text><text x="3.6" y="17" text-anchor="middle" font-family="Consolas,monospace" font-weight="700" font-size="5.6">3</text><path d="M6.6 2.5h1v15h-1zM9 4.5h9V6H9zM9 9.5h9V11H9zM9 14.5h6.5V16H9z"/></symbol>
+  <symbol id="i-lines" viewBox="0 0 20 20"><g fill="none" stroke-width="1.4" stroke-dasharray="2 1.6"><path d="M2.5 5.5h15" stroke="#3b82f6"/><path d="M2.5 9h15" stroke="#3b82f6"/><path d="M2.5 13.5h15" stroke="#f59e0b"/><path d="M2.5 17h15" stroke="#f59e0b"/></g></symbol>
+  <symbol id="i-clean" viewBox="0 0 20 20"><text x="8.5" y="14" text-anchor="middle" font-family="Georgia,'Times New Roman',serif" font-style="italic" font-size="14">T</text><text x="14.6" y="16.2" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="7">x</text><rect x="3" y="17" width="12" height="1.2"/></symbol>
+</svg>
+
+<header class="topbar">
+  <div class="brand">
+    <h1>เอดิเตอร์ข้อความ e-Office <input type="text" id="docName" class="docname" aria-label="ชื่อเอกสาร" title="ชื่อเอกสาร ใช้เป็นชื่อไฟล์ตอนบันทึก — ถ้าเว้นว่าง จะตั้งเป็นวันเวลาที่บันทึกครั้งแรก" placeholder="ชื่อเอกสาร (ตั้งอัตโนมัติเมื่อบันทึกครั้งแรก)" maxlength="80"></h1>
+    <p>พิมพ์และจัดหน้าแบบออฟไลน์ด้วย Quill • ไม่ส่งเนื้อหาออกนอกเครื่อง</p>
+  </div>
+  <div class="actions">
+    <button type="button" class="btn" id="btnNew">เอกสารใหม่</button>
+    <button type="button" class="btn" id="btnSample">ข้อความตัวอย่าง</button>
+    <button type="button" class="btn" id="btnSave" title="Ctrl+S">บันทึกร่าง HTML</button>
+    <button type="button" class="btn" id="btnPrint">พิมพ์ / PDF</button>
+    <button type="button" class="btn" id="btnFile" title="เลือกไฟล์ .html ในเครื่อง แล้วบันทึกทับให้อัตโนมัติทุกครั้งที่แก้ไข">บันทึกลงไฟล์อัตโนมัติ</button>
+    <label class="zoom">ซูม
+      <select id="zoomSel" aria-label="ซูม">
+        <option value="100">100%</option><option value="125">125%</option><option value="150">150%</option><option value="175">175%</option><option value="200">200%</option>
+      </select>
+    </label>
+    <button type="button" class="btn primary" id="btnCopy">คัดลอกไป e-Office</button>
+  </div>
+</header>
+
+<main class="desk" id="desk">
+  <div class="sheet">
+    <div class="head">
+      <div class="pagebar" id="pagebar" role="tablist" aria-label="หน้าเอกสาร"></div>
+      <div class="toolbar" id="toolbar" role="toolbar" aria-label="เครื่องมือจัดรูปแบบ">
+        <div class="tb-row">
+          <div class="grp">
+            <button type="button" class="tb" data-cmd="bold" aria-pressed="false" aria-label="ตัวหนา" title="ตัวหนา (Ctrl+B)"><svg aria-hidden="true"><use href="#i-bold"/></svg></button>
+            <button type="button" class="tb" data-cmd="italic" aria-pressed="false" aria-label="ตัวเอียง" title="ตัวเอียง (Ctrl+I)"><svg aria-hidden="true"><use href="#i-italic"/></svg></button>
+            <button type="button" class="tb" data-cmd="underline" aria-pressed="false" aria-label="ขีดเส้นใต้" title="ขีดเส้นใต้ (Ctrl+U)"><svg aria-hidden="true"><use href="#i-underline"/></svg></button>
+            <button type="button" class="tb" data-cmd="strike" aria-pressed="false" aria-label="ขีดฆ่า" title="ขีดฆ่า"><svg aria-hidden="true"><use href="#i-strike"/></svg></button>
+          </div>
+          <div class="grp">
+            <button type="button" class="tb" data-cmd="align" data-val="left" aria-pressed="false" aria-label="ชิดซ้าย" title="ชิดซ้าย"><svg aria-hidden="true"><use href="#i-left"/></svg></button>
+            <button type="button" class="tb" data-cmd="align" data-val="center" aria-pressed="false" aria-label="กึ่งกลาง" title="กึ่งกลาง"><svg aria-hidden="true"><use href="#i-center"/></svg></button>
+            <button type="button" class="tb" data-cmd="align" data-val="right" aria-pressed="false" aria-label="ชิดขวา" title="ชิดขวา"><svg aria-hidden="true"><use href="#i-right"/></svg></button>
+            <button type="button" class="tb" data-cmd="align" data-val="justify" aria-pressed="false" aria-label="เสมอหน้าหลัง" title="เสมอหน้าหลัง"><svg aria-hidden="true"><use href="#i-justify"/></svg></button>
+            <button type="button" class="tb" data-cmd="align" data-val="distribute" aria-pressed="false" aria-label="กระจายแบบไทย" title="กระจายแบบไทย (เต็มบรรทัด รวมบรรทัดสุดท้าย)"><svg aria-hidden="true"><use href="#i-distribute"/></svg></button>
+          </div>
+          <div class="grp">
+            <button type="button" class="tb menu-btn" data-menu="m-charspace" aria-haspopup="true" aria-expanded="false" aria-label="ช่องไฟตัวอักษร" title="ช่องไฟตัวอักษร"><svg aria-hidden="true"><use href="#i-charspace"/></svg></button>
+            <button type="button" class="tb menu-btn" data-menu="m-paraspace" aria-haspopup="true" aria-expanded="false" aria-label="ระยะก่อนและหลังย่อหน้า" title="ระยะก่อน/หลังย่อหน้า"><svg aria-hidden="true"><use href="#i-paraspace"/></svg></button>
+          </div>
+          <div class="grp">
+            <button type="button" class="tb" data-cmd="tab" aria-label="แทรกแท็บ" title="แทรก Tab"><svg aria-hidden="true"><use href="#i-tab"/></svg></button>
+          </div>
+          <div class="grp">
+            <button type="button" class="tb" data-cmd="list" data-val="ordered" aria-pressed="false" aria-label="รายการลำดับเลข" title="รายการลำดับเลข"><svg aria-hidden="true"><use href="#i-ol"/></svg></button>
+            <button type="button" class="tb" data-cmd="list" data-val="bullet" aria-pressed="false" aria-label="รายการสัญลักษณ์" title="รายการสัญลักษณ์"><svg aria-hidden="true"><use href="#i-ul"/></svg></button>
+            <button type="button" class="tb menu-btn" data-menu="m-lineheight" aria-haspopup="true" aria-expanded="false" aria-label="ระยะห่างบรรทัด" title="ระยะห่างบรรทัด"><svg aria-hidden="true"><use href="#i-lineheight"/></svg></button>
+          </div>
+          <div class="grp">
+            <button type="button" class="tb" data-cmd="outdent" aria-label="ลดการเยื้อง" title="ลดการเยื้อง"><svg aria-hidden="true"><use href="#i-outdent"/></svg></button>
+            <button type="button" class="tb" data-cmd="indent" aria-label="เพิ่มการเยื้อง" title="เพิ่มการเยื้อง"><svg aria-hidden="true"><use href="#i-indent"/></svg></button>
+          </div>
+          <div class="grp">
+            <button type="button" class="tb" data-cmd="sub" aria-pressed="false" aria-label="ตัวห้อย" title="ตัวห้อย"><svg aria-hidden="true"><use href="#i-sub"/></svg></button>
+            <button type="button" class="tb" data-cmd="sup" aria-pressed="false" aria-label="ตัวยก" title="ตัวยก"><svg aria-hidden="true"><use href="#i-sup"/></svg></button>
+          </div>
+          <div class="grp">
+            <button type="button" class="tb menu-btn" id="btnColor" data-menu="m-color" aria-haspopup="true" aria-expanded="false" aria-label="สีตัวอักษร" title="สีตัวอักษร"><svg aria-hidden="true"><use href="#i-color"/></svg></button>
+            <button type="button" class="tb menu-btn" id="btnBg" data-menu="m-bg" aria-haspopup="true" aria-expanded="false" aria-label="สีเน้นข้อความ" title="สีเน้นข้อความ"><svg aria-hidden="true"><use href="#i-highlight"/></svg></button>
+          </div>
+        </div>
+        <div class="tb-row">
+          <div class="grp">
+            <select id="fontSel" class="sel" aria-label="แบบอักษร" title="แบบอักษร"></select>
+            <select id="sizeSel" class="sel" aria-label="ขนาดอักษร (พอยต์)" title="ขนาดอักษร (พอยต์)"></select>
+          </div>
+          <div class="grp">
+            <button type="button" class="tb" data-cmd="cut" aria-label="ตัด" title="ตัด (Ctrl+X)"><svg aria-hidden="true"><use href="#i-cut"/></svg></button>
+            <button type="button" class="tb" data-cmd="copy" aria-label="คัดลอก" title="คัดลอก (Ctrl+C)"><svg aria-hidden="true"><use href="#i-copy"/></svg></button>
+          </div>
+          <div class="grp">
+            <button type="button" class="tb" id="btnUndo" data-cmd="undo" aria-label="ย้อนกลับ" title="ย้อนกลับ (Ctrl+Z)"><svg aria-hidden="true"><use href="#i-undo"/></svg></button>
+            <button type="button" class="tb" id="btnRedo" data-cmd="redo" aria-label="ทำซ้ำ" title="ทำซ้ำ (Ctrl+Y)"><svg aria-hidden="true"><use href="#i-redo"/></svg></button>
+          </div>
+          <div class="grp">
+            <button type="button" class="tb menu-btn" data-menu="m-table" aria-haspopup="true" aria-expanded="false" aria-label="ตาราง" title="ตาราง"><svg aria-hidden="true"><use href="#i-table"/></svg></button>
+            <button type="button" class="tb" data-menu="m-link" aria-haspopup="true" aria-expanded="false" aria-label="ลิงก์" title="ลิงก์"><svg aria-hidden="true"><use href="#i-link"/></svg></button>
+          </div>
+          <div class="grp">
+            <button type="button" class="tb" data-cmd="image" aria-label="แทรกรูปภาพ" title="แทรกรูปภาพ"><svg aria-hidden="true"><use href="#i-image"/></svg></button>
+            <button type="button" class="tb" data-cmd="open" aria-label="เปิดไฟล์ร่าง" title="เปิดไฟล์ร่าง (.html / .txt)"><svg aria-hidden="true"><use href="#i-folder"/></svg></button>
+          </div>
+          <div class="grp">
+            <button type="button" class="tb" data-cmd="clean" aria-label="ล้างรูปแบบ" title="ล้างรูปแบบ"><svg aria-hidden="true"><use href="#i-clean"/></svg></button>
+          </div>
+          <div class="grp">
+            <button type="button" class="tb" id="btnMarks" data-cmd="marks" aria-pressed="false" aria-label="แสดง/ซ่อนเครื่องหมาย" title="แสดง/ซ่อนเครื่องหมาย เว้นวรรค แท็บ ย่อหน้า (Ctrl+Shift+8)"><svg aria-hidden="true"><use href="#i-pilcrow"/></svg></button>
+            <button type="button" class="tb" id="btnLines" data-cmd="lines" aria-pressed="false" aria-label="เส้นบรรทัด" title="เส้นบรรทัดแบบเส้นประ สลับสีตามย่อหน้า"><svg aria-hidden="true"><use href="#i-lines"/></svg></button>
+            <button type="button" class="tb menu-btn" id="btnNumbers" data-menu="m-numbers" aria-haspopup="true" aria-expanded="false" aria-label="เลขที่ย่อหน้าและเลขที่บรรทัด" title="เลขที่ย่อหน้า / เลขที่บรรทัด"><svg aria-hidden="true"><use href="#i-numbers"/></svg></button>
+          </div>
+        </div>
+      </div>
+      <div class="rulerwrap">
+        <div class="ruler-corner" title="ไม้บรรทัด หน่วยเซนติเมตร"></div>
+        <div class="ruler off" id="ruler">
+          <div class="ruler-scale" id="rulerScale"></div>
+          <div class="ruler-marks" id="rulerMarks">
+            <button type="button" class="mk mk-first" data-kind="first" role="slider" aria-valuemin="0" aria-valuemax="16" aria-label="ย่อหน้าบรรทัดแรก"><svg viewBox="0 0 13 9" aria-hidden="true"><path d="M.5.5h12l-6 8z"/></svg></button>
+            <button type="button" class="mk mk-hang" data-kind="hang" role="slider" aria-valuemin="0" aria-valuemax="16" aria-label="ย่อหน้าแขวน"><svg viewBox="0 0 13 8" aria-hidden="true"><path d="M6.5.5l6 7H.5z"/></svg></button>
+            <button type="button" class="mk mk-box" data-kind="box" role="slider" aria-valuemin="0" aria-valuemax="16" aria-label="กั้นซ้าย"><svg viewBox="0 0 13 7" aria-hidden="true"><rect x=".5" y=".5" width="12" height="6"/></svg></button>
+            <button type="button" class="mk mk-right" data-kind="right" role="slider" aria-valuemin="0" aria-valuemax="16" aria-label="กั้นขวา"><svg viewBox="0 0 13 8" aria-hidden="true"><path d="M6.5.5l6 7H.5z"/></svg></button>
+            <div class="ruler-tip" id="rulerTip" hidden></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="editorwrap">
+      <div class="vruler" id="vruler" aria-label="ไม้บรรทัดแนวดิ่ง (ซม.)"><div class="vruler-scale" id="vrulerScale"></div></div>
+      <div class="editor-box"><div id="editor"></div></div>
+      <div class="guide" id="guide" hidden></div>
+      <div class="guide-h" id="guideH" hidden></div>
+      <div class="vtip" id="vrulerTip" hidden></div>
+    </div>
+  </div>
+</main>
+
+<footer class="statusbar">
+  <span id="status" class="st st-msg" role="status" aria-live="polite">กำลังโหลด Quill…</span>
+  <span id="posInfo" class="st st-pos" title="ตำแหน่งเมาส์บนกระดาษ (ซม. นับจากมุมซ้ายบนของพื้นที่ข้อความ)"></span>
+  <span id="paraInfo" class="st st-para" title="ย่อหน้าที่เคอร์เซอร์อยู่: กั้นซ้าย / ย่อหน้าบรรทัดแรก / กั้นขวา (ซม.)"></span>
+  <span id="lnInfo" class="st st-ln" title="ย่อหน้าและบรรทัดที่เคอร์เซอร์อยู่ (แสดงเมื่อเปิดเลขที่ย่อหน้า/บรรทัด)"></span>
+  <span id="lsInfo" class="st st-ls" title="ช่องไฟตัวอักษรตรงเคอร์เซอร์"></span>
+  <span id="counts" class="st st-count" title="จำนวนคำและตัวอักษรในหน้านี้"></span>
+  <span id="saveInfo" class="st st-save"></span>
+</footer>
+<div id="printArea" hidden></div>
+<div id="renderer" hidden></div>
+
+<!-- เมนูแบบเลื่อนลง -->
+<div class="menu ls-menu" id="m-charspace" role="dialog" aria-label="ช่องไฟตัวอักษร" hidden>
+  <div class="menu-title">ช่องไฟตัวอักษร — ปรับแล้วเห็นผลในเอกสารทันที</div>
+  <div class="menu-row"><label>ใช้กับ <select id="lsScope"><option value="sel">ข้อความที่เลือก</option><option value="para">ทั้งย่อหน้า</option><option value="page">ทั้งหน้า</option></select></label></div>
+  <div class="ls-value" aria-live="polite"><strong id="lsVal">0.000</strong> em <span id="lsHint" class="ls-hint">ปกติ</span><small id="lsPt"></small></div>
+  <div class="ls-slider"><span>แคบ</span><input type="range" id="lsRange" min="-0.2" max="0.5" step="0.005" value="0" list="lsTicks" aria-label="ช่องไฟตัวอักษร (em) ตั้งแต่ −0.2 ถึง +0.5"><span>กว้าง</span></div>
+  <datalist id="lsTicks"><option value="-0.2"></option><option value="-0.1"></option><option value="0"></option><option value="0.1"></option><option value="0.2"></option><option value="0.3"></option><option value="0.4"></option><option value="0.5"></option></datalist>
+  <div class="menu-row ls-steps">
+    <button type="button" class="chip" data-ls-step="-0.02" title="แคบลง 0.02 em">−−</button>
+    <button type="button" class="chip" data-ls-step="-0.005" title="แคบลง 0.005 em (Ctrl+Shift+[)">−</button>
+    <input type="number" id="lsCustom" step="0.005" min="-0.2" max="0.5" aria-label="ค่าช่องไฟ (em)">
+    <button type="button" class="chip" data-ls-step="0.005" title="กว้างขึ้น 0.005 em (Ctrl+Shift+])">+</button>
+    <button type="button" class="chip" data-ls-step="0.02" title="กว้างขึ้น 0.02 em">++</button>
+  </div>
+  <div class="chips">
+    <button type="button" class="chip" data-ls-set="-0.05">แคบมาก</button><button type="button" class="chip" data-ls-set="-0.03">แคบ</button><button type="button" class="chip" data-ls-set="-0.015">แคบเล็กน้อย</button><button type="button" class="chip" data-ls-set="0">ปกติ</button><button type="button" class="chip" data-ls-set="0.015">กว้างเล็กน้อย</button><button type="button" class="chip" data-ls-set="0.03">กว้าง</button><button type="button" class="chip" data-ls-set="0.05">กว้างมาก</button><button type="button" class="chip" data-ls-set="0.1">กว้างพิเศษ</button><button type="button" class="chip" data-ls-set="0.2">ห่างมาก</button>
+  </div>
+  <div class="menu-row end"><button type="button" class="chip" data-ls-revert title="กลับเป็นค่าก่อนเปิดแผงนี้">ยกเลิกการปรับ</button><button type="button" class="chip primary" data-ls-done>เสร็จ</button></div>
+  <p class="ls-note">ลากแถบหรือกดปุ่มแล้วเห็นผลทันที · กดย้อนกลับ (Ctrl+Z) ครั้งเดียวได้ทั้งหมดที่ปรับในรอบนี้ · ปรับโดยไม่เปิดแผง: Ctrl+Shift+[ / ]</p>
+</div>
+</div>
+
+<div class="menu" id="m-paraspace" role="menu" aria-label="ระยะก่อนและหลังย่อหน้า" hidden>
+  <div class="menu-title">ระยะก่อนย่อหน้า</div>
+  <div class="chips">
+    <button type="button" class="chip" data-act="spacebefore" data-val="0">0</button><button type="button" class="chip" data-act="spacebefore" data-val="3">3 pt</button><button type="button" class="chip" data-act="spacebefore" data-val="6">6 pt</button><button type="button" class="chip" data-act="spacebefore" data-val="12">12 pt</button><button type="button" class="chip" data-act="spacebefore" data-val="18">18 pt</button>
+  </div>
+  <div class="menu-title">ระยะหลังย่อหน้า</div>
+  <div class="chips">
+    <button type="button" class="chip" data-act="spaceafter" data-val="0">0</button><button type="button" class="chip" data-act="spaceafter" data-val="3">3 pt</button><button type="button" class="chip" data-act="spaceafter" data-val="6">6 pt</button><button type="button" class="chip" data-act="spaceafter" data-val="12">12 pt</button><button type="button" class="chip" data-act="spaceafter" data-val="18">18 pt</button>
+  </div>
+</div>
+
+<div class="menu" id="m-numbers" role="menu" aria-label="เลขที่ย่อหน้าและเลขที่บรรทัด" hidden>
+  <div class="menu-title">แสดงตัวเลขที่ขอบซ้าย (บนจอเท่านั้น)</div>
+  <button type="button" class="mi" role="menuitemcheckbox" data-act="numbers" data-val="paraNumbers">เลขที่ย่อหน้า<small>ตรงกับ “ย่อหน้า N” ในแท็บจัดหน้า</small></button>
+  <button type="button" class="mi" role="menuitemcheckbox" data-act="numbers" data-val="lineNumbers">เลขที่บรรทัด<small>นับทุกบรรทัดในหน้านี้</small></button>
+</div>
+<div class="menu" id="m-lineheight" role="menu" aria-label="ระยะห่างบรรทัด" hidden>
+  <div class="menu-title">ระยะห่างบรรทัด</div>
+  <button type="button" class="mi" role="menuitemradio" data-act="lineheight" data-val="100">เดี่ยว<small>1.0</small></button>
+  <button type="button" class="mi" role="menuitemradio" data-act="lineheight" data-val="115">1.15<small>115%</small></button>
+  <button type="button" class="mi" role="menuitemradio" data-act="lineheight" data-val="150">1.5<small>150%</small></button>
+  <button type="button" class="mi" role="menuitemradio" data-act="lineheight" data-val="200">สองเท่า<small>2.0</small></button>
+  <button type="button" class="mi" role="menuitemradio" data-act="lineheight" data-val="250">2.5<small>250%</small></button>
+  <div class="sep"></div>
+  <div class="menu-row"><label>กำหนดเอง <input type="number" id="lhCustom" step="5" min="80" max="400"> %</label><button type="button" class="chip" data-act="lineheight-custom">ใช้</button></div>
+</div>
+
+<div class="menu" id="m-color" role="menu" aria-label="สีตัวอักษร" hidden>
+  <div class="menu-title">สีตัวอักษร</div>
+  <button type="button" class="mi" data-act="color" data-val="">อัตโนมัติ (ดำ)</button>
+  <div class="palette" data-kind="color"></div>
+  <div class="menu-row"><label>สีอื่น <input type="color" data-kind="color" value="#1b5fb4"></label></div>
+</div>
+
+<div class="menu" id="m-bg" role="menu" aria-label="สีเน้นข้อความ" hidden>
+  <div class="menu-title">สีเน้นข้อความ</div>
+  <button type="button" class="mi" data-act="background" data-val="">ไม่มีสี</button>
+  <div class="palette" data-kind="background"></div>
+  <div class="menu-row"><label>สีอื่น <input type="color" data-kind="background" value="#fff2cc"></label></div>
+</div>
+
+<div class="menu" id="m-table" role="menu" aria-label="ตาราง" hidden>
+  <div class="menu-title">แทรกตาราง <span id="tgridLabel">1 × 1</span></div>
+  <div class="tgrid" id="tgrid"></div>
+  <div class="menu-row"><label>แถว <input type="number" id="tRows" min="1" max="30" value="2"></label><label>คอลัมน์ <input type="number" id="tCols" min="1" max="12" value="2"></label><button type="button" class="chip" id="tInsert" data-act="table-insert">แทรก</button></div>
+  <div class="sep"></div>
+  <button type="button" class="mi" data-act="table-op" data-val="insertRowAbove">แทรกแถวด้านบน</button>
+  <button type="button" class="mi" data-act="table-op" data-val="insertRowBelow">แทรกแถวด้านล่าง</button>
+  <button type="button" class="mi" data-act="table-op" data-val="insertColumnLeft">แทรกคอลัมน์ด้านซ้าย</button>
+  <button type="button" class="mi" data-act="table-op" data-val="insertColumnRight">แทรกคอลัมน์ด้านขวา</button>
+  <div class="sep"></div>
+  <button type="button" class="mi" data-act="table-op" data-val="deleteRow">ลบแถว</button>
+  <button type="button" class="mi" data-act="table-op" data-val="deleteColumn">ลบคอลัมน์</button>
+  <button type="button" class="mi" data-act="table-op" data-val="deleteTable">ลบตาราง</button>
+</div>
+
+<div class="menu" id="m-link" role="dialog" aria-label="ลิงก์" hidden>
+  <label class="menu-field">ที่อยู่ลิงก์ (URL)<input type="text" id="linkUrl" inputmode="url" placeholder="https://" autocomplete="off"></label>
+  <div class="menu-row end"><button type="button" class="chip" id="linkRemove" data-act="link-remove">เอาลิงก์ออก</button><button type="button" class="chip primary" data-act="link-apply">ใช้ลิงก์</button></div>
+</div>
+
+<script src="./eoffice-pastetest.js" defer onerror="(window.__missing=window.__missing||[]).push('eoffice-pastetest.js')"></script>
+<script src="./eoffice-tools.js" defer onerror="(window.__missing=window.__missing||[]).push('eoffice-tools.js')"></script>
+<noscript><div class="load-banner">แอปนี้ต้องเปิด JavaScript ในเบราว์เซอร์จึงจะใช้งานได้</div></noscript>
+<input type="file" id="fileImage" accept="image/png,image/jpeg,image/gif,image/webp" hidden>
+<input type="file" id="fileOpen" accept=".html,.htm,.txt,text/html,text/plain" hidden>
+
+<script>
+(() => {
+  'use strict';
+  const CDN = 'https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/';
+  const $ = (s, root = document) => root.querySelector(s);
+  const $$ = (s, root = document) => [...root.querySelectorAll(s)];
+  const say = msg => { const el = $('#status'); el.textContent = msg; el.title = msg; };
+
+  // ค่าเริ่มต้นของเอกสาร (ยึดตาม para0) — แสดงผ่าน CSS ในเอดิเตอร์ และใส่เป็น inline style ตอนส่งออก
+  // มาตรฐานเอกสาร: ค่าเริ่มต้นของย่อหน้าที่ไม่ได้ตั้งค่าเอง (แสดงผ่าน CSS และใส่เป็น inline style ตอนส่งออก)
+  const PROFILES = {
+    standard: { label: 'หนังสือราชการ — ย่อหน้า 2.5 ซม. บรรทัดเดี่ยว', indent: '2.5cm', lineHeight: '100%' },
+    para0: { label: 'แบบเดิม (para0) — ย่อหน้า 45px บรรทัด 150%', indent: '45px', lineHeight: '150%' },
+  };
+  const SETTINGS_KEY = 'eoffice-editor:settings';
+  const settings = (() => {
+    const base = {
+      profile: 'standard', listDigits: 'arabic', pageNumbers: true, pageDigits: 'thai',
+      // การแสดงผลบนจอ (ไม่มีผลกับการพิมพ์/ส่งออก)
+      paper: 'a4', pageBreaks: true, grid: false,
+      showMarks: false,
+      marks: { space: true, nbsp: true, tab: true, para: true, zw: true, dup: true, wj: true },
+      markColors: { space: '#2563eb', nbsp: '#d97706', tab: '#16a34a', para: '#7c3aed', zw: '#dc2626', dup: '#fecaca', wj: '#0d9488' },
+      lineGuides: false,
+      paraNumbers: false, lineNumbers: false,
+      lineColors: ['#3b82f6', '#f59e0b', '#10b981'],
+    };
+    try {
+      const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
+      return { ...base, ...saved, marks: { ...base.marks, ...saved.marks }, markColors: { ...base.markColors, ...saved.markColors } };
+    } catch { return base; }
+  })();
+  if (!PROFILES[settings.profile]) settings.profile = 'standard';
+  document.body.classList.toggle('a4', settings.paper === 'a4');
+  document.body.classList.toggle('grid-on', !!settings.grid);
+  document.body.classList.toggle('numbers-on', !!(settings.paraNumbers || settings.lineNumbers));
+  const DEFAULTS = { font: 'TH SarabunPSK', size: '16pt', align: 'justify', indent: PROFILES[settings.profile].indent, lineHeight: PROFILES[settings.profile].lineHeight };
+  const FONT_STACK = `"${DEFAULTS.font}","TH Sarabun PSK","TH Sarabun New",Sarabun,Tahoma,sans-serif`;
+  const FONTS = [
+    { value: 'TH SarabunPSK', label: 'TH Sarabun PSK' },
+    { value: 'TH Sarabun New', label: 'TH Sarabun New' },
+    { value: 'TH Niramit AS', label: 'TH Niramit AS' },
+    { value: 'Angsana New', label: 'Angsana New' },
+    { value: 'Cordia New', label: 'Cordia New' },
+    { value: 'Tahoma', label: 'Tahoma' },
+  ];
+  const SIZES = [8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 20, 22, 24, 26, 28, 32, 36];
+  const PALETTE = [
+    '#000000', '#434343', '#666666', '#999999', '#b7b7b7', '#cccccc', '#d9d9d9', '#efefef', '#f3f3f3', '#ffffff',
+    '#980000', '#ff0000', '#ff9900', '#ffff00', '#00ff00', '#00ffff', '#4a86e8', '#0000ff', '#9900ff', '#ff00ff',
+    '#e6b8af', '#f4cccc', '#fce5cd', '#fff2cc', '#d9ead3', '#d0e0e3', '#c9daf8', '#cfe2f3', '#d9d2e9', '#ead1dc',
+    '#a61c00', '#cc0000', '#e69138', '#f1c232', '#6aa84f', '#45818e', '#3c78d8', '#3d85c6', '#674ea7', '#a64d79',
+  ];
+  const CM = 96 / 2.54;                  // px ต่อ 1 ซม.
+  const RULER_CM = 16, SNAP = 0.25, FINE = 0.05, MIN_TEXT = 1, INDENT_STEP = 1.25;
+  const KEY = { draft: 'eoffice-editor:draft', zoom: 'eoffice-editor:zoom' };
+
+  const store = {
+    get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+    set(k, v) { try { localStorage.setItem(k, v); return true; } catch { return false; } },
+    del(k) { try { localStorage.removeItem(k); } catch { /* ไม่มี storage */ } },
+  };
+  const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+  const round2 = v => Math.round(v * 100) / 100;
+  const cmStr = v => `${round2(v)}cm`;
+  const fmt = v => round2(v).toFixed(2);
+  const debounce = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
+
+  // แปลงความยาว CSS เป็น ซม. (null ถ้าอ่านไม่ได้)
+  function toCm(v) {
+    if (typeof v !== 'string' && typeof v !== 'number') return null;
+    const m = /^(-?\d*\.?\d+)(cm|mm|in|pt|px|em|rem)?$/.exec(String(v).trim());
+    if (!m) return null;
+    const n = parseFloat(m[1]);
+    switch (m[2]) {
+      case 'cm': return n;
+      case 'mm': return n / 10;
+      case 'in': return n * 2.54;
+      case 'pt': return n * 2.54 / 72;
+      case 'em': case 'rem': return n * parseFloat(DEFAULTS.size) * 2.54 / 72;
+      default: return n / CM;
+    }
+  }
+
+  // ---------- โหลด Quill ----------
+  // ลำดับ: ไฟล์ quill.js ข้างไฟล์นี้ → (ถ้าไม่มี) CDN สำรอง — ทั้งสองมีเวลาหมดอายุ เพราะเครือข่ายที่บล็อกแบบเงียบ ๆ
+  // จะทำให้เบราว์เซอร์รอเป็นนาทีโดยไม่รายงานข้อผิดพลาดเลย (อาการ “ค้างที่กำลังโหลด”) และมีหน้าต่างอธิบายปัญหา
+  function loadScript(src, ms) {
+    return new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      const timer = setTimeout(() => { s.remove(); reject(new Error('timeout')); }, ms);
+      s.onload = () => { clearTimeout(timer); resolve(); };
+      s.onerror = () => { clearTimeout(timer); s.remove(); reject(new Error('error')); };
+      s.src = src;
+      document.head.append(s);
+    });
+  }
+  const LOAD = { local: '', cdn: '' };       // ผลการโหลดแต่ละแหล่ง: ok / error / timeout / trying
+  const SIBLINGS = ['eoffice-editor.html', 'quill.js', 'quill.snow.css', 'eoffice-tools.js', 'eoffice-pastetest.js'];
+  let gate = null;
+  function showGate(mode) {
+    if (!gate) {
+      gate = document.createElement('div');
+      gate.id = 'loadGate';
+      gate.setAttribute('role', 'alertdialog');
+      gate.setAttribute('aria-live', 'polite');
+      document.body.append(gate);
+    }
+    const why = r => (r === 'timeout' ? 'ช้าเกินไป (หมดเวลา)' : r === 'trying' ? 'กำลังลอง…' : r === 'ok' ? 'สำเร็จ' : 'ไม่พบหรือโหลดไม่ได้');
+    let html;
+    if (mode === 'fail') {
+      html = `<h2>เปิดเอดิเตอร์ไม่ได้</h2>
+        <ul class="gate-list"><li>ไฟล์ quill.js ข้างไฟล์นี้: <b>${why(LOAD.local)}</b></li><li>ตัวสำรองจากอินเทอร์เน็ต (cdn.jsdelivr.net): <b>${why(LOAD.cdn)}</b></li></ul>
+        <p><b>วิธีแก้</b></p>
+        <ol class="gate-list">
+          <li>คัดลอกไฟล์ให้ครบ <b>ทั้ง ${SIBLINGS.length} ไฟล์</b> ไว้โฟลเดอร์เดียวกัน: ${SIBLINGS.map(f => `<code>${f}</code>`).join(' ')}</li>
+          <li>หรือใช้ไฟล์เดี่ยว <code>eoffice-editor-single.html</code> ซึ่งไม่ต้องใช้ไฟล์อื่นเลย</li>
+          <li>ถ้าไฟล์อยู่ใน OneDrive / SharePoint / Teams ให้เลือก “เก็บไว้ในเครื่องนี้เสมอ” ให้ครบทุกไฟล์ก่อน แล้วเปิดใหม่</li>
+          <li>ถ้าเปิดจากอีเมลหรือเว็บที่ดาวน์โหลดมา ให้คลิกขวาไฟล์ → คุณสมบัติ → ติ๊ก “ปลดบล็อก” (Unblock) ทุกไฟล์</li>
+        </ol>
+        <button type="button" class="btn primary" id="gateRetry">ลองใหม่</button>`;
+    } else {
+      html = `<h2>กำลังโหลดเอดิเตอร์…</h2>
+        <p class="gate-note">${mode === 'cdn' ? 'ไม่พบ <code>quill.js</code> ข้างไฟล์นี้ — กำลังลองโหลดจากอินเทอร์เน็ตแทน (สูงสุด 10 วินาที)' : 'ใช้เวลานานกว่าปกติ — กำลังรอไฟล์ <code>quill.js</code>'}</p>`;
+    }
+    gate.innerHTML = `<div class="gate-card">${html}</div>`;
+    $('#gateRetry')?.addEventListener('click', () => location.reload());
+  }
+  const hideGate = () => { gate?.remove(); gate = null; };
+  // ข้อความเตือนถาวรด้านบน (ปิดได้) สำหรับไฟล์เสริมที่ขาด — เอดิเตอร์ยังใช้ได้
+  function banner(msg) {
+    const b = document.createElement('div');
+    b.className = 'load-banner';
+    b.setAttribute('role', 'alert');
+    b.innerHTML = `<span>${msg}</span><button type="button" aria-label="ปิดข้อความนี้">×</button>`;
+    b.querySelector('button').addEventListener('click', () => b.remove());
+    document.body.prepend(b);
+  }
+  function checkCompanions() {
+    const missing = window.__missing || [];
+    if (missing.length) banner(`ไม่พบไฟล์ <code>${missing.join('</code>, <code>')}</code> — ${missing.some(f => /tools|pastetest/.test(f)) ? 'เครื่องมือเสริมจะไม่ทำงาน ' : ''}คัดลอกไฟล์ให้ครบหรือใช้ไฟล์เดี่ยว <code>eoffice-editor-single.html</code>`);
+    // quill.snow.css จำเป็นต่อการแสดงผลกล่องพิมพ์ (white-space: pre-wrap ฯลฯ)
+    if (typeof getComputedStyle === 'function' && window.eofficeEditor && getComputedStyle(window.eofficeEditor.quill.root).whiteSpace !== 'pre-wrap') {
+      banner('ไม่พบไฟล์ <code>quill.snow.css</code> — หน้าตาและการเว้นวรรคในกล่องพิมพ์อาจผิดเพี้ยน คัดลอกไฟล์ให้ครบหรือใช้ไฟล์เดี่ยว');
+    }
+  }
+  async function bootQuill() {
+    const slow = setTimeout(() => showGate('loading'), 700);          // ไม่แสดงหน้าต่างถ้าโหลดเร็ว
+    try {
+      if (!window.Quill) {
+        try { await loadScript('./quill.js', 6000); LOAD.local = 'ok'; } catch (e) {
+          LOAD.local = e.message === 'timeout' ? 'timeout' : 'error';
+          LOAD.cdn = 'trying';
+          showGate('cdn');
+          try { await loadScript(CDN + 'quill.js', 10000); LOAD.cdn = 'ok'; } catch (e2) { LOAD.cdn = e2.message === 'timeout' ? 'timeout' : 'error'; throw e2; }
+        }
+      }
+      if (typeof window.Quill !== 'function') throw new Error('Quill missing');
+    } catch (err) {
+      clearTimeout(slow);
+      showGate('fail');
+      say('โหลด Quill ไม่สำเร็จ — ดูคำอธิบายในหน้าต่างกลางจอ');
+      return;
+    }
+    clearTimeout(slow);
+    hideGate();
+    try { init(); checkCompanions(); } catch (e) { console.error(e); say('เริ่มเอดิเตอร์ไม่สำเร็จ: ' + e.message); }
+  }
+
+  setupZoom();
+  buildRuler();
+  bootQuill();
+
+  function setupZoom() {
+    const sel = $('#zoomSel');
+    const saved = store.get(KEY.zoom);
+    if (saved && [...sel.options].some(o => o.value === saved)) sel.value = saved;
+    const apply = () => {
+      const avail = $('#desk').clientWidth - 34;          // หัก padding ของ desk และขอบ sheet
+      const z = clamp(Math.min(+sel.value / 100, avail / ((settings.paper === 'a4' ? 21 * CM : 16 * CM + 16) + 2 + 20)), 0.4, 3);
+      document.documentElement.style.setProperty('--z', z.toFixed(3));
+    };
+    sel.addEventListener('change', () => { store.set(KEY.zoom, sel.value); apply(); });
+    addEventListener('resize', apply);
+    apply();
+  }
+
+  function buildRuler() {
+    let html = '';
+    for (let i = 1; i <= RULER_CM * 4; i++) {
+      const pos = `${i / 4}cm`;
+      html += i % 4 === 0
+        ? `<span class="num" style="left:${pos}">${i / 4}</span>`
+        : `<span class="tick ${i % 2 ? 'q' : 'h'}" style="left:${pos}"></span>`;
+    }
+    $('#rulerScale').innerHTML = html;
+  }
+
+  function init() {
+    const { StyleAttributor, Scope } = Quill.import('parchment');
+    const Delta = Quill.import('delta');
+    const BLOCK = { scope: Scope.BLOCK }, INLINE = { scope: Scope.INLINE };
+
+    // แบบอักษร: เขียน font-family พร้อม fallback แต่อ่านกลับเฉพาะชื่อแรก เพื่อให้ตรงกับรายการใน FONTS
+    const normFont = s => s.replace(/["']/g, '').replace(/\s+/g, '').toLowerCase();
+    class FontAttributor extends StyleAttributor {
+      add(node, value) {
+        const f = FONTS.find(x => x.value === value);
+        if (!f || !this.canAdd(node, value)) return false;
+        node.style.fontFamily = `"${f.value}", sans-serif`;
+        return true;
+      }
+      value(node) {
+        const first = normFont((node.style.fontFamily || '').split(',')[0]);
+        return FONTS.find(x => normFont(x.value) === first)?.value || '';
+      }
+    }
+    // ขนาด: เก็บเป็น pt เสมอ (แปลง px จากข้อความที่วางมาให้เป็น pt)
+    const toPt = v => {
+      const m = /^(\d*\.?\d+)(pt|px)$/.exec(String(v || '').trim());
+      if (!m) return '';
+      const n = Math.round(parseFloat(m[1]) * (m[2] === 'px' ? 0.75 : 1) * 2) / 2;
+      return n >= 4 && n <= 96 ? `${n}pt` : '';
+    };
+    class SizeAttributor extends StyleAttributor {
+      add(node, value) {
+        const v = toPt(value);
+        if (!v || !this.canAdd(node, v)) return false;
+        node.style.fontSize = v;
+        return true;
+      }
+      value(node) { return toPt(node.style.fontSize); }
+    }
+
+    // keyName = ชื่อ CSS property ทำให้การวาง/เปิดไฟล์ HTML อ่านสไตล์กลับเป็น format ได้เอง
+    const Align = new StyleAttributor('align', 'text-align', { scope: Scope.BLOCK, whitelist: ['left', 'center', 'right', 'justify'] });
+    const Font = new FontAttributor('font', 'font-family', INLINE);
+    const Size = new SizeAttributor('size', 'font-size', INLINE);
+    Quill.register({
+      'attributors/style/align': Align,
+      'attributors/style/font': Font,
+      'attributors/style/size': Size,
+      'formats/align': Align,
+      'formats/font': Font,
+      'formats/size': Size,
+      'formats/textalignlast': new StyleAttributor('textalignlast', 'text-align-last', { scope: Scope.BLOCK, whitelist: ['justify'] }),
+      'formats/textindent': new StyleAttributor('textindent', 'text-indent', BLOCK),
+      'formats/marginleft': new StyleAttributor('marginleft', 'margin-left', BLOCK),
+      'formats/marginright': new StyleAttributor('marginright', 'margin-right', BLOCK),
+      'formats/lineheight': new StyleAttributor('lineheight', 'line-height', BLOCK),
+      'formats/spacebefore': new StyleAttributor('spacebefore', 'margin-top', BLOCK),
+      'formats/spaceafter': new StyleAttributor('spaceafter', 'margin-bottom', BLOCK),
+      'formats/letterspacing': new StyleAttributor('letterspacing', 'letter-spacing', INLINE),
+      // จุดแท็บของย่อหน้า: Tab จะกระโดดไปทุกระยะนี้นับจากต้นบรรทัด เช่น 8cm ให้ "วันที่" เริ่มที่ 8 ซม. พอดี
+      'formats/tabsize': new StyleAttributor('tabsize', 'tab-size', BLOCK),
+    }, true);
+
+    // CSS ที่สร้างจากการตั้งค่าเอกสาร: ค่าเริ่มต้นของย่อหน้า, เลขรายการแบบไทย, เลขหน้าตอนพิมพ์
+    const docCss = document.createElement('style');
+    const LIST_STYLES = ['decimal', 'lower-alpha', 'lower-roman'];
+    function pageNumberCss() {
+      if (!settings.pageNumbers) return '';
+      return `@page{@top-center{content:"- " counter(page${settings.pageDigits === 'thai' ? ', thai' : ''}) " -";font-family:${FONT_STACK};font-size:16pt;color:#000}}
+@page:first{@top-center{content:none}}`;
+    }
+    function renderDocCss() {
+      const listCss = settings.listDigits === 'thai'
+        ? Array.from({ length: 9 }, (_, i) => `#editor .ql-editor li[data-list=ordered]${i ? `.ql-indent-${i}` : ''} > .ql-ui:before{content:counter(list-${i}, thai) '. '}`).join('\n')
+        : '';
+      docCss.textContent = `#editor.ql-container{font-family:${FONT_STACK};font-size:${DEFAULTS.size}}
+#editor .ql-editor{line-height:${DEFAULTS.lineHeight}}
+#editor .ql-editor p{text-align:${DEFAULTS.align};text-indent:${DEFAULTS.indent}}
+${listCss}
+@media print{${pageNumberCss()}}`;
+    }
+    renderDocCss();
+    document.head.append(docCss);
+
+    const quill = new Quill('#editor', {
+      modules: {
+        table: true,
+        history: { delay: 600, maxStack: 300, userOnly: false },
+        keyboard: {
+          bindings: {
+            // ปิดการแปลง "1. " / "- " เป็นรายการอัตโนมัติ เพราะหนังสือราชการมักพิมพ์เลขข้อเอง
+            'list autofill': null,
+            // Ctrl+Shift+Space = เว้นวรรคห้ามตัดบรรทัด (เช่น ระหว่างตัวเลขกับหน่วย "๑๒ บาท")
+            nbsp: {
+              key: ' ', shiftKey: true, shortKey: true,
+              handler(range) {
+                this.quill.updateContents(new Delta().retain(range.index).delete(range.length).insert(' '), 'user');
+                this.quill.setSelection(range.index + 1, 0, 'silent');
+                return false;
+              },
+            },
+          },
+        },
+      },
+      placeholder: 'พิมพ์หรือวางข้อความที่นี่…',
+    });
+    quill.container.classList.add('ql-snow');
+    const tableMod = quill.getModule('table');
+    // Quill ตัวที่ซ่อนไว้ ใช้แปลงหน้าอื่น (ที่ไม่ได้เปิดอยู่) เป็น HTML ตอนพิมพ์/บันทึก
+    const renderer = new Quill('#renderer', { modules: { table: true } });
+
+    // Quill แทรก "\t" ทุกครั้งที่ย่อหน้ามี text-indent > 0 แต่เราเก็บ text-indent เป็น format อยู่แล้ว จึงตัดแท็บนั้นทิ้ง
+    // และตัด font/size ที่เท่ากับค่าเริ่มต้นออก เพื่อไม่ให้ทุกคำถูกห่อด้วย span โดยไม่จำเป็น
+    quill.clipboard.addMatcher(Node.ELEMENT_NODE, (node, delta) => {
+      let ops = delta.ops;
+      if (parseFloat(node.style?.textIndent) > 0) {
+        const first = ops[0];
+        if (first && typeof first.insert === 'string' && first.insert.startsWith('\t')) {
+          const rest = first.insert.slice(1);
+          ops = rest ? [{ ...first, insert: rest }, ...ops.slice(1)] : ops.slice(1);
+        }
+      }
+      ops = ops.map(op => {
+        if (!op.attributes || (op.attributes.font !== DEFAULTS.font && op.attributes.size !== DEFAULTS.size)) return op;
+        const a = { ...op.attributes };
+        if (a.font === DEFAULTS.font) delete a.font;
+        if (a.size === DEFAULTS.size) delete a.size;
+        return Object.keys(a).length ? { ...op, attributes: a } : { insert: op.insert };
+      });
+      return new Delta(ops);
+    });
+
+    // ข้อความที่วางจากที่อื่น (เช่น Word) มัก &nbsp; ปนมาจำนวนมาก — แปลงเป็นช่องว่างปกติ ให้ภาษาไทยตัดบรรทัดได้
+    // เว้นวรรคห้ามตัดบรรทัดที่ตั้งใจใส่ ให้ใช้ Ctrl+Shift+Space แทน
+    quill.clipboard.addMatcher(Node.TEXT_NODE, (node, delta) => new Delta(delta.ops.map(op => (
+      typeof op.insert === 'string' && op.insert.includes(' ') ? { ...op, insert: op.insert.replace(/ /g, ' ') } : op))));
+
+    // ---------- ช่วงที่เลือก ----------
+    let lastRange = { index: 0, length: 0 };
+    let openMenu = null, menuRange = null;
+    quill.on('selection-change', r => { if (r) lastRange = r; });
+    const currentRange = () => quill.getSelection() || lastRange;
+    const activeRange = () => (openMenu && menuRange) || currentRange();
+    function useRange(r = currentRange()) {
+      const max = Math.max(0, quill.getLength() - 1);
+      const index = clamp(r.index, 0, max);
+      const length = clamp(r.length, 0, max - index);
+      quill.setSelection(index, length, 'silent');
+      lastRange = { index, length };
+      return lastRange;
+    }
+    function linesIn(r) {
+      if (r.length) {
+        const ls = quill.getLines(r.index, r.length);
+        if (ls.length) return ls;
+      }
+      const [line] = quill.getLine(r.index);
+      return line ? [line] : [];
+    }
+    const isEmpty = () => quill.getLength() <= 1;
+
+    // ---------- คำสั่งจัดรูปแบบ ----------
+    function toggleInline(name, value = true) {
+      const r = useRange(activeRange());
+      const cur = quill.getFormat(r.index, r.length)[name];
+      quill.format(name, cur === value ? false : value, 'user');
+    }
+    function setInline(name, value) {
+      useRange(activeRange());
+      quill.format(name, value || false, 'user');
+    }
+    function setLine(formats, msg) {
+      const r = useRange(activeRange());
+      quill.formatLine(r.index, r.length, formats, 'user');
+      if (msg) say(msg);
+    }
+    function setAlign(v) {
+      setLine(v === 'distribute' ? { align: 'justify', textalignlast: 'justify' } : { align: v, textalignlast: false });
+    }
+    function toggleList(v) {
+      const r = useRange(activeRange());
+      const cur = quill.getFormat(r.index, r.length).list;
+      // รายการมีระยะเยื้องของตัวเอง จึงไม่พาย่อหน้าบรรทัดแรกของย่อหน้าเดิมติดไปด้วย
+      quill.formatLine(r.index, r.length, cur === v ? { list: false } : { list: v, textindent: false }, 'user');
+    }
+    function insertTab() {
+      const r = useRange(activeRange());
+      quill.updateContents(new Delta().retain(r.index).delete(r.length).insert('\t'), 'user');
+      quill.setSelection(r.index + 1, 0, 'user');
+    }
+    function metricsOf(line) {
+      const f = line.formats();
+      const isP = line.domNode.tagName === 'P';
+      return {
+        left: toCm(f.marginleft) ?? 0,
+        right: toCm(f.marginright) ?? 0,
+        first: toCm(f.textindent) ?? (isP ? toCm(DEFAULTS.indent) : 0),
+      };
+    }
+    function shiftIndent(dir) {
+      const r = useRange(activeRange());
+      for (const line of linesIn(r)) {
+        const i = quill.getIndex(line);
+        const kind = line.statics.blotName;
+        if (kind === 'table') continue;
+        if (kind === 'list') {
+          const next = clamp((line.formats().indent || 0) + dir, 0, 8);
+          quill.formatLine(i, 1, 'indent', next || false, 'user');
+          continue;
+        }
+        const m = metricsOf(line);
+        const next = round2(clamp(m.left + dir * INDENT_STEP, Math.max(0, -m.first), RULER_CM - m.right - MIN_TEXT));
+        quill.formatLine(i, 1, 'marginleft', next ? cmStr(next) : false, 'user');
+      }
+      useRange(r);
+    }
+    // ---------- ช่องไฟตัวอักษร: ปรับแล้วเห็นผลทันที ----------
+    const LS_MIN = -0.2, LS_MAX = 0.5;
+    const lsRound = v => Math.round(clamp(v, LS_MIN, LS_MAX) * 1000) / 1000;
+    const lsSigned = v => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toFixed(3);
+    const lsLabel = v => (v <= -0.03 ? 'แคบมาก' : v < -0.004 ? 'แคบ' : v < 0.005 ? 'ปกติ' : v < 0.04 ? 'กว้าง' : v < 0.12 ? 'กว้างมาก' : 'ห่างมาก');
+    // ช่วงข้อความที่จะปรับ: ข้อความที่เลือก / ทั้งย่อหน้าที่เคอร์เซอร์อยู่ / ทั้งหน้า
+    function lsTarget(scope, r) {
+      if (scope === 'sel' && r.length) return { index: r.index, length: r.length };
+      if (scope === 'page') return { index: 0, length: Math.max(0, quill.getLength() - 1) };
+      const ls = linesIn(r);
+      if (!ls.length) return { index: r.index, length: 0 };
+      const a = quill.getIndex(ls[0]), last = ls[ls.length - 1];
+      return { index: a, length: quill.getIndex(last) + last.length() - 1 - a };
+    }
+    // ค่าปัจจุบันของช่วง: ตัวเลข (em) หรือ null ถ้ามีหลายค่าปนกัน
+    // (getFormat ของ Quill ตัดค่าที่ไม่มีครบทุกตัวอักษรทิ้ง จึงอ่านจากเนื้อหาจริงแทน)
+    function lsCurrent(t) {
+      if (!t.length) return parseFloat(quill.getFormat(t.index, 0).letterspacing) || 0;
+      const vals = new Set();
+      for (const op of quill.getContents(t.index, t.length).ops) {
+        if (typeof op.insert === 'string' && op.insert.trim()) vals.add(parseFloat(op.attributes?.letterspacing) || 0);
+      }
+      return vals.size > 1 ? null : [...vals][0] ?? 0;
+    }
+    function lsApply(t, v) {
+      if (!t.length) return false;
+      quill.formatText(t.index, t.length, 'letterspacing', Math.abs(v) < 0.0005 ? false : `${lsRound(v)}em`, 'user');
+      return true;
+    }
+    // รวมประวัติย้อนกลับที่เกิดขึ้นตั้งแต่ตำแหน่ง n ให้เป็นขั้นเดียว (ลากแถบเลื่อนหลายครั้ง = กดย้อนกลับครั้งเดียว)
+    function mergeHistorySince(n) {
+      const st = quill.history.stack.undo;
+      if (st.length - n <= 1) return;
+      const added = st.splice(n);
+      if (!added.every(e => e.delta)) { st.push(...added); return; }
+      st.push({ delta: added.reduceRight((acc, e) => acc.compose(e.delta), new Delta()), range: added[0].range });
+    }
+    let lsSession = null;       // { start: ความยาวกองย้อนกลับตอนเปิดแผง, r: ช่วงที่เลือกตอนเปิด }
+    function lsShow(v) {
+      const mixed = v == null;
+      $('#lsVal').textContent = mixed ? 'หลายค่า' : lsSigned(v);
+      $('#lsHint').textContent = mixed ? 'ปนกัน' : lsLabel(v);
+      $('#lsPt').textContent = mixed ? '' : `≈ ${lsSigned(v * parseFloat(DEFAULTS.size)).replace(/0+$/, '').replace(/\.$/, '')} pt ที่ ${DEFAULTS.size}`;
+      $('#lsRange').value = mixed ? 0 : v;
+      if (document.activeElement !== $('#lsCustom')) $('#lsCustom').value = mixed ? '' : lsRound(v);
+      for (const c of $$('#m-charspace [data-ls-set]')) c.setAttribute('aria-checked', String(!mixed && Math.abs(+c.dataset.lsSet - v) < 1e-6));
+    }
+    function lsSet(v) {
+      if (!lsSession) return;
+      v = lsRound(v);
+      const t = lsTarget($('#lsScope').value, lsSession.r);
+      if (!lsApply(t, v)) { say('ยังไม่มีข้อความในย่อหน้านี้'); return; }
+      lsShow(v);
+            say(`ช่องไฟ ${lsSigned(v)} em (${lsLabel(v)}) — ${$('#lsScope').selectedOptions[0].textContent}`);
+    }
+    function lsOpen() {
+      const r = menuRange || currentRange();
+      lsSession = { start: quill.history.stack.undo.length, r: { ...r } };
+      quill.history.cutoff();
+      const scope = $('#lsScope');
+      scope.options[0].disabled = !r.length;
+      scope.value = r.length ? 'sel' : 'para';
+      lsShow(lsCurrent(lsTarget(scope.value, r)));
+    }
+    function lsClose() {
+      if (!lsSession) return;
+      mergeHistorySince(lsSession.start);
+      quill.history.cutoff();
+      lsSession = null;
+      schedule();
+    }
+    // ปุ่มลัด Ctrl+Shift+[ / ] : ปรับทีละ 0.005 em กับข้อความที่เลือก หรือทั้งย่อหน้าถ้าไม่ได้เลือก
+    function lsNudge(step) {
+      const r = currentRange();
+      const t = lsTarget(r.length ? 'sel' : 'para', r);
+      const v = lsRound((lsCurrent(t) ?? 0) + step);
+      if (lsApply(t, v)) say(`ช่องไฟ ${lsSigned(v)} em (${lsLabel(v)})`);
+    }
+    function setLineHeight(v) {
+      const n = parseFloat(v);
+      if (!Number.isFinite(n) || n < 80 || n > 400) { say('ระยะบรรทัดต้องอยู่ระหว่าง 80–400%'); return false; }
+      setLine({ lineheight: `${n}%` }, `ระยะบรรทัด ${n}%`);
+      return true;
+    }
+    const INLINE_KEYS = ['bold', 'italic', 'underline', 'strike', 'script', 'color', 'background', 'font', 'size', 'letterspacing'];
+    const BLOCK_KEYS = ['align', 'textalignlast', 'textindent', 'marginleft', 'marginright', 'lineheight', 'spacebefore', 'spaceafter'];
+    const allOff = keys => Object.fromEntries(keys.map(k => [k, false]));
+    // ล้างรูปแบบเอง แทน quill.removeFormat ซึ่งจะลบรูปและตารางทิ้งไปด้วย
+    function cleanFormat() {
+      const r = useRange(activeRange());
+      for (const line of linesIn(r)) {
+        const start = quill.getIndex(line), len = line.length() - 1;
+        const from = r.length ? Math.max(start, r.index) : start;
+        const to = r.length ? Math.min(start + len, r.index + r.length) : start + len;
+        if (to > from) quill.formatText(from, to - from, allOff(INLINE_KEYS), 'user');
+      }
+      quill.formatLine(r.index, r.length, allOff(BLOCK_KEYS), 'user');
+      useRange(r);
+      say('ล้างรูปแบบแล้ว');
+    }
+    function clip(kind) {
+      useRange(activeRange());
+      let ok = false;
+      try { ok = document.execCommand(kind); } catch { ok = false; }
+      say(ok ? (kind === 'cut' ? 'ตัดแล้ว' : 'คัดลอกแล้ว') : `เบราว์เซอร์ไม่อนุญาตจากปุ่มนี้ — ใช้ ${kind === 'cut' ? 'Ctrl+X' : 'Ctrl+C'} แทน`);
+    }
+
+    // ---------- ตาราง ----------
+    function insertTable(rows, cols) {
+      const r = useRange(activeRange());
+      const [line] = quill.getLine(r.index);
+      if (!line || !tableMod) return;
+      // แทรกที่ย่อหน้าว่างเสมอ ไม่ให้ข้อความหน้าเคอร์เซอร์ถูกดูดเข้าไปเป็นเซลล์แรก
+      let at = quill.getIndex(line);
+      if (line.length() > 1) {
+        at += line.length();
+        quill.insertText(at - 1, '\n', 'user');
+      }
+      quill.setSelection(at, 0, 'silent');
+      tableMod.insertTable(rows, cols);
+      say(`แทรกตาราง ${rows} × ${cols} แล้ว`);
+    }
+    function tableOp(name) {
+      useRange(activeRange());
+      if (typeof tableMod?.[name] === 'function') tableMod[name]();
+    }
+
+    // ---------- ลิงก์ ----------
+    function normalizeUrl(s) {
+      s = s.trim();
+      if (/^(https?:\/\/|mailto:)\S+$/i.test(s)) return s;
+      if (/^[^\s@/]+@[^\s@]+\.[^\s@]+$/.test(s)) return 'mailto:' + s;
+      if (/^(www\.)?[\w-]+(\.[\w-]+)+(\/\S*)?$/i.test(s)) return 'https://' + s;
+      return null;
+    }
+    function linkExtent(r) {
+      if (r.length) return r;
+      let b = quill.getLeaf(r.index)[0];
+      while (b && b !== quill.scroll && b.statics?.blotName !== 'link') b = b.parent;
+      return b && b !== quill.scroll ? { index: quill.getIndex(b), length: b.length() } : null;
+    }
+    function applyLink() {
+      const url = normalizeUrl($('#linkUrl').value);
+      if (!url) { say('กรอก URL ที่ขึ้นต้นด้วย http://, https:// หรืออีเมล'); $('#linkUrl').focus(); return false; }
+      const r = useRange(menuRange);
+      const ext = linkExtent(r);
+      if (ext) quill.formatText(ext.index, ext.length, 'link', url, 'user');
+      else {
+        quill.insertText(r.index, url, { link: url }, 'user');
+        quill.setSelection(r.index + url.length, 0, 'user');
+      }
+      say('ใส่ลิงก์แล้ว');
+      return true;
+    }
+    function removeLink() {
+      const ext = linkExtent(useRange(menuRange));
+      if (ext) quill.formatText(ext.index, ext.length, 'link', false, 'user');
+      say('เอาลิงก์ออกแล้ว');
+    }
+
+    // ---------- ส่งออก ----------
+    const KEEP_TAGS = new Set(['P', 'SPAN', 'STRONG', 'EM', 'U', 'S', 'SUB', 'SUP', 'BR', 'OL', 'UL', 'LI', 'A', 'TABLE', 'TBODY', 'TR', 'TD', 'IMG']);
+    const KEEP_ATTRS = new Set(['style', 'href', 'src', 'alt', 'colspan', 'rowspan', 'width', 'height']);
+    const DROP_TAGS = new Set(['SCRIPT', 'STYLE', 'IFRAME', 'OBJECT', 'EMBED', 'TEMPLATE', 'NOSCRIPT']);
+    const TO_P = new Set(['H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'BLOCKQUOTE', 'PRE', 'DIV']);
+    const EXPORT_FONT = `"${DEFAULTS.font}", "TH Sarabun PSK", sans-serif`;
+
+    // getSemanticHTML แปลงเว้นวรรคทุกตัวเป็น &nbsp; จึงแยกไม่ออกว่าตัวไหนผู้ใช้ตั้งใจใส่ (Ctrl+Shift+Space)
+    // ก่อนส่งออกจึงแทน &nbsp; ที่ตั้งใจด้วยอักขระสำรอง NB แล้วค่อยคืนกลับหลังแปลงเว้นวรรคเสร็จ
+    const NB = '';
+    // โปรไฟล์การส่งออกจากผลทดสอบการวางใน e-Office (ตั้งโดย eoffice-tools.js แท็บ “ทดสอบวาง”)
+    const exportProfile = { stripWJ: false, tabsAsSpaces: false };
+    let copyAdvisor = null;         // (html) => ข้อความเตือนที่จะต่อท้ายสถานะหลังคัดลอก
+    function exportHtml(q = quill) {
+      let src = q;
+      const contents = q.getContents();
+      if (contents.ops.some(op => typeof op.insert === 'string' && op.insert.includes(' '))) {
+        renderer.setContents(new Delta(contents.ops.map(op => (typeof op.insert === 'string' ? { ...op, insert: op.insert.replace(/ /g, NB) } : op))), 'silent');
+        src = renderer;
+      }
+      const doc = new DOMParser().parseFromString(`<body>${src.getSemanticHTML()}</body>`, 'text/html');
+      const root = doc.body;
+      // getSemanticHTML ทิ้ง style ของรายการ (จัดแนว ระยะบรรทัด ระยะเยื้อง) — คัดลอกกลับจากเอดิเตอร์ตามลำดับ
+      // ลำดับ <li> ในเอกสาร (ทั้งแบบซ้อน) ตรงกับลำดับรายการใน Quill
+      const srcItems = src.root.querySelectorAll('li'), outItems = root.querySelectorAll('li');
+      if (srcItems.length === outItems.length) {
+        srcItems.forEach((li, i) => { const st = li.getAttribute('style'); if (st) outItems[i].setAttribute('style', st); });
+      }
+      for (const el of [...root.querySelectorAll('*')].reverse()) {
+        if (DROP_TAGS.has(el.tagName)) { el.remove(); continue; }
+        if (TO_P.has(el.tagName)) {
+          const p = doc.createElement('p');
+          if (el.getAttribute('style')) p.setAttribute('style', el.getAttribute('style'));
+          p.append(...el.childNodes);
+          el.replaceWith(p);
+          continue;
+        }
+        if (!KEEP_TAGS.has(el.tagName)) { el.replaceWith(...el.childNodes); continue; }
+        for (const a of [...el.attributes]) if (!KEEP_ATTRS.has(a.name)) el.removeAttribute(a.name);
+        if (el.tagName === 'A') {
+          if (/^(https?:|mailto:)/i.test(el.getAttribute('href') || '')) el.setAttribute('rel', 'noopener noreferrer');
+          else el.removeAttribute('href');
+        }
+        if (el.tagName === 'IMG' && !/^(data:image\/(png|jpe?g|gif|webp);|https:)/i.test(el.getAttribute('src') || '')) el.remove();
+      }
+      // Quill 2.0.3 เปลี่ยนเว้นวรรคทุกตัวเป็น &nbsp; ทำให้ภาษาไทยตัดบรรทัดไม่ได้: คืนเป็นช่องว่างปกติ
+      // เก็บ &nbsp; ไว้เฉพาะจุดที่ช่องว่างปกติจะถูกยุบหาย (ต้น/ท้ายย่อหน้า หรือติดกับช่องว่างอื่น)
+      const blockOf = n => n.parentElement.closest('p,li,td') || root;
+      const charBefore = n => { const r = doc.createRange(); r.setStart(blockOf(n), 0); r.setEnd(n, 0); return r.toString().slice(-1); };
+      const charAfter = n => { const b = blockOf(n), r = doc.createRange(); r.setStart(n, n.length); r.setEnd(b, b.childNodes.length); return r.toString().charAt(0); };
+      const walker = doc.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+      const tabNodes = [];
+      for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+        if (!/[\u00A0\t]/.test(n.data)) continue;
+        const before = charBefore(n), after = charAfter(n);
+        // \u0E22\u0E48\u0E2D\u0E2B\u0E19\u0E49\u0E32\u0E17\u0E35\u0E48\u0E15\u0E31\u0E49\u0E07\u0E08\u0E38\u0E14\u0E41\u0E17\u0E47\u0E1A\u0E44\u0E27\u0E49: \u0E40\u0E01\u0E47\u0E1A Tab \u0E08\u0E23\u0E34\u0E07\u0E44\u0E27\u0E49 (\u0E2B\u0E48\u0E2D\u0E14\u0E49\u0E27\u0E22 white-space:pre \u0E14\u0E49\u0E32\u0E19\u0E25\u0E48\u0E32\u0E07) \u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E43\u0E2B\u0E49\u0E15\u0E23\u0E07\u0E15\u0E33\u0E41\u0E2B\u0E19\u0E48\u0E07
+        // \u0E22\u0E01\u0E40\u0E27\u0E49\u0E19\u0E1C\u0E25\u0E17\u0E14\u0E2A\u0E2D\u0E1A\u0E01\u0E32\u0E23\u0E27\u0E32\u0E07\u0E1A\u0E2D\u0E01\u0E27\u0E48\u0E32 e-Office \u0E25\u0E49\u0E32\u0E07\u0E27\u0E34\u0E18\u0E35\u0E19\u0E35\u0E49\u0E17\u0E34\u0E49\u0E07 \u2192 \u0E43\u0E0A\u0E49\u0E0A\u0E48\u0E2D\u0E07\u0E27\u0E48\u0E32\u0E07\u0E2B\u0E49\u0E32\u0E21\u0E15\u0E31\u0E14\u0E1A\u0E23\u0E23\u0E17\u0E31\u0E14 8 \u0E15\u0E31\u0E27\u0E41\u0E17\u0E19
+        const keepTabs = !!blockOf(n).style?.tabSize && !exportProfile.tabsAsSpaces;
+        if (keepTabs && n.data.includes('\t')) tabNodes.push(n);
+        n.data = n.data.replace(/\u00A0+/g, (run, off, s) => {
+          const atStart = off === 0 && (before === '' || /\s/.test(before));
+          const atEnd = off + run.length === s.length && after === '';
+          // สลับช่องว่างปกติกับ &nbsp; ไม่ให้มีช่องว่างปกติสองตัวติดกัน (จะถูกยุบเหลือตัวเดียว)
+          const [a, b] = atStart ? ['\u00A0', ' '] : [' ', '\u00A0'];
+          const out = Array.from(run, (_, i) => (i % 2 ? b : a));
+          if (atEnd || run.length > 1) out[out.length - 1] = '\u00A0';
+          return out.join('');
+        });
+        if (!keepTabs) n.data = n.data.replace(/\t/g, '\u00A0'.repeat(8));
+      }
+      for (const n of tabNodes) {
+        const frag = doc.createDocumentFragment();
+        n.data.split('\t').forEach((part, i) => {
+          if (i) { const s = doc.createElement('span'); s.style.whiteSpace = 'pre'; s.textContent = '\t'; frag.append(s); }
+          if (part) frag.append(part);
+        });
+        n.replaceWith(frag);
+      }
+      // \u0E04\u0E37\u0E19\u0E40\u0E27\u0E49\u0E19\u0E27\u0E23\u0E23\u0E04\u0E2B\u0E49\u0E32\u0E21\u0E15\u0E31\u0E14\u0E1A\u0E23\u0E23\u0E17\u0E31\u0E14\u0E17\u0E35\u0E48\u0E1C\u0E39\u0E49\u0E43\u0E0A\u0E49\u0E15\u0E31\u0E49\u0E07\u0E43\u0E08\u0E43\u0E2A\u0E48 \u0E41\u0E25\u0E30\u0E16\u0E2D\u0E14 Word Joiner \u0E16\u0E49\u0E32\u0E1C\u0E25\u0E17\u0E14\u0E2A\u0E2D\u0E1A\u0E01\u0E32\u0E23\u0E27\u0E32\u0E07\u0E1A\u0E2D\u0E01\u0E27\u0E48\u0E32 e-Office \u0E44\u0E21\u0E48\u0E23\u0E2D\u0E07\u0E23\u0E31\u0E1A
+      const nbWalker = doc.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+      for (let n = nbWalker.nextNode(); n; n = nbWalker.nextNode()) {
+        if (n.data.includes(NB)) n.data = n.data.replaceAll(NB, '\u00A0');
+        if (exportProfile.stripWJ && n.data.includes('\u2060')) n.data = n.data.replaceAll('\u2060', '');
+      }
+      const setIf = (el, prop, val) => { if (!el.style.getPropertyValue(prop)) el.style.setProperty(prop, val); };
+      const fontDefaults = el => {
+        setIf(el, 'font-family', EXPORT_FONT);
+        setIf(el, 'font-size', DEFAULTS.size);
+        setIf(el, 'line-height', DEFAULTS.lineHeight);
+      };
+      for (const p of root.querySelectorAll('p')) {
+        fontDefaults(p);
+        setIf(p, 'text-align', DEFAULTS.align);
+        setIf(p, 'text-indent', DEFAULTS.indent);
+        setIf(p, 'margin-top', '0');
+        setIf(p, 'margin-bottom', '0');
+        if (p.style.textAlign === 'justify') setIf(p, 'text-justify', 'inter-character');
+      }
+      for (const li of root.querySelectorAll('li')) fontDefaults(li);
+      // ย่อหน้าว่าง (บรรทัดเว้น) ต้องมี <br> ไม่เช่นนั้นจะยุบหายเมื่อวางใน e-Office
+      for (const el of root.querySelectorAll('p,li')) if (!el.textContent && !el.querySelector('img,br')) el.append(doc.createElement('br'));
+      for (const list of root.querySelectorAll('ol,ul')) { setIf(list, 'margin-top', '0'); setIf(list, 'margin-bottom', '0'); }
+      // เลขรายการให้ตรงกับที่เห็นในเอดิเตอร์: เลขไทยทุกระดับ หรือ 1. / a. / i. ตามระดับการซ้อนแบบ Quill
+      for (const ol of root.querySelectorAll('ol')) {
+        let depth = 0;
+        for (let p = ol.parentElement; p && p !== root; p = p.parentElement) if (p.tagName === 'OL') depth++;
+        setIf(ol, 'list-style-type', settings.listDigits === 'thai' ? 'thai' : LIST_STYLES[depth % 3]);
+      }
+      for (const t of root.querySelectorAll('table')) {
+        setIf(t, 'border-collapse', 'collapse');
+        setIf(t, 'width', '100%');
+      }
+      for (const td of root.querySelectorAll('td')) {
+        fontDefaults(td);
+        setIf(td, 'border', '1px solid #000');
+        setIf(td, 'padding', '2px 6px');
+        setIf(td, 'vertical-align', 'top');
+      }
+      return root.innerHTML;
+    }
+
+    function copyViaEvent(html, text) {
+      let done = false;
+      const onCopy = e => {
+        e.clipboardData.setData('text/html', html);
+        e.clipboardData.setData('text/plain', text);
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        done = true;
+      };
+      window.addEventListener('copy', onCopy, true);
+      try { document.execCommand('copy'); } catch { /* ไม่รองรับ */ } finally { window.removeEventListener('copy', onCopy, true); }
+      return done;
+    }
+    // เขียน HTML + ข้อความธรรมดาลงคลิปบอร์ด (ลอง Clipboard API ก่อน ไม่ได้ค่อยใช้เหตุการณ์ copy) คืน true ถ้าสำเร็จ
+    async function writeClipboard(html, text) {
+      try {
+        if (!navigator.clipboard?.write || typeof ClipboardItem === 'undefined') throw new Error('no clipboard api');
+        await navigator.clipboard.write([new ClipboardItem({
+          'text/html': new Blob([html], { type: 'text/html' }),
+          'text/plain': new Blob([text], { type: 'text/plain' }),
+        })]);
+        return true;
+      } catch {
+        return copyViaEvent(html, text);
+      }
+    }
+    async function copyToEoffice() {
+      if (isEmpty()) { say('ยังไม่มีข้อความให้คัดลอก'); return; }
+      const html = exportHtml(), text = quill.getText().replace(/\n+$/, '');
+      const warn = copyAdvisor?.(html) || [];
+      const ok = `คัดลอกหน้า ${cur + 1} แล้ว (HTML + ข้อความ) — วางใน e-Office ด้วย Ctrl+V แล้วตรวจผลอีกครั้งหลังบันทึก`
+        + (warn.length ? ` · ⚠ ตามผลทดสอบ e-Office จะไม่รองรับ: ${warn.join(', ')}` : '');
+      say(await writeClipboard(html, text) ? ok : 'คัดลอกอัตโนมัติไม่ได้ — คลิกในกล่องพิมพ์ กด Ctrl+A แล้ว Ctrl+C แทน');
+    }
+
+    const stamp = () => {
+      const d = new Date(), p = n => String(n).padStart(2, '0');
+      return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}`;
+    };
+    function download(name, text) {
+      const url = URL.createObjectURL(new Blob([text], { type: 'text/html;charset=utf-8' }));
+      const a = document.createElement('a');
+      a.href = url; a.download = name;
+      document.body.append(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+    // HTML ของทุกหน้า: หน้าปัจจุบันอ่านจากเอดิเตอร์ หน้าอื่นแปลงผ่าน Quill ตัวที่ซ่อนไว้
+    function pagesHtml() {
+      snapshot();
+      return pages.map((p, i) => {
+        if (i === cur) return exportHtml();
+        renderer.setContents(p.delta, 'silent');
+        return exportHtml(renderer);
+      });
+    }
+    function draftDocument() {
+      const body = pagesHtml().map((h, i) => `<section data-page="${i + 1}">\n${h}\n</section>`).join('\n');
+      return `<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="generator" content="eoffice-editor">
+<title>${esc(ensureDocName())}</title>
+<style>
+body{max-width:16cm;margin:2.5cm auto;font-family:${FONT_STACK};font-size:${DEFAULTS.size};color:#000}
+img{max-width:100%}
+section+section{margin-top:2cm;padding-top:2cm;border-top:1px dashed #999;break-before:page;page-break-before:always}
+p,li{orphans:3;widows:3}
+@page{size:A4;margin:2.5cm 2cm 2cm 3cm}
+${pageNumberCss()}
+@media print{body{max-width:none;margin:0}section+section{margin:0;padding:0;border:0}}
+</style>
+</head>
+<body>
+${body}
+</body>
+</html>
+`;
+    }
+    function saveDraft() {
+      download(`${fileSafe(ensureDocName())}.html`, draftDocument());
+      say(`ดาวน์โหลดไฟล์ร่างแล้ว (${pages.length} หน้า) — ไฟล์มีเนื้อหาเอกสารจริง ควรเก็บตามนโยบายหน่วยงาน`);
+    }
+    // แปลงไฟล์ HTML เป็น delta ทีละหน้า (ไฟล์ร่างของแอปนี้แยกหน้าด้วย <section data-page>)
+    function htmlToPages(html) {
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      doc.querySelectorAll('script,style,noscript,template,iframe,object,embed').forEach(n => n.remove());
+      const parts = doc.querySelectorAll('section[data-page]');
+      return (parts.length ? [...parts] : [doc.body]).map(el => quill.clipboard.convert({ html: el.innerHTML, text: el.textContent }));
+    }
+    function buildPrintArea() {
+      $('#printArea').innerHTML = pagesHtml().map(h => `<section>${h}</section>`).join('');
+    }
+
+    // ---------- เมนู ----------
+    const menuOpeners = {
+      'm-charspace'() { lsOpen(); },
+      'm-lineheight'(f, m) {
+        const cur = parseFloat(typeof f.lineheight === 'string' ? f.lineheight : DEFAULTS.lineHeight);
+        for (const b of $$('[data-act=lineheight]', m)) b.setAttribute('aria-checked', String(+b.dataset.val === cur));
+        $('#lhCustom').value = Number.isFinite(cur) ? cur : '';
+      },
+      'm-paraspace'(f, m) {
+        for (const key of ['spacebefore', 'spaceafter']) {
+          const cur = typeof f[key] === 'string' ? Math.round((toCm(f[key]) ?? 0) * 72 / 2.54) : 0;
+          for (const b of $$(`[data-act=${key}]`, m)) b.setAttribute('aria-checked', String(+b.dataset.val === cur));
+        }
+      },
+      'm-table'(f, m) {
+        const inTable = !!f.table;
+        for (const b of $$('[data-act=table-op]', m)) b.disabled = !inTable || !tableMod;
+        $('#tgrid').classList.toggle('off', inTable || !tableMod);
+        $('#tInsert').disabled = inTable || !tableMod;
+      },
+      'm-link'(f) {
+        $('#linkUrl').value = typeof f.link === 'string' ? f.link : '';
+        $('#linkRemove').disabled = !f.link;
+        setTimeout(() => { $('#linkUrl').focus(); $('#linkUrl').select(); }, 0);
+      },
+    };
+    function placeMenu(m, btn) {
+      const b = btn.getBoundingClientRect();
+      const w = m.offsetWidth, h = m.offsetHeight;
+      const left = clamp(b.left, 8, innerWidth - w - 8);
+      let top = b.bottom + 4;
+      if (top + h > innerHeight - 8) top = Math.max(8, b.top - h - 4);
+      m.style.left = `${left}px`;
+      m.style.top = `${top}px`;
+    }
+    // แผงช่องไฟต้องไม่บังข้อความที่กำลังปรับ: ถ้าทับกัน ให้ย้ายไปไว้ใต้ (หรือเหนือ) ข้อความที่เลือก
+    function keepSelectionVisible(m) {
+      const b = quill.getBounds(menuRange.index, Math.max(menuRange.length, 1));
+      if (!b) return;
+      const c = quill.container.getBoundingClientRect(), z = c.width / (quill.container.offsetWidth || c.width) || 1;
+      const sel = { top: c.top + b.top * z, bottom: c.top + b.bottom * z, left: c.left + b.left * z, right: c.left + b.right * z };
+      const r = m.getBoundingClientRect();
+      if (r.bottom < sel.top || r.top > sel.bottom || r.right < sel.left || r.left > sel.right) return;
+      if (sel.bottom + 12 + r.height < innerHeight - 8) m.style.top = `${sel.bottom + 12}px`;
+      else if (sel.top - 12 - r.height > 8) m.style.top = `${sel.top - 12 - r.height}px`;
+      else m.style.left = `${clamp(sel.right + 16, 8, innerWidth - r.width - 8)}px`;
+    }
+    function toggleMenu(id, btn) {
+      if (openMenu?.id === id) { closeMenu(); return; }
+      closeMenu();
+      menuRange = currentRange();
+      const m = $('#' + id);
+      menuOpeners[id]?.(quill.getFormat(menuRange.index, menuRange.length), m);
+      m.hidden = false;
+      placeMenu(m, btn);
+      if (id === 'm-charspace') keepSelectionVisible(m);
+      btn.setAttribute('aria-expanded', 'true');
+      openMenu = { id, m, btn };
+    }
+    function closeMenu() {
+      if (!openMenu) return;
+      if (openMenu.id === 'm-charspace') lsClose();
+      openMenu.m.hidden = true;
+      openMenu.btn.setAttribute('aria-expanded', 'false');
+      openMenu = null;
+    }
+
+    for (const pal of $$('.palette')) {
+      pal.innerHTML = PALETTE.map(c => `<button type="button" class="sw" data-act="${pal.dataset.kind}" data-val="${c}" style="background:${c}" title="${c}" aria-label="${c}"></button>`).join('');
+    }
+    for (const input of $$('.menu input[type=color]')) {
+      input.addEventListener('change', () => { setInline(input.dataset.kind, input.value); closeMenu(); schedule(); });
+    }
+    const tgrid = $('#tgrid');
+    tgrid.innerHTML = Array.from({ length: 64 }, (_, i) => `<span data-r="${Math.floor(i / 8) + 1}" data-c="${i % 8 + 1}"></span>`).join('');
+    tgrid.addEventListener('mouseover', e => {
+      const s = e.target.closest('span');
+      if (!s) return;
+      for (const c of tgrid.children) c.classList.toggle('on', +c.dataset.r <= +s.dataset.r && +c.dataset.c <= +s.dataset.c);
+      $('#tgridLabel').textContent = `${s.dataset.r} × ${s.dataset.c}`;
+    });
+    tgrid.addEventListener('click', e => {
+      const s = e.target.closest('span');
+      if (!s) return;
+      insertTable(+s.dataset.r, +s.dataset.c);
+      closeMenu(); schedule();
+    });
+    const intIn = (v, lo, hi) => clamp(Math.round(+v) || lo, lo, hi);
+
+    const commands = {
+      bold: () => toggleInline('bold'),
+      italic: () => toggleInline('italic'),
+      underline: () => toggleInline('underline'),
+      strike: () => toggleInline('strike'),
+      sub: () => toggleInline('script', 'sub'),
+      sup: () => toggleInline('script', 'super'),
+      align: setAlign,
+      tab: insertTab,
+      list: toggleList,
+      indent: () => shiftIndent(1),
+      outdent: () => shiftIndent(-1),
+      cut: () => clip('cut'),
+      copy: () => clip('copy'),
+      undo: () => quill.history.undo(),
+      redo: () => quill.history.redo(),
+      image: () => $('#fileImage').click(),
+      open: () => openPicker(),
+      clean: cleanFormat,
+      marks: () => toggleSetting('showMarks'),
+      lines: () => toggleSetting('lineGuides'),
+    };
+    // คืนค่า 'keep' เพื่อให้เมนูยังเปิดอยู่
+    const actions = {
+      lineheight: v => { setLineHeight(v); },
+      'lineheight-custom': () => (setLineHeight($('#lhCustom').value) ? undefined : 'keep'),
+      spacebefore: v => { setLine({ spacebefore: +v ? `${v}pt` : false }, `ระยะก่อนย่อหน้า ${v} pt`); return 'keep'; },
+      spaceafter: v => { setLine({ spaceafter: +v ? `${v}pt` : false }, `ระยะหลังย่อหน้า ${v} pt`); return 'keep'; },
+      color: v => setInline('color', v),
+      background: v => setInline('background', v),
+      'table-insert': () => insertTable(intIn($('#tRows').value, 1, 30), intIn($('#tCols').value, 1, 12)),
+      'table-op': v => tableOp(v),
+      'link-apply': () => (applyLink() ? undefined : 'keep'),
+      'link-remove': removeLink,
+      numbers: key => { toggleSetting(key); return 'keep'; },
+    };
+
+    $('#toolbar').addEventListener('click', e => {
+      const b = e.target.closest('button');
+      if (!b || b.disabled) return;
+      if (b.dataset.menu) { toggleMenu(b.dataset.menu, b); return; }
+      if (commands[b.dataset.cmd]) { closeMenu(); commands[b.dataset.cmd](b.dataset.val); schedule(); }
+    });
+    document.addEventListener('click', e => {
+      const t = e.target.closest('.menu [data-act]');
+      if (!t || t.disabled || !actions[t.dataset.act]) return;
+      const keep = actions[t.dataset.act](t.dataset.val) === 'keep';
+      if (keep && openMenu) menuOpeners[openMenu.id]?.(quill.getFormat(menuRange.index, menuRange.length), openMenu.m);
+      else closeMenu();
+      schedule();
+    });
+    // ปุ่มในแถบเครื่องมือ/เมนูไม่ดึงโฟกัสออกจากกล่องพิมพ์ ทำให้ส่วนที่เลือกไว้ไม่หาย
+    document.addEventListener('mousedown', e => {
+      if (openMenu && !openMenu.m.contains(e.target) && !openMenu.btn.contains(e.target)) closeMenu();
+      if (e.target.closest('.tb, .mi, .chip, .sw, .tgrid')) e.preventDefault();
+    });
+    // เลื่อนหน้าแล้วปิดเมนู ยกเว้นแผงช่องไฟ (การปรับอาจทำให้หน้าเลื่อนเอง)
+    addEventListener('scroll', () => { if (openMenu?.id !== 'm-charspace') closeMenu(); }, { passive: true });
+    // ขนาดหน้าต่างเปลี่ยน: ย้ายเมนูที่เปิดอยู่ให้อยู่ใต้ปุ่มเหมือนเดิม (ไม่ปิด เพื่อให้ปรับค่าต่อได้)
+    addEventListener('resize', () => {
+      if (!openMenu) return;
+      placeMenu(openMenu.m, openMenu.btn);
+      if (openMenu.id === 'm-charspace') keepSelectionVisible(openMenu.m);
+    });
+    // ลากย้ายแผงช่องไฟด้วยแถบหัวได้
+    $('#m-charspace .menu-title').addEventListener('pointerdown', e => {
+      const m = $('#m-charspace'), r = m.getBoundingClientRect(), dx = e.clientX - r.left, dy = e.clientY - r.top;
+      e.preventDefault();
+      const move = ev => {
+        m.style.left = `${clamp(ev.clientX - dx, 0, innerWidth - r.width)}px`;
+        m.style.top = `${clamp(ev.clientY - dy, 0, innerHeight - 40)}px`;
+      };
+      const up = () => { removeEventListener('pointermove', move); removeEventListener('pointerup', up); };
+      addEventListener('pointermove', move);
+      addEventListener('pointerup', up);
+    });
+    // แผงช่องไฟ: ทุกการปรับมีผลกับเอกสารทันที
+    $('#lsRange').addEventListener('input', e => lsSet(+e.target.value));
+    $('#lsCustom').addEventListener('input', e => { const v = parseFloat(e.target.value); if (Number.isFinite(v)) lsSet(v); });
+    $('#lsCustom').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); closeMenu(); useRange(menuRange); } });
+    $('#lsScope').addEventListener('change', () => lsShow(lsCurrent(lsTarget($('#lsScope').value, lsSession?.r || currentRange()))));
+    $('#m-charspace').addEventListener('click', e => {
+      const b = e.target.closest('button');
+      if (!b || !lsSession) return;
+      const t = lsTarget($('#lsScope').value, lsSession.r);
+      if (b.dataset.lsStep) lsSet((lsCurrent(t) ?? 0) + +b.dataset.lsStep);
+      else if (b.dataset.lsSet != null) lsSet(+b.dataset.lsSet);
+      else if (b.hasAttribute('data-ls-revert')) {
+        mergeHistorySince(lsSession.start);
+        if (quill.history.stack.undo.length > lsSession.start) quill.history.undo();
+        quill.history.cutoff();
+        lsShow(lsCurrent(t));
+        say('ยกเลิกการปรับช่องไฟในรอบนี้แล้ว');
+      } else if (b.hasAttribute('data-ls-done')) { closeMenu(); useRange(menuRange); }
+    });
+    for (const id of ['lhCustom', 'linkUrl', 'tRows', 'tCols']) {
+      $('#' + id).addEventListener('keydown', e => {
+        if (e.key !== 'Enter') return;
+        e.preventDefault();
+        $(`#${openMenu?.id} [data-act$="${{ lhCustom: 'lineheight-custom', linkUrl: 'link-apply', tRows: 'table-insert', tCols: 'table-insert' }[id]}"]`)?.click();
+      });
+    }
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && openMenu) { closeMenu(); useRange(menuRange); return; }
+      // Ctrl+Shift+8 = แสดง/ซ่อนเครื่องหมาย (เหมือน Word)
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && !e.altKey && e.code === 'Digit8') { e.preventDefault(); toggleSetting('showMarks'); return; }
+      // Ctrl+Shift+[ / ] = ช่องไฟแคบลง / กว้างขึ้น 0.005 em
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && !e.altKey && (e.code === 'BracketLeft' || e.code === 'BracketRight') && openMenu?.id !== 'm-charspace') {
+        e.preventDefault();
+        lsNudge(e.code === 'BracketRight' ? 0.005 : -0.005);
+        return;
+      }
+      if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        saveLocalNow();
+        if (file.handle && !file.error) queueWrite().then(() => { if (file.handle && !file.error) say(`บันทึกลงไฟล์ “${file.handle.name}” แล้ว`); });
+        else saveDraft();
+      }
+    });
+
+    // แบบอักษร / ขนาด
+    const fontSel = $('#fontSel'), sizeSel = $('#sizeSel');
+    fontSel.innerHTML = FONTS.map(f => `<option value="${f.value}">${f.label}</option>`).join('');
+    sizeSel.innerHTML = SIZES.map(n => `<option value="${n}pt">${n}</option>`).join('');
+    fontSel.addEventListener('change', () => {
+      useRange(lastRange);
+      quill.format('font', fontSel.value === DEFAULTS.font ? false : fontSel.value, 'user');
+    });
+    sizeSel.addEventListener('change', () => {
+      useRange(lastRange);
+      quill.format('size', sizeSel.value === DEFAULTS.size ? false : sizeSel.value, 'user');
+    });
+
+    // รูปภาพ / เปิดไฟล์
+    $('#fileImage').addEventListener('change', e => {
+      const f = e.target.files[0];
+      e.target.value = '';
+      if (!f) return;
+      if (!/^image\/(png|jpeg|gif|webp)$/.test(f.type)) { say('รองรับเฉพาะไฟล์ภาพ PNG, JPG, GIF และ WebP'); return; }
+      if (f.size > 5 * 1024 * 1024) { say('ไฟล์ภาพใหญ่เกิน 5 MB'); return; }
+      const rd = new FileReader();
+      rd.onload = () => {
+        const r = useRange(lastRange);
+        quill.insertEmbed(r.index, 'image', rd.result, 'user');
+        quill.setSelection(r.index + 1, 0, 'user');
+        say('แทรกรูปแล้ว — e-Office อาจไม่รับรูปที่ฝังในข้อความ ควรแนบไฟล์รูปแยกด้วย');
+      };
+      rd.readAsDataURL(f);
+    });
+    const isOwnDraft = html => /<meta name="generator" content="eoffice-editor">/.test(html);
+    // โหลดข้อความจากไฟล์: ไฟล์ร่างของแอปนี้แทนที่ทั้งเอกสาร ไฟล์อื่นแทนที่เฉพาะหน้าที่เปิดอยู่ — คืน true ถ้าโหลดแล้ว
+    async function loadFileText(name, text, isTxt) {
+      const deltas = isTxt ? [new Delta().insert(text.endsWith('\n') ? text : text + '\n')] : htmlToPages(text);
+      if (deltas.length > 1 || (!isTxt && isOwnDraft(text))) {
+        if (!allEmpty() && !confirm(`แทนที่เอกสารทั้งหมด (${pages.length} หน้า) ด้วย “${name}” (${deltas.length} หน้า)?`)) return false;
+        await unlinkFile();
+        replaceAllPages(deltas);
+        setDocName(name.replace(/\.[^.]+$/, ''));
+      } else {
+        if (!isEmpty() && !confirm(`แทนที่เนื้อหาหน้า ${cur + 1} ด้วย “${name}”? (กดย้อนกลับได้)`)) return false;
+        quill.setContents(deltas[0], 'user');
+        quill.setSelection(0, 0, 'user');
+      }
+      say(`เปิด “${name}” แล้ว`);
+      return true;
+    }
+    $('#fileOpen').addEventListener('change', async e => {
+      const f = e.target.files[0];
+      e.target.value = '';
+      if (!f) return;
+      if (f.size > 20 * 1024 * 1024) { say('ไฟล์ใหญ่เกิน 20 MB'); return; }
+      await loadFileText(f.name, await f.text(), /\.txt$/i.test(f.name) || f.type === 'text/plain');
+    });
+
+    // ---------- ไม้บรรทัด ----------
+    const rulerEl = $('#ruler'), marks = $('#rulerMarks'), tip = $('#rulerTip'), guide = $('#guide');
+    const LABEL = { first: 'ย่อหน้าบรรทัดแรก', hang: 'ย่อหน้าแขวน', box: 'กั้นซ้าย', right: 'กั้นขวา' };
+    let rm = { left: 0, first: 0, right: 0 }, drag = null;
+    const markPos = (kind, m) => (kind === 'first' ? m.left + m.first : kind === 'right' ? RULER_CM - m.right : m.left);
+    function placeMarks(m) {
+      for (const el of marks.querySelectorAll('.mk')) {
+        const pos = markPos(el.dataset.kind, m);
+        el.style.left = `${pos}cm`;
+        el.setAttribute('aria-valuenow', fmt(pos));
+        el.setAttribute('aria-valuetext', `${fmt(pos)} ซม.`);
+      }
+    }
+    function dragResult(kind, s, x) {
+      const m = { ...s };
+      const maxLeft = RULER_CM - s.right - MIN_TEXT;
+      if (kind === 'first') m.first = clamp(x, 0, maxLeft) - s.left;
+      else if (kind === 'hang') { m.left = clamp(x, 0, maxLeft); m.first = s.left + s.first - m.left; }
+      else if (kind === 'box') m.left = clamp(x, Math.max(0, -s.first), maxLeft - Math.max(0, s.first));
+      else m.right = RULER_CM - clamp(x, Math.max(s.left, s.left + s.first) + MIN_TEXT, RULER_CM);
+      return { left: round2(m.left), first: round2(m.first), right: round2(m.right) };
+    }
+    const changed = (a, b) => a.left !== b.left || a.first !== b.first || a.right !== b.right;
+    function showTip(kind, m) {
+      const pos = markPos(kind, m);
+      const val = kind === 'first' ? m.first : kind === 'right' ? m.right : m.left;
+      tip.hidden = false;
+      tip.style.left = `${pos}cm`;
+      tip.textContent = `${LABEL[kind]} ${fmt(val)} ซม.`;
+      guide.hidden = false;
+      guide.style.left = `calc(var(--vr) + var(--edge-x) + ${pos}cm)`;
+    }
+    function hideTip() { tip.hidden = true; guide.hidden = true; }
+    function commit(kind, m, r) {
+      const f = {};
+      if (kind === 'hang' || kind === 'box') f.marginleft = m.left ? cmStr(m.left) : false;
+      if (kind === 'hang' || kind === 'first') f.textindent = cmStr(m.first);
+      if (kind === 'right') f.marginright = m.right ? cmStr(m.right) : false;
+      useRange(r);
+      quill.formatLine(r.index, r.length, f, 'user');
+      rm = m;
+      say(`${LABEL[kind]} ${fmt(kind === 'first' ? m.first : kind === 'right' ? m.right : m.left)} ซม.`);
+    }
+    function updateRuler(r) {
+      if (drag) return;
+      const line = linesIn(r)[0];
+      const off = !line || line.statics.blotName === 'table';
+      rulerEl.classList.toggle('off', off);
+      if (off) { $('#paraInfo').textContent = line ? 'ในตาราง' : ''; return; }
+      rm = metricsOf(line);
+      placeMarks(rm);
+      const short = v => String(round2(v));
+      $('#paraInfo').textContent = `ซ้าย ${short(rm.left)} · ย่อ ${short(rm.first)} · ขวา ${short(rm.right)} ซม.`;
+    }
+    function xToCm(clientX, fine) {
+      const rect = marks.getBoundingClientRect();
+      const step = fine ? FINE : SNAP;
+      return Math.round((clientX - rect.left) / rect.width * RULER_CM / step) * step;
+    }
+    marks.addEventListener('pointerdown', e => {
+      const mk = e.target.closest('.mk');
+      if (!mk || rulerEl.classList.contains('off') || e.button !== 0) return;
+      e.preventDefault();
+      mk.setPointerCapture(e.pointerId);
+      drag = { kind: mk.dataset.kind, start: { ...rm }, m: { ...rm }, r: currentRange(), id: e.pointerId };
+      showTip(drag.kind, rm);
+    });
+    marks.addEventListener('pointermove', e => {
+      if (!drag || e.pointerId !== drag.id) return;
+      drag.m = dragResult(drag.kind, drag.start, xToCm(e.clientX, e.altKey));
+      placeMarks(drag.m);
+      showTip(drag.kind, drag.m);
+    });
+    const endDrag = e => {
+      if (!drag || e.pointerId !== drag.id) return;
+      const d = drag;
+      drag = null;
+      hideTip();
+      if (e.type === 'pointerup' && changed(d.start, d.m)) commit(d.kind, d.m, d.r);
+      else placeMarks(rm);
+      schedule();
+    };
+    marks.addEventListener('pointerup', endDrag);
+    marks.addEventListener('pointercancel', endDrag);
+    marks.addEventListener('keydown', e => {
+      const mk = e.target.closest('.mk');
+      const dir = { ArrowLeft: -1, ArrowRight: 1 }[e.key];
+      if (!mk || !dir || rulerEl.classList.contains('off')) return;
+      e.preventDefault();
+      const kind = mk.dataset.kind;
+      const step = e.shiftKey ? 1 : e.altKey ? FINE : SNAP;
+      const m = dragResult(kind, rm, markPos(kind, rm) + dir * step);
+      if (changed(rm, m)) { commit(kind, m, currentRange()); mk.focus(); schedule(); }
+    });
+
+    // ---------- ไม้บรรทัดแนวดิ่ง + บอกระยะเมื่อชี้ / ลากวัด ----------
+    // ชี้บนไม้บรรทัด: บอกตำแหน่ง (ซม.) พร้อมเส้นนำ | ลากบนพื้นที่ว่างของไม้บรรทัด: วัดระยะระหว่างจุดเริ่มกับจุดปัจจุบัน
+    // ชี้บนกระดาษ: แถบสถานะบอกตำแหน่งเมาส์ (ซม.) นับจากมุมซ้ายบนของพื้นที่ข้อความ
+    const vruler = $('#vruler'), vscale = $('#vrulerScale'), vtip = $('#vrulerTip'), guideH = $('#guideH');
+    const editorBox = $('.editor-box');
+    let vBuiltCm = 0;
+    function buildVRuler() {
+      const cmTall = Math.ceil(editorBox.getBoundingClientRect().height / (marks.getBoundingClientRect().width / RULER_CM || CM)) + 1;
+      if (cmTall <= vBuiltCm) return;
+      let html = '';
+      for (let i = vBuiltCm * 4 + 1; i <= cmTall * 4; i++) {
+        const pos = `${i / 4}cm`;
+        html += i % 4 === 0 ? `<span class="vnum" style="top:${pos}">${i / 4}</span>` : `<span class="vtick ${i % 2 ? 'q' : 'h'}" style="top:${pos}"></span>`;
+      }
+      vscale.insertAdjacentHTML('beforeend', html);
+      vBuiltCm = cmTall;
+    }
+    new ResizeObserver(buildVRuler).observe(editorBox);
+    buildVRuler();
+    const pxPerCm = () => marks.getBoundingClientRect().width / RULER_CM;
+    const snapCm = (v, fine) => { const step = fine ? 0.01 : FINE; return Math.round(v / step) * step; };
+    const cmX = (clientX, fine) => snapCm((clientX - marks.getBoundingClientRect().left) / pxPerCm(), fine);
+    const cmY = (clientY, fine) => snapCm((clientY - vscale.getBoundingClientRect().top) / pxPerCm(), fine);
+    const band = (host, id) => {
+      let b = host.querySelector(`#${id}`);
+      if (!b) { b = document.createElement('div'); b.className = 'ruler-band'; b.id = id; host.append(b); }
+      return b;
+    };
+    let measure = null;
+    function showH(x, text) {
+      tip.hidden = false;
+      tip.style.left = `${x}cm`;
+      tip.textContent = text;
+      guide.hidden = false;
+      guide.style.left = `calc(var(--vr) + var(--edge-x) + ${x}cm)`;
+    }
+    function showV(y, text) {
+      vtip.hidden = false;
+      vtip.style.top = `calc(var(--edge-y) + ${y}cm)`;
+      vtip.textContent = text;
+      guideH.hidden = false;
+      guideH.style.top = `calc(var(--edge-y) + ${y}cm)`;
+    }
+    function hideV() { vtip.hidden = true; guideH.hidden = true; }
+    const measureText = (a, b) => `ระยะ ${fmt(Math.abs(b - a))} ซม. (${fmt(Math.min(a, b))} → ${fmt(Math.max(a, b))})`;
+
+    // ไม้บรรทัดแนวนอน: ชี้ = ตำแหน่ง/ค่าของตัวเลื่อน, ลากบนที่ว่าง = วัดระยะ
+    marks.addEventListener('pointerdown', e => {
+      if (e.target.closest('.mk') || e.button !== 0) return;
+      e.preventDefault();
+      try { marks.setPointerCapture(e.pointerId); } catch { /* ไม่มี pointer ที่จับได้ */ }
+      measure = { axis: 'h', start: cmX(e.clientX, e.altKey), id: e.pointerId };
+    });
+    marks.addEventListener('pointermove', e => {
+      if (drag) return;
+      const x = cmX(e.clientX, e.altKey);
+      if (measure?.axis === 'h') {
+        const b = band(marks, 'hBand');
+        b.style.left = `${Math.min(measure.start, x)}cm`;
+        b.style.width = `${Math.abs(x - measure.start)}cm`;
+        showH(x, measureText(measure.start, x));
+        return;
+      }
+      const mk = e.target.closest('.mk');
+      if (mk && !rulerEl.classList.contains('off')) {
+        const kind = mk.dataset.kind;
+        showTip(kind, rm);
+        return;
+      }
+      showH(x, `${fmt(x)} ซม.`);
+    });
+    const endMeasure = e => {
+      if (!measure || e.pointerId !== measure.id) return;
+      const text = measure.axis === 'h' ? measureText(measure.start, cmX(e.clientX, e.altKey)) : measureText(measure.start, cmY(e.clientY, e.altKey));
+      if (e.type === 'pointerup' && !/ระยะ 0\.00/.test(text)) say(`วัด${text}`);
+      $('#hBand')?.remove();
+      $('#vBand')?.remove();
+      measure = null;
+    };
+    marks.addEventListener('pointerup', endMeasure);
+    marks.addEventListener('pointercancel', endMeasure);
+    marks.addEventListener('pointerleave', () => { if (!drag && !measure) hideTip(); });
+
+    // ไม้บรรทัดแนวดิ่ง
+    vruler.addEventListener('pointerdown', e => {
+      if (e.button !== 0) return;
+      e.preventDefault();
+      try { vruler.setPointerCapture(e.pointerId); } catch { /* ไม่มี pointer ที่จับได้ */ }
+      measure = { axis: 'v', start: cmY(e.clientY, e.altKey), id: e.pointerId };
+    });
+    vruler.addEventListener('pointermove', e => {
+      const y = cmY(e.clientY, e.altKey);
+      if (measure?.axis === 'v') {
+        const b = band(vruler, 'vBand');
+        b.style.top = `calc(var(--edge-y) + ${Math.min(measure.start, y)}cm)`;
+        b.style.height = `${Math.abs(y - measure.start)}cm`;
+        showV(y, measureText(measure.start, y));
+        return;
+      }
+      showV(y, `${fmt(y)} ซม.`);
+    });
+    vruler.addEventListener('pointerup', endMeasure);
+    vruler.addEventListener('pointercancel', endMeasure);
+    vruler.addEventListener('pointerleave', () => { if (!measure) hideV(); });
+
+    // ตำแหน่งเมาส์บนกระดาษ
+    editorBox.addEventListener('pointermove', e => {
+      $('#posInfo').textContent = `⌖ ${fmt(cmX(e.clientX))}, ${fmt(cmY(e.clientY))}`;
+    });
+    editorBox.addEventListener('pointerleave', () => { $('#posInfo').textContent = ''; });
+
+    // ---------- ชั้นซ้อนทับ: เครื่องหมายซ่อน (¶), เส้นบรรทัด, เส้นแบ่งหน้า A4 ----------
+    // วาดเป็น div ลอยทับกล่องพิมพ์ ไม่แทรกอะไรลงในเนื้อหา Quill จึงไม่กระทบข้อความ ประวัติ หรือการส่งออก
+    const layer = document.createElement('div');
+    layer.className = 'mark-layer';
+    layer.setAttribute('aria-hidden', 'true');
+    editorBox.append(layer);
+    const ZW = /[\u200B\u200C\u200D\uFEFF]/;   // อักขระล่องหนที่มักติดมาจากการคัดลอก (ไม่รวม Word Joiner ที่ตั้งใจผูกคำ)
+    const saveSettings = () => { try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch { /* ไม่มี storage */ } };
+    let overlayTimer = 0;
+    function scheduleOverlay() { clearTimeout(overlayTimer); overlayTimer = setTimeout(renderOverlay, 40); }
+    // ข้อความของ line blot (ข้าม .ql-ui ของรายการ) พร้อม text node สำหรับวัดตำแหน่ง
+    function textNodesOf(dom) {
+      const out = [];
+      const w = document.createTreeWalker(dom, NodeFilter.SHOW_TEXT, { acceptNode: n => (n.parentElement.closest('.ql-ui') ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT) });
+      for (let n = w.nextNode(); n; n = w.nextNode()) out.push(n);
+      return out;
+    }
+    let lineTops = [];          // ตำแหน่งบรรทัดที่วาดล่าสุด: ใช้บอกเลขที่ย่อหน้า/บรรทัดของเคอร์เซอร์
+    function renderOverlay() {
+      layer.textContent = '';
+      const pageGuides = settings.paper === 'a4' && settings.pageBreaks;
+      lineTops = [];
+      if (!settings.showMarks && !settings.lineGuides && !pageGuides && !settings.paraNumbers && !settings.lineNumbers) { updateLineInfo(); return; }
+      const box = editorBox.getBoundingClientRect();
+      const z = box.width / (editorBox.offsetWidth || box.width) || 1;   // อัตราซูมจริง (CSS zoom)
+      const X = v => (v - box.left) / z, Y = v => (v - box.top) / z;
+      const frag = document.createDocumentFragment();
+      const put = (cls, css, text) => {
+        const e = document.createElement('div');
+        e.className = cls;
+        Object.assign(e.style, css);
+        if (text) e.textContent = text;
+        frag.append(e);
+        return e;
+      };
+      const px = v => `${v}px`;
+      const rootRect = quill.root.getBoundingClientRect(), rs = getComputedStyle(quill.root);
+      const textLeft = X(rootRect.left) + parseFloat(rs.paddingLeft), textRight = X(rootRect.right) - parseFloat(rs.paddingRight);
+      const range = document.createRange();
+      const lines = quill.getLines();
+
+      if (settings.lineGuides) {
+        const colors = settings.lineColors;
+        lines.forEach((line, i) => {
+          const dom = line.domNode, br = dom.getBoundingClientRect();
+          if (!br.height) return;
+          range.selectNodeContents(dom);
+          const tops = new Set([...range.getClientRects()].filter(r => r.height > 0).map(r => Math.round(r.top / (4 * z))));
+          const count = Math.max(1, tops.size), lh = br.height / z / count, color = colors[i % colors.length];
+          const left = line.statics.blotName === 'table' ? X(br.left) : textLeft, width = line.statics.blotName === 'table' ? br.width / z : textRight - textLeft;
+          for (let k = 1; k <= count; k++) put('mk-line', { left: px(left), width: px(width), top: px(Y(br.top) + k * lh - 1), borderTopColor: color });
+          put('mk-bar', { left: px(left - 8), top: px(Y(br.top)), height: px(br.height / z), background: color });
+        });
+      }
+
+      if (settings.showMarks) {
+        const M = settings.marks, C = settings.markColors;
+        for (const line of lines) {
+          const nodes = textNodesOf(line.domNode);
+          const full = nodes.map(n => n.data).join('');
+          let offset = 0;
+          for (const n of nodes) {
+            const t = n.data;
+            for (let i = 0; i < t.length; i++) {
+              const ch = t[i];
+              const kind = ch === ' ' ? 'space' : ch === '\u00A0' ? 'nbsp' : ch === '\t' ? 'tab' : ch === '\u2060' ? 'wj' : ZW.test(ch) ? 'zw' : null;
+              if (!kind || !M[kind]) continue;
+              range.setStart(n, i);
+              range.setEnd(n, i + 1);
+              const r = range.getClientRects()[0] || range.getBoundingClientRect();
+              if (!r || (!r.width && !r.height)) continue;
+              const cx = X(r.left + r.width / 2), cy = Y(r.top + r.height / 2);
+              if (kind === 'wj') { put('mk-wj', { left: px(X(r.left)), top: px(Y(r.top)), color: C.wj }, '⁀'); continue; }
+              if (kind === 'zw') { put('mk-zw', { left: px(X(r.left)), top: px(Y(r.top)), height: px(r.height / z), background: C.zw, color: C.zw }); continue; }
+              if (kind === 'tab') { put('mk-ch', { left: px(cx), top: px(cy), color: C.tab }, '→'); continue; }
+              // เว้นวรรคซ้อน และเว้นวรรคที่ท้ายย่อหน้า: ระบายพื้นหลังเตือน (Word ไม่มี)
+              const at = offset + i, neighbour = full[at - 1] === ' ' || full[at + 1] === ' ', trailing = !full.slice(at + 1).trim();
+              if (M.dup && kind === 'space' && (neighbour || trailing)) put('mk-dup', { left: px(X(r.left)), top: px(Y(r.top) + r.height / z * 0.2), width: px(Math.max(2, r.width / z)), height: px(r.height / z * 0.6), background: C.dup });
+              put('mk-ch', { left: px(cx), top: px(cy), color: kind === 'space' ? C.space : C.nbsp }, kind === 'space' ? '·' : '°');
+            }
+            offset += t.length;
+          }
+          if (M.para) {
+            // เครื่องหมายท้ายย่อหน้า: ใช้ตำแหน่งเคอร์เซอร์ก่อนตัวขึ้นบรรทัดใหม่ของบรรทัดนั้น
+            const b = quill.getBounds(quill.getIndex(line) + line.length() - 1);
+            if (!b) continue;
+            const cr = quill.container.getBoundingClientRect();
+            const mark = line.statics.blotName === 'table' ? '¤' : '¶';
+            put('mk-ch', { left: px(X(cr.left + b.left) + 2), top: px(Y(cr.top + b.top + b.height / 2)), color: C.para, transform: 'translate(0,-50%)', font: '600 12px/1 Arial,sans-serif' }, mark);
+          }
+        }
+      }
+
+      if (settings.paraNumbers || settings.lineNumbers) {
+        // เลขที่บรรทัดนับทุกบรรทัดบนจอในหน้านี้ (รวมบรรทัดว่าง) ; เลขที่ย่อหน้าใช้ลำดับเดียวกับแท็บจัดหน้า
+        let lineNo = 0;
+        const lnX = textLeft - 8, pnX = textLeft - (settings.lineNumbers ? 30 : 8);
+        lines.forEach((line, i) => {
+          const dom = line.domNode, br = dom.getBoundingClientRect();
+          if (line.statics.blotName === 'table' || !br.height) return;
+          range.selectNodeContents(dom);
+          const count = Math.max(1, new Set([...range.getClientRects()].filter(r => r.height > 0).map(r => Math.round(r.top / (4 * z)))).size);
+          const lh = br.height / z / count, top = Y(br.top);
+          for (let k = 0; k < count; k++) {
+            lineNo++;
+            lineTops.push({ y: top + k * lh, line: lineNo, para: i + 1 });
+            if (settings.lineNumbers) put('mk-ln', { left: px(lnX), top: px(top + (k + 0.5) * lh) }, String(lineNo));
+          }
+          if (settings.paraNumbers) {
+            const blank = !textNodesOf(dom).some(n => n.data.trim());
+            const e = put('mk-pn', { left: px(pnX), top: px(top + lh / 2) }, String(i + 1));
+            if (blank) e.classList.add('blank');
+          }
+        });
+      }
+
+      if (pageGuides) {
+        // พื้นที่ข้อความต่อหน้า A4 = 29.7 − 2.5 − 2 = 25.2 ซม. (จุดตัดหน้าจริงอาจเลื่อนเล็กน้อยเพราะไม่ตัดกลางบรรทัด)
+        const pt = parseFloat(rs.paddingTop), per = 25.2 * CM, total = box.height / z;
+        for (let k = 1; pt + k * per < total - 2; k++) {
+          const g = put('mk-page', { top: px(1 + pt + k * per) });
+          const s = document.createElement('span');
+          s.textContent = `ขึ้นหน้า ${k + 1} (โดยประมาณ)`;
+          g.append(s);
+        }
+      }
+      layer.append(frag);
+      updateLineInfo();
+    }
+    quill.on('editor-change', type => { if (type === 'text-change') scheduleOverlay(); });
+    new ResizeObserver(scheduleOverlay).observe(editorBox);
+    addEventListener('resize', scheduleOverlay);
+    document.fonts?.ready?.then(scheduleOverlay);
+    function updateLineInfo(r = currentRange()) {
+      const el = $('#lnInfo');
+      if (!(settings.paraNumbers || settings.lineNumbers) || !lineTops.length || !r) { el.textContent = ''; return; }
+      const b = quill.getBounds(r.index);
+      if (!b) return;
+      const c = quill.container.getBoundingClientRect(), box = editorBox.getBoundingClientRect();
+      const z = box.width / (editorBox.offsetWidth || box.width) || 1;
+      const y = (c.top + b.top + b.height / 2 - box.top) / z;
+      let hit = lineTops[0];
+      for (const t of lineTops) { if (t.y <= y + 1) hit = t; else break; }
+      el.textContent = `ย่อหน้า ${hit.para} · บรรทัด ${hit.line}`;
+    }
+    // วัดย่อหน้าบนหน้าจอ: จำนวนบรรทัด และอัตราที่เว้นวรรคถูกยืดมากที่สุด (การจัดเสมอหน้าหลังของภาษาไทยยืดได้เฉพาะเว้นวรรค)
+    const measureCtx = document.createElement('canvas').getContext('2d');
+    const graphemes = new Intl.Segmenter('th', { granularity: 'grapheme' });
+    const thWords = new Intl.Segmenter('th', { granularity: 'word' });
+    const WJ = '⁠';        // Word Joiner: อักขระล่องหนที่ห้ามเบราว์เซอร์ตัดบรรทัดตรงนั้น
+    const INVISIBLE = /[⁠​]/g;
+    // คำห้ามตัด (จัดการในแท็บ "คำห้ามตัด" ของเครื่องมือเสริม)
+    let noBreakWords = [];
+
+    // ---------- ผูกคำด้วย Word Joiner โดยใช้ Intl.Segmenter ----------
+    // Segmenter ใช้พจนานุกรม ICU ชุดเดียวกับที่เบราว์เซอร์ตัดบรรทัด ขอบเขตคำที่ได้จึงเป็นจุดที่เบราว์เซอร์อาจตัดจริง
+    // ใส่ WJ เฉพาะขอบเขตที่อยู่ "ภายใน" คำในรายการ ข้อความยังเหมือนเดิมทุกตัวอักษร
+    function joinPositions(text, words, from = 0, to = text.length) {
+      const bounds = new Set();
+      for (const s of thWords.segment(text)) bounds.add(s.index);
+      const pos = new Set();
+      for (const w of words) {
+        if (!w || w.length < 2 || /\s/.test(w)) continue;
+        for (let i = text.indexOf(w, from); i !== -1 && i + w.length <= to; i = text.indexOf(w, i + 1)) {
+          for (let k = i + 1; k < i + w.length; k++) if (bounds.has(k) && text[k - 1] !== WJ && text[k] !== WJ) pos.add(k);
+        }
+      }
+      return [...pos].sort((a, b) => a - b);
+    }
+    const deltaText = d => d.ops.map(op => (typeof op.insert === 'string' ? op.insert : '￼')).join('');
+    function joinChange(delta, words, from, to) {
+      const text = deltaText(delta);
+      const pos = joinPositions(text, words, from, to);
+      let change = new Delta(), last = 0;
+      for (const p of pos) {
+        change = change.retain(p - last).insert(WJ, delta.slice(p - 1, p).ops[0]?.attributes);
+        last = p;
+      }
+      return { change, count: pos.length };
+    }
+    // ผูกคำทั้งหน้า/ทุกหน้า: หน้าที่เปิดอยู่กดย้อนกลับได้ หน้าอื่นแก้ที่ delta โดยตรง
+    function bindWords(scope = 'page', words = noBreakWords) {
+      snapshot();
+      let total = 0;
+      const list = scope === 'all' ? pages.map((_, i) => i) : [cur];
+      for (const p of list) {
+        const delta = p === cur ? quill.getContents() : pages[p].delta;
+        const { change, count } = joinChange(delta, words, 0, delta.length());
+        if (!count) continue;
+        total += count;
+        if (p === cur) quill.updateContents(change, 'user');
+        else { pages[p] = { delta: delta.compose(change), stack: emptyStack() }; }
+      }
+      if (total && scope === 'all') scheduleSave();
+      return total;
+    }
+
+    // ---------- วัดบรรทัดบนจอจริง ----------
+    // ข้อความของแต่ละบรรทัด (ภาษาไทยตัดบรรทัดตามพจนานุกรมของเบราว์เซอร์ จึงต้องวัดจากตำแหน่งตัวอักษร)
+    function visualLines(dom, z) {
+      const range = document.createRange(), rows = [];
+      let offset = 0;
+      for (const n of textNodesOf(dom)) {
+        for (let i = 0; i < n.data.length; i++) {
+          range.setStart(n, i);
+          range.setEnd(n, i + 1);
+          const r = range.getClientRects()[0];
+          const key = r && r.width > 0 ? Math.round(r.top / (4 * z)) : null;   // สระ/วรรณยุกต์กว้าง 0 อยู่บรรทัดเดียวกับตัวก่อนหน้า
+          let row = rows[rows.length - 1];
+          if (!row || (key != null && key !== row.key)) { row = { key: key ?? row?.key, text: '', start: offset + i, left: Infinity, right: 0 }; rows.push(row); }
+          row.text += n.data[i];
+          if (r && r.width > 0) { row.left = Math.min(row.left, r.left); row.right = Math.max(row.right, r.right); }
+        }
+        offset += n.data.length;
+      }
+      return rows;
+    }
+    // ระยะที่ถูกยืดเพิ่มต่อตัวอักษร (em) ในแต่ละบรรทัดที่จัดเสมอหน้าหลัง:
+    // text-justify: inter-character กระจายช่องว่างระหว่างตัวอักษร จึงเทียบความกว้างจริงบนจอกับความกว้างปกติของข้อความเดียวกัน
+    function stretchOf(dom, rows, z, ls = 0) {
+      const cs = getComputedStyle(dom);
+      if (cs.textAlign !== 'justify' || rows.length < 1) return { stretch: 0, worst: 0 };
+      const fs = parseFloat(cs.fontSize) || 21;
+      measureCtx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+      let stretch = 0, worst = 0;
+      rows.forEach((row, i) => {
+        if (i === rows.length - 1 && cs.textAlignLast !== 'justify') return;       // บรรทัดสุดท้ายไม่ถูกยืด
+        const t = row.text.replace(INVISIBLE, '').replace(/\s+$/, '');
+        const g = [...graphemes.segment(t)].length;
+        if (g < 2 || !isFinite(row.left)) return;
+        const natural = measureCtx.measureText(t).width + ls * fs * (g - 1);
+        const s = ((row.right - row.left) / z - natural) / (g - 1) / fs;
+        if (s > stretch) { stretch = s; worst = i + 1; }
+      });
+      return { stretch: Math.round(stretch * 1000) / 1000, worst };
+    }
+    // จุดตัดบรรทัดที่ไม่ควรเกิดในภาษาไทย
+    const BAD_HEAD = /^[ๆฯะ-ฺๅ็-๎,.)\]”’:;!?]/;
+    const UNIT_WORD = /^(บาท|สตางค์|คน|ราย|วัน|เดือน|ปี|ชั่วโมง|นาที|แห่ง|ฉบับ|หน้า|ครั้ง|ชุด|เครื่อง|หลัง|กิโลเมตร|เมตร|ล้าน|เปอร์เซ็นต์|ข้อ|อัตรา|โครงการ)/;
+    function breakInfo(rows) {
+      const full = rows.map(r => r.text).join('');
+      const out = [];
+      for (let k = 1; k < rows.length; k++) {
+        const at = rows[k].start, tail = full.slice(Math.max(0, at - 12), at), head = full.slice(at, at + 12);
+        const h = head.replace(/^[  ]+/, '');
+        let reason = '', join = null;
+        // ตัดกลางคำห้ามตัด (คำประสม ชื่อหน่วยงาน ชื่อคน)
+        for (const w of noBreakWords) {
+          for (let i = full.indexOf(w); i !== -1 && i < at; i = full.indexOf(w, i + 1)) {
+            if (i < at && at < i + w.length) { join = w; break; }
+          }
+          if (join) break;
+        }
+        if (join) reason = `ตัดกลางคำ “${join}”`;
+        else if (BAD_HEAD.test(h)) reason = 'ขึ้นบรรทัดใหม่ด้วยเครื่องหมายหรือสระที่ต้องอยู่ติดคำก่อนหน้า';
+        else if (/[0-9๐-๙][0-9๐-๙,.]*[  ]*$/.test(tail) && UNIT_WORD.test(h)) reason = 'ตัวเลขกับหน่วยถูกแยกคนละบรรทัด';
+        else if (/(นาย|นาง|นางสาว|ดร\.)[  ]*$/.test(tail)) reason = 'คำนำหน้าชื่อถูกแยกจากชื่อ';
+        // ถ้าตัดตรงเว้นวรรค: เสนอวลี (คำท้ายบรรทัด + เว้นวรรค + คำต้นบรรทัด) ให้ผูกด้วยเว้นวรรคห้ามตัด
+        let phrase = null;
+        const sp = full[at - 1] === ' ' ? at - 1 : full[at] === ' ' ? at : -1;
+        if (reason && !join && sp >= 0) {
+          const before = full.slice(0, sp).split(/[  ]/).pop(), after = full.slice(sp + 1).split(/[  ]/)[0];
+          if (before && after) phrase = `${before} ${after}`;
+        }
+        out.push({ tail: tail.replace(INVISIBLE, ''), head: head.replace(INVISIBLE, ''), bad: !!reason, reason, phrase, join });
+      }
+      return out;
+    }
+    // ทดลองช่องไฟกับสำเนาย่อหน้าที่มองไม่เห็น (ไม่แตะเนื้อหาจริง): คืนจำนวนบรรทัด ความยาวบรรทัดสุดท้าย และระยะยืด
+    let measurer = null;
+    function trialStats(dom, ls, z) {
+      if (!measurer) {
+        measurer = document.createElement('div');
+        measurer.className = 'ql-editor';
+        measurer.setAttribute('aria-hidden', 'true');
+        Object.assign(measurer.style, { position: 'absolute', left: '0', top: '0', visibility: 'hidden', pointerEvents: 'none', height: 'auto', minHeight: '0' });
+        quill.container.append(measurer);
+      }
+      measurer.style.width = `${quill.root.offsetWidth}px`;
+      const clone = dom.cloneNode(true);
+      clone.querySelectorAll('[style]').forEach(el => { el.style.letterSpacing = ''; });
+      clone.style.letterSpacing = `${ls}em`;
+      measurer.replaceChildren(clone);
+      const rows = visualLines(clone, z), br = clone.getBoundingClientRect();
+      const res = {
+        lines: Math.max(1, rows.length),
+        lastFill: rows.length > 1 ? clamp((rows[rows.length - 1].right - br.left) / (br.width || 1), 0, 1) : 1,
+        ...stretchOf(clone, rows, z, ls),
+      };
+      measurer.replaceChildren();
+      return res;
+    }
+    function currentLetterSpacing(q, line) {
+      const vals = new Set(q.getContents(q.getIndex(line), Math.max(0, line.length() - 1)).ops
+        .filter(op => typeof op.insert === 'string' && op.insert.trim()).map(op => parseFloat(op.attributes?.letterspacing) || 0));
+      return vals.size > 1 ? null : [...vals][0] ?? 0;
+    }
+    const STRETCH_LIMIT = 0.08;        // ยืดเกิน 0.08 em ต่อตัวอักษร ถือว่าตัวอักษรห่างผิดสังเกต
+    function measureLine(line) {
+      const dom = line.domNode;
+      const box = editorBox.getBoundingClientRect(), z = box.width / (editorBox.offsetWidth || box.width) || 1;
+      const rows = visualLines(dom, z);
+      const lines = Math.max(1, rows.length);
+      const br = dom.getBoundingClientRect();
+      const lastFill = rows.length > 1 ? Math.round(clamp((rows[rows.length - 1].right - br.left) / (br.width || 1), 0, 1) * 100) / 100 : 1;
+      const breaks = breakInfo(rows);
+      const base = currentLetterSpacing(quill, line) ?? 0;
+      const { stretch, worst } = stretchOf(dom, rows, z, base);
+      const round3 = v => Math.round(v * 1000) / 1000;
+      // คำโดด: บรรทัดสุดท้ายสั้นกว่า 20% ของความกว้าง → หาช่องไฟที่ลดลงแล้วดึงคำขึ้นไปได้
+      let orphanFix = null;
+      if (dom.tagName === 'P' && lines > 1 && lastFill < 0.2) {
+        for (let k = 1; k <= 6; k++) {
+          const v = round3(base - k * 0.005);
+          if (trialStats(dom, v, z).lines < lines) { orphanFix = v; break; }
+        }
+      }
+      // ตัวอักษรถูกยืดห่างเกิน: หาช่องไฟที่ทำให้ยืดน้อยลงโดยไม่เพิ่มบรรทัดและไม่เกิดคำโดด
+      let stretchFix = null;
+      if (dom.tagName === 'P' && lines > 1 && stretch > STRETCH_LIMIT) {
+        for (const d of [0.005, -0.005, 0.01, -0.01, 0.015, -0.015, 0.02, -0.02]) {
+          const v = round3(base + d), t = trialStats(dom, v, z);
+          if (t.lines <= lines && t.stretch < STRETCH_LIMIT && t.lastFill >= 0.2) { stretchFix = v; break; }
+        }
+      }
+      return {
+        lines, lastFill, orphanFix, stretch, stretchLine: worst, stretchFix,
+        badBreaks: breaks.filter(b => b.bad).map(({ tail, head, reason, phrase, join }) => ({ at: `${tail}|${head}`, reason, phrase, join })),
+      };
+    }
+    function toggleSetting(key) {
+      settings[key] = !settings[key];
+      document.body.classList.toggle('numbers-on', !!(settings.paraNumbers || settings.lineNumbers));
+      saveSettings();
+      scheduleOverlay();
+      schedule();
+    }
+
+    // ---------- สถานะปุ่ม ----------
+    const press = (el, on) => el.setAttribute('aria-pressed', on ? 'true' : 'false');
+    const cmdBtn = (cmd, val) => $(`[data-cmd="${cmd}"]${val ? `[data-val="${val}"]` : ''}`);
+    function refresh() {
+      const r = currentRange();
+      const f = quill.getFormat(r.index, r.length);
+      for (const k of ['bold', 'italic', 'underline', 'strike']) press(cmdBtn(k), f[k] === true);
+      press(cmdBtn('sub'), f.script === 'sub');
+      press(cmdBtn('sup'), f.script === 'super');
+      const dist = f.textalignlast === 'justify';
+      const align = typeof f.align === 'string' ? f.align : (f.align ? null : DEFAULTS.align);
+      for (const b of $$('[data-cmd=align]')) press(b, b.dataset.val === 'distribute' ? dist : !dist && align === b.dataset.val);
+      for (const b of $$('[data-cmd=list]')) press(b, f.list === b.dataset.val);
+      fontSel.value = typeof f.font === 'string' ? f.font : (f.font ? '' : DEFAULTS.font);
+      const size = typeof f.size === 'string' ? f.size : (f.size ? '' : DEFAULTS.size);
+      if (size && ![...sizeSel.options].some(o => o.value === size)) sizeSel.add(new Option(parseFloat(size), size));
+      sizeSel.value = size;
+      $('#btnColor').style.setProperty('--swatch', typeof f.color === 'string' ? f.color : '#000');
+      $('#btnBg').style.setProperty('--swatch', typeof f.background === 'string' ? f.background : 'transparent');
+      press($('#btnMarks'), settings.showMarks);
+      press($('#btnLines'), settings.lineGuides);
+      $('#btnNumbers').classList.toggle('on', !!(settings.paraNumbers || settings.lineNumbers));
+      for (const b of $$('#m-numbers [data-act=numbers]')) b.setAttribute('aria-checked', String(!!settings[b.dataset.val]));
+      updateLineInfo(r);
+      $('#btnUndo').disabled = !quill.history.stack.undo.length;
+      $('#btnRedo').disabled = !quill.history.stack.redo.length;
+      updateRuler(r);
+      $('#lsInfo').textContent = Array.isArray(f.letterspacing) ? 'ช่องไฟ หลายค่า' : f.letterspacing ? `ช่องไฟ ${lsSigned(parseFloat(f.letterspacing))}` : '';
+    }
+    // รวมหลาย editor-change ในงานเดียวกันให้ refresh ครั้งเดียว
+    let pending = false;
+    function schedule() {
+      if (pending) return;
+      pending = true;
+      queueMicrotask(() => { pending = false; refresh(); });
+    }
+    quill.on('editor-change', schedule);
+
+    const seg = window.Intl?.Segmenter ? new Intl.Segmenter('th', { granularity: 'word' }) : null;
+    const updateCounts = debounce(() => {
+      const t = quill.getText();
+      let words = 0;
+      if (seg) { for (const s of seg.segment(t)) if (s.isWordLike) words++; }
+      else words = (t.match(/\S+/g) || []).length;
+      $('#counts').textContent = `${words.toLocaleString()} คำ · ${t.replace(/\s/g, '').length.toLocaleString()} ตัว`;
+    }, 250);
+    quill.on('text-change', updateCounts);
+
+    // ---------- ชื่อเอกสาร ----------
+    // ถ้ายังไม่ได้ตั้งชื่อ จะตั้งเป็น "ร่าง-ปีเดือนวัน-เวลา" ของการบันทึกครั้งแรก แล้วใช้ชื่อนั้นต่อไป
+    let docName = '';
+    const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    const fileSafe = s => s.replace(/[\\/:*?"<>|]+/g, '-').trim() || 'ร่าง';
+    function setDocName(name) {
+      docName = String(name || '').trim().slice(0, 80);
+      $('#docName').value = docName;
+      document.title = docName ? `${docName} — e-Office Editor` : 'e-Office Editor';
+      saveLocal();
+    }
+    function ensureDocName() {
+      if (!docName) setDocName(`ร่าง-${stamp()}`);
+      return docName;
+    }
+    $('#docName').addEventListener('change', e => setDocName(e.target.value));
+
+    // ---------- ไฟล์ล่าสุด (Chrome/Edge: จำ handle ไว้ใน IndexedDB แล้วเปิดซ้ำได้) ----------
+    async function recentFiles() {
+      try { return (await idb.get('recent')) || []; } catch { return []; }
+    }
+    async function addRecent(handle) {
+      try {
+        const list = await recentFiles();
+        const keep = [];
+        for (const r of list) if (!(await r.handle.isSameEntry(handle))) keep.push(r);
+        await idb.set('recent', [{ handle, name: handle.name, time: Date.now() }, ...keep].slice(0, 12));
+      } catch { /* ไม่มี IndexedDB */ }
+      document.dispatchEvent(new CustomEvent('eoffice:recent'));
+    }
+    async function removeRecent(i) {
+      const list = await recentFiles();
+      list.splice(i, 1);
+      try { await idb.set('recent', list); } catch { /* ไม่มี IndexedDB */ }
+      document.dispatchEvent(new CustomEvent('eoffice:recent'));
+    }
+    // เปิดไฟล์จาก handle: ถ้าเป็นไฟล์ร่างของแอปนี้ จะผูกไว้บันทึกทับอัตโนมัติต่อ
+    async function openHandle(handle) {
+      try {
+        let perm = await handle.queryPermission({ mode: 'readwrite' });
+        if (perm !== 'granted') perm = await handle.requestPermission({ mode: 'readwrite' });
+        if (perm !== 'granted') { say('ไม่ได้รับอนุญาตให้เปิดไฟล์นี้'); return false; }
+        const f = await handle.getFile();
+        const text = await f.text();
+        if (!(await loadFileText(f.name, text, /\.txt$/i.test(f.name)))) return false;
+        if (isOwnDraft(text)) {
+          Object.assign(file, { handle, savedAt: new Date(f.lastModified), error: false });
+          try { await idb.set('file', handle); } catch { /* ไม่มี IndexedDB */ }
+          renderFileBtn();
+          saveInfo();
+          say(`เปิด “${f.name}” แล้ว — การแก้ไขจะบันทึกทับไฟล์นี้อัตโนมัติ`);
+        }
+        await addRecent(handle);
+        return true;
+      } catch (err) {
+        say(err?.name === 'NotFoundError' ? 'ไม่พบไฟล์นี้แล้ว (อาจถูกย้ายหรือลบ)' : 'เปิดไฟล์ไม่สำเร็จ: ' + err.message);
+        return false;
+      }
+    }
+    async function openPicker() {
+      if (typeof window.showOpenFilePicker !== 'function') { $('#fileOpen').click(); return; }
+      try {
+        const [h] = await window.showOpenFilePicker({ types: [{ description: 'เอกสาร HTML หรือข้อความ', accept: { 'text/html': ['.html', '.htm'], 'text/plain': ['.txt'] } }] });
+        await openHandle(h);
+      } catch (err) {
+        if (err?.name !== 'AbortError') say('เปิดไฟล์ไม่สำเร็จ: ' + err.message);
+      }
+    }
+
+    // ---------- หลายหน้า ----------
+    // ทุกหน้าใช้เอดิเตอร์ตัวเดียว: สลับหน้าโดยเก็บ delta และประวัติย้อนกลับของหน้าเดิมไว้ แล้วโหลดหน้าใหม่
+    const emptyStack = () => ({ undo: [], redo: [] });
+    let pages = [{ delta: new Delta(), stack: emptyStack() }], cur = 0;
+    function snapshot() {
+      pages[cur].delta = quill.getContents();
+      pages[cur].stack = quill.history.stack;
+    }
+    const allEmpty = () => { snapshot(); return pages.every(p => p.delta.length() <= 1); };
+    function renderTabs() {
+      $('#pagebar').innerHTML = pages.map((_, i) => {
+        const on = i === cur;
+        const close = on && pages.length > 1 ? `<button type="button" class="pclose" data-close="${i}" aria-label="ลบหน้า ${i + 1}" title="ลบหน้านี้">×</button>` : '';
+        return `<span class="ptab" aria-selected="${on}"><button type="button" role="tab" aria-selected="${on}" data-page="${i}">หน้า ${i + 1}</button>${close}</span>`;
+      }).join('') + '<button type="button" class="padd" id="btnAddPage" title="เพิ่มหน้าใหม่ต่อจากหน้านี้">＋ เพิ่มหน้า</button>';
+    }
+    function loadPage(i) {
+      cur = i;
+      // Quill 2.0.3 บันทึกการเปลี่ยนแบบ silent ลงประวัติด้วย จึงให้การโหลดหน้าไปลงกองทิ้ง แล้วค่อยใส่ประวัติของหน้านั้น
+      quill.history.stack = emptyStack();
+      quill.setContents(pages[i].delta, 'silent');
+      quill.history.stack = pages[i].stack || emptyStack();
+      quill.history.cutoff();
+      lastRange = { index: 0, length: 0 };
+      quill.setSelection(0, 0, 'silent');
+      renderTabs();
+      refresh();
+      updateCounts();
+    }
+    function showPage(i) {
+      if (i === cur || !pages[i]) return;
+      closeMenu();
+      quill.history.cutoff();
+      snapshot();
+      loadPage(i);
+      scheduleSave();
+      say(`หน้า ${i + 1} จาก ${pages.length}`);
+    }
+    function addPage() {
+      closeMenu();
+      quill.history.cutoff();
+      snapshot();
+      pages.splice(cur + 1, 0, { delta: new Delta(), stack: emptyStack() });
+      loadPage(cur + 1);
+      quill.focus();
+      scheduleSave();
+      say(`เพิ่มหน้า ${cur + 1} แล้ว (ทั้งหมด ${pages.length} หน้า)`);
+    }
+    function deletePage(i) {
+      snapshot();
+      if (pages.length === 1 || !pages[i]) return;
+      if (pages[i].delta.length() > 1 && !confirm(`ลบหน้า ${i + 1}? เนื้อหาในหน้านี้จะหายและกดย้อนกลับไม่ได้`)) return;
+      pages.splice(i, 1);
+      loadPage(Math.min(i, pages.length - 1));
+      scheduleSave();
+      say(`ลบหน้าแล้ว เหลือ ${pages.length} หน้า`);
+    }
+    function replaceAllPages(deltas) {
+      pages = deltas.map(d => ({ delta: d, stack: emptyStack() }));
+      loadPage(0);
+      scheduleSave();
+    }
+    $('#pagebar').addEventListener('click', e => {
+      const b = e.target.closest('button');
+      if (!b) return;
+      if (b.id === 'btnAddPage') addPage();
+      else if (b.dataset.close) deletePage(+b.dataset.close);
+      else if (b.dataset.page) showPage(+b.dataset.page);
+    });
+
+    // ---------- บันทึกอัตโนมัติ ----------
+    // 1) ในเบราว์เซอร์ (localStorage) ทุกครั้งที่แก้ไข  2) ทับไฟล์ .html ที่ผู้ใช้เลือก (File System Access API: Chrome/Edge)
+    const clock = d => d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const file = { handle: null, savedAt: null, error: false, supported: typeof window.showSaveFilePicker === 'function' };
+    let localSavedAt = null, localFailed = false;
+    function saveInfo() {
+      const hm = d => d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+      const el = $('#saveInfo');
+      const text = localFailed ? '⚠ บันทึกไม่ได้' : localSavedAt ? `✓ บันทึก ${hm(localSavedAt)}` : '✓ บันทึกอัตโนมัติ';
+      const fileText = !file.handle ? '' : file.error ? ' · ไฟล์รออนุญาต' : ` · ไฟล์ ${file.savedAt ? hm(file.savedAt) : '✓'}`;
+      el.textContent = text + fileText;
+      el.classList.toggle('warn', localFailed || (!!file.handle && file.error));
+      el.title = [localFailed ? 'บันทึกในเบราว์เซอร์ไม่ได้ (พื้นที่เต็ม)' : localSavedAt ? `บันทึกอัตโนมัติในเบราว์เซอร์ ${clock(localSavedAt)}` : 'บันทึกอัตโนมัติในเบราว์เซอร์: เปิด',
+        file.handle ? (file.error ? `ไฟล์ ${file.handle.name}: รออนุญาต` : `บันทึกทับไฟล์ ${file.handle.name}${file.savedAt ? ' ' + clock(file.savedAt) : ''}`) : ''].filter(Boolean).join(' · ');
+    }
+    function saveLocalNow() {
+      snapshot();
+      localFailed = !store.set(KEY.draft, JSON.stringify({ v: 2, cur, name: docName, pages: pages.map(p => p.delta.ops) }));
+      if (localFailed) say('บันทึกในเบราว์เซอร์ไม่ได้ (พื้นที่เต็ม เช่น มีรูปขนาดใหญ่) — ใช้ “บันทึกลงไฟล์อัตโนมัติ” แทน');
+      else localSavedAt = new Date();
+      saveInfo();
+    }
+    const saveLocal = debounce(saveLocalNow, 800);
+
+    const idb = {
+      db: null,
+      open() {
+        return this.db ||= new Promise((resolve, reject) => {
+          const r = indexedDB.open('eoffice-editor', 1);
+          r.onupgradeneeded = () => r.result.createObjectStore('kv');
+          r.onsuccess = () => resolve(r.result);
+          r.onerror = () => reject(r.error);
+        });
+      },
+      async run(mode, fn) {
+        const db = await this.open();
+        return new Promise((resolve, reject) => {
+          const req = fn(db.transaction('kv', mode).objectStore('kv'));
+          req.onsuccess = () => resolve(req.result);
+          req.onerror = () => reject(req.error);
+        });
+      },
+      get(k) { return this.run('readonly', s => s.get(k)); },
+      set(k, v) { return this.run('readwrite', s => s.put(v, k)); },
+      del(k) { return this.run('readwrite', s => s.delete(k)); },
+    };
+    let writing = Promise.resolve();
+    async function writeFileNow() {
+      const h = file.handle;
+      if (!h) return;
+      try {
+        if ((await h.queryPermission({ mode: 'readwrite' })) !== 'granted') { file.error = true; return; }
+        const w = await h.createWritable();
+        await w.write(draftDocument());
+        await w.close();
+        file.savedAt = new Date();
+        file.error = false;
+      } catch (err) {
+        file.error = true;
+        say(`บันทึกลงไฟล์ “${h.name}” ไม่ได้: ${err.message}`);
+      } finally {
+        renderFileBtn();
+        saveInfo();
+      }
+    }
+    const queueWrite = () => (writing = writing.then(writeFileNow));
+    const saveFile = debounce(() => { if (file.handle && !file.error) queueWrite(); }, 1500);
+    function scheduleSave() { saveLocal(); saveFile(); }
+    quill.on('text-change', scheduleSave);
+
+    function renderFileBtn() {
+      const b = $('#btnFile');
+      b.disabled = !file.supported;
+      b.classList.toggle('linked', !!file.handle && !file.error);
+      b.classList.toggle('warn', !!file.handle && file.error);
+      b.textContent = !file.handle ? 'บันทึกลงไฟล์อัตโนมัติ' : file.error ? `บันทึกต่อลง “${file.handle.name}”` : `✓ ${file.handle.name}`;
+      b.title = !file.supported ? 'เบราว์เซอร์นี้ไม่รองรับ — ใช้ Chrome หรือ Edge หรือกด “บันทึกร่าง HTML” แทน'
+        : !file.handle ? 'เลือกไฟล์ .html ในเครื่อง แล้วบันทึกทับให้อัตโนมัติทุกครั้งที่แก้ไข'
+        : file.error ? 'คลิกเพื่ออนุญาตให้บันทึกลงไฟล์นี้ต่อ'
+        : 'กำลังบันทึกทับไฟล์นี้อัตโนมัติ — คลิกเพื่อเลิกผูกไฟล์';
+    }
+    async function unlinkFile() {
+      if (!file.handle) return;
+      Object.assign(file, { handle: null, savedAt: null, error: false });
+      try { await idb.del('file'); } catch { /* ไม่มี IndexedDB */ }
+      renderFileBtn();
+      saveInfo();
+    }
+    $('#btnFile').addEventListener('click', async () => {
+      if (!file.supported) return;
+      try {
+        if (!file.handle) {
+          const h = await window.showSaveFilePicker({
+            suggestedName: `${fileSafe(ensureDocName())}.html`,
+            types: [{ description: 'เอกสาร HTML', accept: { 'text/html': ['.html', '.htm'] } }],
+          });
+          Object.assign(file, { handle: h, savedAt: null, error: false });
+          try { await idb.set('file', h); } catch { /* จำไฟล์ข้ามการเปิดใหม่ไม่ได้ */ }
+          await queueWrite();
+          await addRecent(h);
+          if (!file.error) say(`ผูกไฟล์ “${h.name}” แล้ว — จะบันทึกทับให้อัตโนมัติทุกครั้งที่แก้ไข (ทุกหน้า)`);
+        } else if (file.error) {
+          if ((await file.handle.requestPermission({ mode: 'readwrite' })) === 'granted') {
+            file.error = false;
+            await queueWrite();
+            if (!file.error) say(`บันทึกต่อลง “${file.handle.name}” แล้ว`);
+          }
+        } else if (confirm(`เลิกบันทึกอัตโนมัติลงไฟล์ “${file.handle.name}”? (ไฟล์ที่บันทึกไว้แล้วยังอยู่)`)) {
+          await unlinkFile();
+          say('เลิกผูกไฟล์แล้ว — ยังบันทึกอัตโนมัติในเบราว์เซอร์ต่อ');
+        }
+      } catch (err) {
+        if (err?.name !== 'AbortError') say('เลือกไฟล์ไม่สำเร็จ: ' + err.message);
+      }
+      renderFileBtn();
+      saveInfo();
+    });
+    addEventListener('beforeunload', e => {
+      saveLocalNow();
+      if (localFailed && !file.handle && !allEmpty()) e.preventDefault();
+    });
+    addEventListener('beforeprint', buildPrintArea);
+    addEventListener('afterprint', () => { $('#printArea').innerHTML = ''; });
+
+    const SAMPLE = [
+      { insert: 'ตัวอย่างข้อความภาษาไทยสำหรับทดลองจัดหน้าเอกสาร ก่อนคัดลอกไปวางในระบบ e-Office ย่อหน้านี้ใช้ค่าเริ่มต้นตามมาตรฐานเอกสารที่เลือกไว้ในแท็บสไตล์ของเครื่องมือเสริม แบบอักษร TH Sarabun PSK ขนาด 16 พอยต์ จัดเสมอหน้าหลัง\n' },
+      { insert: 'ลองคลิกในย่อหน้านี้ แล้วลากตัวเลื่อนบนไม้บรรทัดเพื่อปรับกั้นซ้าย กั้นขวา และย่อหน้าบรรทัดแรก หรือใช้ปุ่มในแถบเครื่องมือเพื่อปรับ' },
+      { insert: 'ช่องไฟ', attributes: { bold: true } }, { insert: ' ' },
+      { insert: 'ระยะบรรทัด', attributes: { bold: true } },
+      { insert: ' และระยะก่อนหลังย่อหน้า' },
+      { insert: '\n', attributes: { marginleft: '1cm', textindent: '1.5cm' } },
+      { insert: 'เมื่อจัดเรียบร้อยแล้ว กดปุ่ม “คัดลอกไป e-Office” แล้ววางในช่องข้อความของระบบ จากนั้นตรวจผลอีกครั้งหลังบันทึก\n' },
+    ];
+    $('#btnNew').addEventListener('click', async () => {
+      if (!allEmpty() && !confirm(`เริ่มเอกสารใหม่? ทุกหน้า (${pages.length} หน้า) จะถูกล้างและกดย้อนกลับไม่ได้${file.handle ? ` และจะเลิกผูกไฟล์ “${file.handle.name}”` : ''}`)) return;
+      await unlinkFile();
+      replaceAllPages([new Delta()]);
+      setDocName('');
+      quill.focus();
+      say('เริ่มเอกสารใหม่แล้ว');
+    });
+    $('#btnSample').addEventListener('click', () => {
+      if (!isEmpty() && !confirm(`แทนที่เนื้อหาหน้า ${cur + 1} ด้วยข้อความตัวอย่าง? (กดย้อนกลับได้)`)) return;
+      quill.setContents(SAMPLE, 'user');
+      quill.setSelection(0, 0, 'user');
+      say('โหลดข้อความตัวอย่างแล้ว');
+    });
+    $('#btnSave').addEventListener('click', saveDraft);
+    $('#btnPrint').addEventListener('click', () => { buildPrintArea(); window.print(); });
+    $('#btnCopy').addEventListener('click', copyToEoffice);
+
+    // เริ่มต้น: กู้คืนร่างล่าสุดจากเบราว์เซอร์ (รองรับร่างรุ่นเก่าที่มีหน้าเดียว)
+    let restored = false;
+    try {
+      const saved = JSON.parse(store.get(KEY.draft) || 'null');
+      const list = saved?.v === 2 ? saved.pages : saved?.ops ? [saved.ops] : null;
+      if (Array.isArray(list) && list.length) {
+        pages = list.map(ops => ({ delta: new Delta(ops), stack: emptyStack() }));
+        cur = clamp(saved.cur | 0, 0, pages.length - 1);
+        restored = pages.some(p => p.delta.length() > 1);
+        docName = String(saved.name || '');
+        $('#docName').value = docName;
+        if (docName) document.title = `${docName} — e-Office Editor`;
+      }
+    } catch { /* ร่างเสีย ข้ามไป */ }
+    store.del('eoffice-editor:remember');
+    loadPage(cur);
+    renderFileBtn();
+    saveInfo();
+    quill.focus();
+    say(restored ? `กู้คืนร่างล่าสุดแล้ว (${pages.length} หน้า)` : 'พร้อมใช้งาน — ตรวจสอบว่าเครื่องติดตั้งฟอนต์ TH Sarabun PSK แล้ว');
+    // จำไฟล์ที่ผูกไว้ข้ามการเปิดใหม่ (เบราว์เซอร์มักให้กดอนุญาตอีกครั้ง)
+    if (file.supported) {
+      idb.get('file').then(async h => {
+        if (!h || file.handle) return;
+        file.handle = h;
+        file.error = (await h.queryPermission({ mode: 'readwrite' })) !== 'granted';
+        renderFileBtn();
+        saveInfo();
+      }).catch(() => { /* ไม่มี IndexedDB */ });
+    }
+    // ช่องทางให้ eoffice-tools.js (แผงเครื่องมือเสริม) ใช้งานเอดิเตอร์
+    window.eofficeEditor = {
+      quill, Delta, say, exportHtml, draftDocument,
+      writeClipboard,
+      // ภาพถ่ายทั้งเอกสาร (ทุกหน้า + ประวัติย้อนกลับ) ใช้ย้อนกลับการแก้ที่ข้ามหลายหน้า — restoreAll คืนค่ากลับทั้งหมด
+      snapshotAll() {
+        snapshot();
+        const copy = s => ({ undo: s.undo.map(e => ({ ...e })), redo: s.redo.map(e => ({ ...e })) });
+        return { cur, pages: pages.map(p => ({ delta: p.delta, stack: copy(p.stack || emptyStack()) })) };
+      },
+      restoreAll(snap) {
+        pages = snap.pages.map(p => ({ delta: p.delta, stack: p.stack }));
+        loadPage(clamp(snap.cur, 0, pages.length - 1));
+        scheduleSave();
+      },
+      // รัน fn(q) กับหน้าที่ระบุ: หน้าที่เปิดอยู่ใช้เอดิเตอร์จริง (กดย้อนกลับได้) หน้าอื่นใช้ตัวซ่อนแล้วเก็บผลกลับ (ประวัติของหน้านั้นถูกล้าง)
+      withPage(page, fn) {
+        if (page === cur) return fn(quill);
+        snapshot();
+        renderer.setContents(pages[page].delta, 'silent');
+        const r = fn(renderer);
+        pages[page] = { delta: renderer.getContents(), stack: emptyStack() };
+        scheduleSave();
+        return r;
+      },
+      setExportProfile: p => Object.assign(exportProfile, { stripWJ: false, tabsAsSpaces: false }, p),
+      setCopyAdvisor: fn => { copyAdvisor = fn; },
+      range: currentRange,
+      useRange,
+      pages: () => pages,
+      currentPage: () => cur,
+      addPage,
+      // การตั้งค่าเอกสาร (มาตรฐานย่อหน้า, เลขรายการ, เลขหน้าตอนพิมพ์)
+      profiles: PROFILES,
+      settings: () => ({ ...settings, defaults: { ...DEFAULTS } }),
+      setSetting(key, value) {
+        if (!(key in settings)) return;
+        settings[key] = value;
+        if (key === 'profile' && PROFILES[value]) Object.assign(DEFAULTS, { indent: PROFILES[value].indent, lineHeight: PROFILES[value].lineHeight });
+        saveSettings();
+        document.body.classList.toggle('a4', settings.paper === 'a4');
+        document.body.classList.toggle('grid-on', !!settings.grid);
+        document.body.classList.toggle('numbers-on', !!(settings.paraNumbers || settings.lineNumbers));
+        if (key === 'paper') window.dispatchEvent(new Event('resize'));   // คำนวณซูมให้พอดีกับความกว้างกระดาษใหม่
+        renderDocCss();
+        refresh();
+        scheduleOverlay();
+      },
+      // ข้อมูลย่อหน้าสำหรับการปรับให้สอดคล้องกัน: scope = 'page' | 'all'
+      // หน้าที่เปิดอยู่มีค่าวัดจริงจากหน้าจอด้วย (จำนวนบรรทัด, ช่องว่างที่ถูกยืดมากที่สุดเทียบกับเว้นวรรคปกติ)
+      paragraphs(scope = 'page') {
+        snapshot();
+        const out = [];
+        const list = scope === 'all' ? pages.map((_, i) => i) : [cur];
+        for (const p of list) {
+          if (p !== cur) renderer.setContents(pages[p].delta, 'silent');
+          const q = p === cur ? quill : renderer;
+          q.getLines().forEach((line, n) => {
+            const f = line.formats();
+            const item = {
+              page: p, n, kind: line.statics.blotName,
+              text: textNodesOf(line.domNode).map(t => t.data).join(''),
+              formats: Object.fromEntries(['align', 'textalignlast', 'textindent', 'marginleft', 'marginright', 'lineheight', 'spacebefore', 'spaceafter', 'list', 'tabsize'].filter(k => f[k] != null).map(k => [k, f[k]])),
+              bold: !!q.getFormat(q.getIndex(line), Math.max(1, line.length() - 1)).bold,
+              ls: currentLetterSpacing(q, line),          // ช่องไฟของย่อหน้า (em) หรือ null ถ้าหลายค่าปนกัน
+              // จำนวนชุดรูปแบบอักษรที่ต่างกันในย่อหน้า (1 = ทั้งย่อหน้าเหมือนกัน) — ใช้ตัดสินว่าเขียนข้อความใหม่ทับได้โดยไม่เสียตัวหนา/เอียง
+              variety: new Set(q.getContents(q.getIndex(line), Math.max(0, line.length() - 1)).ops.map(op => (typeof op.insert === 'string' ? JSON.stringify(op.attributes || {}) : 'embed'))).size,
+            };
+            if (p === cur) item.metrics = measureLine(line);
+            out.push(item);
+          });
+        }
+        return out;
+      },
+      // ใช้ค่าจัดย่อหน้า (formats), ช่องไฟทั้งย่อหน้า (inline.letterspacing: em หรือ 0 = ปกติ)
+      // และเปลี่ยนเว้นวรรคในวลีที่ระบุเป็นเว้นวรรคห้ามตัดบรรทัด (bind)
+      applyParagraph(page, n, formats = {}, bind = [], inline = {}, joinWords = []) {
+        if (page !== cur) { snapshot(); renderer.setContents(pages[page].delta, 'silent'); }
+        const q = page === cur ? quill : renderer;
+        const line = q.getLines()[n];
+        if (!line) return false;
+        const at = q.getIndex(line);
+        if (Object.keys(formats).length) q.formatLine(at, 1, formats, 'user');
+        if (inline.letterspacing != null && line.length() > 1) {
+          const v = +inline.letterspacing;
+          q.formatText(at, line.length() - 1, 'letterspacing', Math.abs(v) < 0.0005 ? false : `${Math.round(v * 1000) / 1000}em`, 'user');
+        }
+        for (const phrase of bind) {
+          if (!phrase.includes(' ')) continue;
+          const len = line.length() - 1;
+          const text = q.getContents(at, len).ops.map(op => (typeof op.insert === 'string' ? op.insert : '￼')).join('');
+          const k = text.indexOf(phrase);
+          if (k < 0) continue;
+          const part = q.getContents(at + k, phrase.length);
+          q.updateContents(new Delta().retain(at + k).delete(phrase.length).concat(new Delta(part.ops.map(op => (typeof op.insert === 'string' ? { ...op, insert: op.insert.replace(/ /g, ' ') } : op)))), 'user');
+        }
+        if (joinWords.length) {
+          const l = q.getLines()[n], a0 = q.getIndex(l);
+          const { change, count } = joinChange(q.getContents(), joinWords, a0, a0 + l.length() - 1);
+          if (count) q.updateContents(change, 'user');
+        }
+        if (page !== cur) { pages[page] = { delta: renderer.getContents(), stack: emptyStack() }; scheduleSave(); }
+        return true;
+      },
+      // คำห้ามตัด: รับรายการจากแผงเครื่องมือ, ผูกทั้งเอกสาร, และแสดงว่า Segmenter แยกคำอย่างไร
+      setNoBreakWords(list) { noBreakWords = [...new Set((list || []).filter(w => w && w.length > 1))]; scheduleOverlay(); },
+      bindWords,
+      segmentWords: text => [...thWords.segment(text)].map(x => x.segment),
+      gotoLine(page, n) {
+        if (page !== cur) showPage(page);
+        const line = quill.getLines()[n];
+        if (!line) return;
+        quill.setSelection(quill.getIndex(line), Math.max(0, line.length() - 1), 'user');
+        line.domNode.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      },
+      docName: () => docName,
+      setDocName,
+      saveDraft,
+      openPicker,
+      recentFiles,
+      openHandle,
+      removeRecent,
+      fileAutosave: () => $('#btnFile').click(),
+      canUseFiles: file.supported,
+      // แก้ delta ของหน้าที่ไม่ได้เปิดอยู่ (ประวัติย้อนกลับของหน้านั้นจะถูกล้าง)
+      setPageDelta(i, delta) {
+        if (i === cur) return;
+        pages[i] = { delta, stack: emptyStack() };
+        scheduleSave();
+      },
+    };
+    document.dispatchEvent(new CustomEvent('eoffice:ready'));
+  }
+})();
+</script>
+</body>
+</html>

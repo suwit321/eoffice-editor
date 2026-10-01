@@ -1,0 +1,16 @@
+# เครื่องมือ/การตั้งค่าในเครื่องของผู้พัฒนา (ไม่ต้องขึ้นเว็บ)
+.claude/
+
+# ไฟล์ที่สร้างตอนพัฒนา
+node_modules/
+*.log
+*.pdf
+
+# ไฟล์ระบบ
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# หมายเหตุ: dist/ และ vendor/ ตั้งใจให้เก็บใน git
+#   dist/   = ชุดไฟล์ที่ deploy (สร้างโดย node build-single.mjs) — เก็บไว้เพื่อให้ deploy ได้แม้โฮสต์ไม่มี Node
+#   vendor/ = SDK ของ Anthropic ที่ล็อกเวอร์ชัน
