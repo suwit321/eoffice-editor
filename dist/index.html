@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'sha256-XKldTrvNHsBkKd4zBgWsgq0j2UIlNOgdCva5EhenFnA=' 'sha256-bjNbvI8tl8y+bAasiIIyVXON/+FsTDSS9qAipExqFpE=' 'sha256-Hn7GQqdNixzI78BdyFzK+WR0oDXcEhZYu6zS914Zyvs=' 'sha256-HjLq8YwHh/EbWBoRNX+Wa1YvknQt2aI1zo6I3/xB28U='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.anthropic.com https://api.openai.com https://generativelanguage.googleapis.com http://localhost:* http://127.0.0.1:*; base-uri 'none'; form-action 'none'; object-src 'none'; manifest-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'sha256-XKldTrvNHsBkKd4zBgWsgq0j2UIlNOgdCva5EhenFnA=' 'sha256-bjNbvI8tl8y+bAasiIIyVXON/+FsTDSS9qAipExqFpE=' 'sha256-Hn7GQqdNixzI78BdyFzK+WR0oDXcEhZYu6zS914Zyvs=' 'sha256-6nyrufgejTjXZKDoodgBmRlZjfXm02XRfBHyb3YFfBs='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.anthropic.com https://api.openai.com https://generativelanguage.googleapis.com http://localhost:* http://127.0.0.1:*; base-uri 'none'; form-action 'none'; object-src 'none'; manifest-src 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="robots" content="noindex,nofollow">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -218,6 +218,18 @@ body.grid-on .editor-box{background-image:linear-gradient(to right,rgba(59,130,2
 .mi:disabled{color:#a8aeb8;background:none;cursor:default}
 .mi small{margin-left:auto;color:var(--muted)}
 .tb-more{position:relative}
+.head.tb-tint{background:transparent}
+.head.tb-tint .toolbar{background:var(--tb-bg);backdrop-filter:blur(8px) saturate(1.2);-webkit-backdrop-filter:blur(8px) saturate(1.2)}
+.tbc-pop{position:absolute;right:0;top:calc(100% + 4px);z-index:56;width:210px;display:flex;flex-direction:column;gap:6px;padding:8px;background:rgba(255,255,255,.92);border:1px solid #c5cad3;border-radius:8px;box-shadow:0 6px 20px rgba(20,30,50,.2);font-size:12px}
+.tbc-pop[hidden]{display:none}
+.tbc-title{font-weight:600;color:var(--muted)}
+.tbc-sw{display:flex;flex-wrap:wrap;gap:5px}
+.tbc-sw button{width:22px;height:22px;padding:0;border:1px solid rgba(0,0,0,.25);border-radius:50%;cursor:pointer}
+.tbc-sw button[aria-pressed="true"]{outline:2px solid var(--accent);outline-offset:1px}
+.tbc-row{display:flex;align-items:center;gap:6px}
+.tbc-row>span{width:52px;flex:none}
+.tbc-row input[type=range]{flex:1;min-width:0}
+.tbc-row input[type=color]{width:34px;height:22px;padding:0;border:1px solid #c5cad3;border-radius:4px;background:#fff}
 .more-pop{position:absolute;left:0;top:calc(100% + 4px);z-index:55;display:flex;flex-wrap:wrap;gap:2px;width:max-content;max-width:230px;padding:5px;background:#fff;border:1px solid #c5cad3;border-radius:6px;box-shadow:0 6px 20px rgba(20,30,50,.18)}
 .more-pop[hidden]{display:none}
 .sep{height:1px;background:var(--line);margin:5px 2px}
@@ -469,6 +481,14 @@ body.ls-docked .desk{padding-left:240px}
           </div>
           <div class="grp tb-more">
             <button type="button" class="tb" id="btnMore" aria-haspopup="true" aria-expanded="false" aria-label="เครื่องมือเพิ่มเติม" title="เพิ่มเติม: ขีดฆ่า, Tab, ตัวห้อย/ตัวยก, ตัด/คัดลอก, รูปภาพ, เปิดไฟล์, ล้างรูปแบบ" style="padding:0 6px;font-size:13px">เพิ่มเติม ▾</button>
+            <button type="button" class="tb" id="btnTbColor" aria-haspopup="true" aria-expanded="false" aria-label="สีพื้นแถบเครื่องมือ" title="สีพื้นแถบเครื่องมือ (เลือกสีและความโปร่งแสงได้)" style="padding:0 5px;font-size:13px">🎨</button>
+            <div class="tbc-pop" id="tbcPop" hidden>
+              <div class="tbc-title">สีพื้นแถบเครื่องมือ</div>
+              <div class="tbc-sw" id="tbcSw"></div>
+              <div class="tbc-row"><span>สีเอง</span><input type="color" id="tbcColor" aria-label="สีพื้นแถบเครื่องมือ"></div>
+              <div class="tbc-row"><span>โปร่งแสง</span><input type="range" id="tbcAlpha" min="10" max="100" step="1" aria-label="ความทึบของสีพื้น"><b id="tbcAv"></b></div>
+              <div class="tbc-row"><button type="button" class="chip" id="tbcReset">กลับค่าเดิม</button></div>
+            </div>
             <div class="more-pop" id="morePop" hidden>
               <button type="button" class="tb" data-cmd="strike" aria-pressed="false" aria-label="ขีดฆ่า" title="ขีดฆ่า"><svg aria-hidden="true"><use href="#i-strike"/></svg></button>
               <button type="button" class="tb" data-cmd="tab" aria-label="แทรกแท็บ" title="แทรก Tab"><svg aria-hidden="true"><use href="#i-tab"/></svg></button>
@@ -4622,6 +4642,35 @@ ${body}
       $('#zoomSel').addEventListener('change', draw);
       addEventListener('resize', () => { clampPos(); draw(); });
       clampPos(); draw();
+    })();
+    // ---------- สีพื้นแถบเครื่องมือ (เลือกสี + โปร่งแสงได้) ----------
+    (() => {
+      const KEYT = 'eoffice-editor:tbcolor', head = $('.head'), pop = $('#tbcPop'), btn = $('#btnTbColor');
+      const PRESETS = [['#ffffff', 'ขาว'], ['#bae6fd', 'ฟ้า'], ['#bbf7d0', 'เขียว'], ['#fecdd3', 'ชมพู'], ['#ddd6fe', 'ม่วง'], ['#fef08a', 'เหลือง'], ['#fed7aa', 'ส้ม'], ['#e2e8f0', 'เทา'], ['#0f172a', 'กรมท่า']];
+      let st = null;
+      try { st = JSON.parse(store.get(KEYT) || 'null'); } catch { st = null; }
+      const rgba = (h, a) => { const n = parseInt(h.slice(1), 16); return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`; };
+      $('#tbcSw').innerHTML = PRESETS.map(([c, n]) => `<button type="button" data-c="${c}" title="${n}" aria-label="${n}" aria-pressed="false" style="background:${c}"></button>`).join('');
+      function apply() {
+        head.classList.toggle('tb-tint', !!st);
+        if (st) head.style.setProperty('--tb-bg', rgba(st.c, st.a));
+        else head.style.removeProperty('--tb-bg');
+        $('#tbcColor').value = st?.c || '#ffffff';
+        $('#tbcAlpha').value = Math.round((st?.a ?? 1) * 100);
+        $('#tbcAv').textContent = `${Math.round((st?.a ?? 1) * 100)}%`;
+        for (const b of $$('#tbcSw button')) b.setAttribute('aria-pressed', String(!!st && b.dataset.c === st.c));
+        btn.style.background = st ? rgba(st.c, Math.max(.5, st.a)) : '';
+        store.set(KEYT, JSON.stringify(st));
+      }
+      const set = (c, a) => { st = { c: c ?? st?.c ?? '#bae6fd', a: a ?? st?.a ?? 0.55 }; apply(); };
+      btn.addEventListener('click', e => { e.stopPropagation(); pop.hidden = !pop.hidden; btn.setAttribute('aria-expanded', String(!pop.hidden)); });
+      document.addEventListener('click', e => { if (!pop.hidden && !pop.contains(e.target) && e.target !== btn) { pop.hidden = true; btn.setAttribute('aria-expanded', 'false'); } });
+      document.addEventListener('keydown', e => { if (e.key === 'Escape' && !pop.hidden) { pop.hidden = true; btn.setAttribute('aria-expanded', 'false'); } });
+      $('#tbcSw').addEventListener('click', e => { const c = e.target.closest('button')?.dataset.c; if (c) set(c, st?.a ?? 0.55); });
+      $('#tbcColor').addEventListener('input', e => set(e.target.value, st?.a ?? 0.55));
+      $('#tbcAlpha').addEventListener('input', e => set(null, e.target.value / 100));
+      $('#tbcReset').addEventListener('click', () => { st = null; apply(); });
+      apply();
     })();
     $('#lhPin').addEventListener('click', () => {
       lhDock = !lhDock; store.set('eoffice-editor:lhdock', lhDock ? '1' : '0');
