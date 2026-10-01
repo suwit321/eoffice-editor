@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'sha256-XKldTrvNHsBkKd4zBgWsgq0j2UIlNOgdCva5EhenFnA=' 'sha256-bjNbvI8tl8y+bAasiIIyVXON/+FsTDSS9qAipExqFpE=' 'sha256-Wi3wBeoJa2pTq56WAg0JsLEYyMwUIPTcrHye7sX20HE=' 'sha256-d4l/m88WYRtO5mpZJ+g+ko3XNXjxt05Pxsf41Zr2xjQ='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.anthropic.com https://api.openai.com https://generativelanguage.googleapis.com http://localhost:* http://127.0.0.1:*; base-uri 'none'; form-action 'none'; object-src 'none'; manifest-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'sha256-XKldTrvNHsBkKd4zBgWsgq0j2UIlNOgdCva5EhenFnA=' 'sha256-bjNbvI8tl8y+bAasiIIyVXON/+FsTDSS9qAipExqFpE=' 'sha256-Wi3wBeoJa2pTq56WAg0JsLEYyMwUIPTcrHye7sX20HE=' 'sha256-k1E9zDDYPcO6LyPgv8vH3sVEbzav2DowjLf6fxL8X0Y='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.anthropic.com https://api.openai.com https://generativelanguage.googleapis.com http://localhost:* http://127.0.0.1:*; base-uri 'none'; form-action 'none'; object-src 'none'; manifest-src 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="robots" content="noindex,nofollow">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -323,6 +323,7 @@ body.grid-on .editor-box{background-image:linear-gradient(to right,rgba(59,130,2
       <div class="fm-pop" id="fileMenu" hidden>
         <button type="button" class="btn" id="btnNew">เอกสารใหม่</button>
         <button type="button" class="btn" id="btnSample">ข้อความตัวอย่าง</button>
+        <button type="button" class="btn" id="btnOpenMenu" title="เปิดไฟล์ร่าง (.html / .txt)">เปิดไฟล์…</button>
         <button type="button" class="btn" id="btnAddPageMenu" title="เพิ่มหน้าใหม่ต่อจากหน้านี้">เพิ่มหน้าใหม่</button>
         <hr>
         <button type="button" class="btn" id="btnSave" title="Ctrl+S">บันทึกร่าง HTML</button>
@@ -5075,6 +5076,7 @@ ${body}
       loadPage(0);
       scheduleSave();
     }
+    $('#btnOpenMenu').addEventListener('click', () => $('[data-cmd=open]').click());
     $('#btnAddPageMenu').addEventListener('click', () => addPage());
     $('#pagebar').addEventListener('click', e => {
       const b = e.target.closest('button');

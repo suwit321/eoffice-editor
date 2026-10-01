@@ -320,6 +320,7 @@ body.grid-on .editor-box{background-image:linear-gradient(to right,rgba(59,130,2
       <div class="fm-pop" id="fileMenu" hidden>
         <button type="button" class="btn" id="btnNew">เอกสารใหม่</button>
         <button type="button" class="btn" id="btnSample">ข้อความตัวอย่าง</button>
+        <button type="button" class="btn" id="btnOpenMenu" title="เปิดไฟล์ร่าง (.html / .txt)">เปิดไฟล์…</button>
         <button type="button" class="btn" id="btnAddPageMenu" title="เพิ่มหน้าใหม่ต่อจากหน้านี้">เพิ่มหน้าใหม่</button>
         <hr>
         <button type="button" class="btn" id="btnSave" title="Ctrl+S">บันทึกร่าง HTML</button>
@@ -5100,6 +5101,7 @@ ${body}
       loadPage(0);
       scheduleSave();
     }
+    $('#btnOpenMenu').addEventListener('click', () => $('[data-cmd=open]').click());
     $('#btnAddPageMenu').addEventListener('click', () => addPage());
     $('#pagebar').addEventListener('click', e => {
       const b = e.target.closest('button');
