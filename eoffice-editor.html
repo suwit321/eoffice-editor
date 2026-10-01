@@ -61,7 +61,8 @@ button,select,input{font:inherit;color:inherit}
 .head{position:sticky;top:0;z-index:5;background:var(--panel)}
 
 /* แถบเครื่องมือ */
-.toolbar{display:flex;flex-wrap:wrap;align-items:center;row-gap:1px;padding:2px 4px;border-bottom:1px solid var(--line)}
+.toolbar,.pagebar{width:0;min-width:100%;box-sizing:border-box}
+.toolbar{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;row-gap:1px;padding:2px 4px;border-bottom:1px solid var(--line)}
 .tb-row{display:contents}
 .tb-row+.tb-row .grp:first-child{border-left:1px solid #dcdcdc;padding-left:3px}
 .grp{display:flex;align-items:center;gap:1px;padding:0 3px;border-left:1px solid #dcdcdc}
@@ -78,14 +79,15 @@ button,select,input{font:inherit;color:inherit}
 #sizeSel{width:52px;margin-left:-1px}
 
 /* แท็บหน้า */
-.pagebar{display:flex;flex-wrap:wrap;align-items:flex-end;gap:2px;padding:4px 4px 0;background:#eef1f5;border-bottom:1px solid var(--line)}
-.ptab{display:inline-flex;align-items:center;height:28px;border:1px solid transparent;border-bottom:0;border-radius:5px 5px 0 0;background:transparent;color:var(--muted)}
-.ptab[aria-selected="true"]{background:var(--panel);border-color:var(--line);color:var(--ink);font-weight:600;margin-bottom:-1px;height:29px}
-.ptab button{height:100%;padding:0 10px;border:0;background:none;color:inherit;font:inherit;cursor:pointer}
+.pagebar[hidden]{display:none}
+.pagebar{display:flex;flex-wrap:wrap;align-items:flex-end;gap:2px;padding:2px 4px 0;font-size:12px;background:#eef1f5;border-bottom:1px solid var(--line)}
+.ptab{display:inline-flex;align-items:center;height:22px;border:1px solid transparent;border-bottom:0;border-radius:5px 5px 0 0;background:transparent;color:var(--muted)}
+.ptab[aria-selected="true"]{background:var(--panel);border-color:var(--line);color:var(--ink);font-weight:600;margin-bottom:-1px;height:23px}
+.ptab button{height:100%;padding:0 8px;border:0;background:none;color:inherit;font:inherit;cursor:pointer}
 .ptab:not([aria-selected="true"]):hover{background:#e2e7ee}
 .ptab .pclose{padding:0 8px 0 2px;font-size:15px;line-height:1;color:var(--muted)}
 .ptab .pclose:hover{color:#b42318}
-.padd{height:26px;margin:0 0 2px 4px;padding:0 10px;border:1px dashed var(--line-strong);border-radius:5px;background:#fff;color:var(--accent);cursor:pointer}
+.padd{height:20px;margin:0 0 2px 4px;padding:0 8px;font-size:12px;border:1px dashed var(--line-strong);border-radius:5px;background:#fff;color:var(--accent);cursor:pointer}
 .padd:hover{background:var(--hover)}
 .btn.linked{border-color:#2e7d32;color:#1e5e22;background:#eef8ef}
 .btn.linked:hover{background:#e0f1e2}
@@ -95,7 +97,8 @@ button,select,input{font:inherit;color:inherit}
 #printArea p,#printArea li{orphans:3;widows:3}
 
 /* ไม้บรรทัด */
-.rulerwrap{zoom:var(--z);width:calc(var(--paper-w) + var(--vr));display:flex}
+.rulerwrap{zoom:var(--z);width:calc(var(--paper-w) + 2*var(--vr));display:flex}
+.rulerwrap::after,.editorwrap::after{content:"";flex:none;width:var(--vr);background:var(--ruler);border-left:1px solid #c2c2c2}
 .ruler-corner{flex:none;width:var(--vr);background:var(--ruler);border-bottom:1px solid #c2c2c2;border-right:1px solid #c2c2c2}
 .ruler{flex:1;position:relative;height:20px;background:var(--ruler);border-bottom:1px solid #c2c2c2;user-select:none;touch-action:none}
 .ruler-scale,.ruler-marks{position:absolute;left:var(--edge-x);width:16cm}
@@ -127,7 +130,7 @@ button,select,input{font:inherit;color:inherit}
 .guide-h{position:absolute;left:var(--vr);right:0;border-top:1px dashed var(--accent);pointer-events:none}
 
 /* กล่องพิมพ์ */
-.editorwrap{position:relative;zoom:var(--z);width:calc(var(--paper-w) + var(--vr));display:flex;align-items:stretch}
+.editorwrap{position:relative;zoom:var(--z);width:calc(var(--paper-w) + 2*var(--vr));display:flex;align-items:stretch}
 .editor-box{flex:1;min-width:0;border:1px solid #c9c9c9;border-top-color:#8f8f8f;border-left-color:#8f8f8f;background:var(--paper)}
 #editor.ql-container{border:0;height:auto;color:var(--paper-ink)}
 #editor .ql-editor{padding:var(--pt) var(--pr) var(--pb) var(--pl);min-height:var(--min-h);height:auto;overflow:visible;tab-size:8;-moz-tab-size:8}
@@ -292,6 +295,7 @@ body.grid-on .editor-box{background-image:linear-gradient(to right,rgba(59,130,2
       <div class="fm-pop" id="fileMenu" hidden>
         <button type="button" class="btn" id="btnNew">เอกสารใหม่</button>
         <button type="button" class="btn" id="btnSample">ข้อความตัวอย่าง</button>
+        <button type="button" class="btn" id="btnAddPageMenu" title="เพิ่มหน้าใหม่ต่อจากหน้านี้">เพิ่มหน้าใหม่</button>
         <hr>
         <button type="button" class="btn" id="btnSave" title="Ctrl+S">บันทึกร่าง HTML</button>
         <button type="button" class="btn" id="btnFile" title="เลือกไฟล์ .html ในเครื่อง แล้วบันทึกทับให้อัตโนมัติทุกครั้งที่แก้ไข">บันทึกลงไฟล์อัตโนมัติ</button>
@@ -360,7 +364,6 @@ body.grid-on .editor-box{background-image:linear-gradient(to right,rgba(59,130,2
             <button type="button" class="tb" id="btnLines" data-cmd="lines" aria-pressed="false" aria-label="เส้นบรรทัด" title="เส้นบรรทัดแบบเส้นประ สลับสีตามย่อหน้า"><svg aria-hidden="true"><use href="#i-lines"/></svg></button>
             <button type="button" class="tb menu-btn" id="btnNumbers" data-menu="m-numbers" aria-haspopup="true" aria-expanded="false" aria-label="เลขที่ย่อหน้าและเลขที่บรรทัด" title="เลขที่ย่อหน้า / เลขที่บรรทัด"><svg aria-hidden="true"><use href="#i-numbers"/></svg></button>
           </div>
-        </div>
           <div class="grp tb-more">
             <button type="button" class="tb" id="btnMore" aria-haspopup="true" aria-expanded="false" aria-label="เครื่องมือเพิ่มเติม" title="เพิ่มเติม: ขีดฆ่า, Tab, ตัวห้อย/ตัวยก, ตัด/คัดลอก, รูปภาพ, เปิดไฟล์, ล้างรูปแบบ" style="padding:0 6px;font-size:13px">เพิ่มเติม ▾</button>
             <div class="more-pop" id="morePop" hidden>
@@ -2230,6 +2233,7 @@ ${body}
     }
     const allEmpty = () => { snapshot(); return pages.every(p => p.delta.length() <= 1); };
     function renderTabs() {
+      $('#pagebar').hidden = pages.length < 2;
       $('#pagebar').innerHTML = pages.map((_, i) => {
         const on = i === cur;
         const close = on && pages.length > 1 ? `<button type="button" class="pclose" data-close="${i}" aria-label="ลบหน้า ${i + 1}" title="ลบหน้านี้">×</button>` : '';
@@ -2282,6 +2286,7 @@ ${body}
       loadPage(0);
       scheduleSave();
     }
+    $('#btnAddPageMenu').addEventListener('click', () => addPage());
     $('#pagebar').addEventListener('click', e => {
       const b = e.target.closest('button');
       if (!b) return;
