@@ -39,20 +39,30 @@ button,select,input{font:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 
 /* แถบคำสั่งบนสุด */
-.topbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px;padding:10px 16px;background:var(--panel);border-bottom:1px solid var(--line)}
-.brand h1{margin:0;font-size:16px;font-weight:600;display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px}
-.docname{width:260px;max-width:100%;height:28px;padding:0 8px;border:1px solid transparent;border-radius:6px;background:#f3f5f8;font:inherit;font-size:14px;font-weight:400}
+.topbar{position:relative;z-index:60;display:flex;align-items:center;gap:8px;height:36px;padding:0 10px;background:var(--panel);border-bottom:1px solid var(--line);white-space:nowrap}
+.brand{display:flex;align-items:center;gap:8px;min-width:0;flex:1 1 auto}
+.brand h1{margin:0;font-size:14px;font-weight:600;flex:none}
+.docname{flex:0 1 300px;min-width:90px;height:24px;padding:0 8px;border:1px solid transparent;border-radius:5px;background:#f3f5f8;font:inherit;font-size:13px;font-weight:400}
 .docname:hover{border-color:var(--line)}
 .docname:focus{background:#fff;border-color:var(--accent);outline:none}
-.brand p{margin:0;font-size:12px;color:var(--muted)}
-.actions{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
-.btn{height:32px;padding:0 12px;border:1px solid var(--line-strong);border-radius:6px;background:#fff;cursor:pointer;white-space:nowrap}
+.actions{display:flex;align-items:center;gap:5px;flex:none}
+.btn{height:26px;padding:0 10px;font-size:13px;border:1px solid var(--line-strong);border-radius:5px;background:#fff;cursor:pointer;white-space:nowrap}
+.fm{position:relative}
+.fm-pop{position:absolute;left:0;top:calc(100% + 4px);min-width:210px;display:flex;flex-direction:column;gap:2px;padding:5px;background:#fff;border:1px solid #c5cad3;border-radius:6px;box-shadow:0 6px 20px rgba(20,30,50,.18)}
+.fm-pop[hidden]{display:none}
+.fm-pop .btn{height:30px;text-align:left;border-color:transparent;background:transparent}
+.fm-pop .btn:hover{background:var(--hover)}
+.fm-pop .btn.linked{border-color:#2e7d32;background:#eef8ef}
+.fm-pop .btn.warn{border-color:#b7791f;background:#fff7e6}
+.fm-pop hr{border:0;border-top:1px solid var(--line);margin:3px 0;width:100%}
+.btn.fmbtn.linked::after{content:" ●";color:#2e7d32}
+.btn.fmbtn.warn::after{content:" ●";color:#b7791f}
 .btn:hover{background:var(--hover)}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
 .btn.primary:hover{background:var(--accent-hover)}
-.zoom{display:inline-flex;align-items:center;gap:6px;font-size:13px;white-space:nowrap}
+.zoom{display:inline-flex;align-items:center;font-size:13px}
 .btn:disabled{opacity:.5;cursor:default}
-.zoom select{height:32px;border:1px solid var(--line-strong);border-radius:6px;background:#fff;padding:0 6px}
+.zoom select{height:26px;border:1px solid var(--line-strong);border-radius:6px;background:#fff;padding:0 6px}
 
 /* พื้นที่เอกสาร */
 .desk{padding:16px 16px 24px}
@@ -225,8 +235,10 @@ body.grid-on .editor-box{background-image:linear-gradient(to right,rgba(59,130,2
 .tgrid span.on{background:#cfe0f7;border-color:var(--accent)}
 .tgrid.off{opacity:.4;pointer-events:none}
 
+@media (max-width:820px){.brand h1{display:none}}
+@media (max-width:560px){.btn.hide-sm{display:none}}
 @media (max-width:640px){
-  .topbar{padding:8px 12px}
+  .topbar{padding:0 8px}
   .desk{padding:12px 8px 16px}
 }
 @media print{
@@ -277,20 +289,25 @@ body.grid-on .editor-box{background-image:linear-gradient(to right,rgba(59,130,2
 
 <header class="topbar">
   <div class="brand">
-    <h1>เอดิเตอร์ข้อความ e-Office <input type="text" id="docName" class="docname" aria-label="ชื่อเอกสาร" title="ชื่อเอกสาร ใช้เป็นชื่อไฟล์ตอนบันทึก — ถ้าเว้นว่าง จะตั้งเป็นวันเวลาที่บันทึกครั้งแรก" placeholder="ชื่อเอกสาร (ตั้งอัตโนมัติเมื่อบันทึกครั้งแรก)" maxlength="80"></h1>
-    <p>พิมพ์และจัดหน้าแบบออฟไลน์ด้วย Quill • ไม่ส่งเนื้อหาออกนอกเครื่อง</p>
+    <h1 title="พิมพ์และจัดหน้าแบบออฟไลน์ด้วย Quill • ไม่ส่งเนื้อหาออกนอกเครื่อง">เอดิเตอร์ e-Office</h1>
+    <input type="text" id="docName" class="docname" aria-label="ชื่อเอกสาร" title="ชื่อเอกสาร ใช้เป็นชื่อไฟล์ตอนบันทึก — ถ้าเว้นว่าง จะตั้งเป็นวันเวลาที่บันทึกครั้งแรก" placeholder="ชื่อเอกสาร" maxlength="80">
   </div>
   <div class="actions">
-    <button type="button" class="btn" id="btnNew">เอกสารใหม่</button>
-    <button type="button" class="btn" id="btnSample">ข้อความตัวอย่าง</button>
-    <button type="button" class="btn" id="btnSave" title="Ctrl+S">บันทึกร่าง HTML</button>
-    <button type="button" class="btn" id="btnPrint">พิมพ์ / PDF</button>
-    <button type="button" class="btn" id="btnFile" title="เลือกไฟล์ .html ในเครื่อง แล้วบันทึกทับให้อัตโนมัติทุกครั้งที่แก้ไข">บันทึกลงไฟล์อัตโนมัติ</button>
-    <label class="zoom">ซูม
-      <select id="zoomSel" aria-label="ซูม">
-        <option value="100">100%</option><option value="125">125%</option><option value="150">150%</option><option value="175">175%</option><option value="200">200%</option>
-      </select>
-    </label>
+    <div class="fm">
+      <button type="button" class="btn fmbtn" id="btnFileMenu" aria-haspopup="true" aria-expanded="false">ไฟล์ ▾</button>
+      <div class="fm-pop" id="fileMenu" hidden>
+        <button type="button" class="btn" id="btnNew">เอกสารใหม่</button>
+        <button type="button" class="btn" id="btnSample">ข้อความตัวอย่าง</button>
+        <hr>
+        <button type="button" class="btn" id="btnSave" title="Ctrl+S">บันทึกร่าง HTML</button>
+        <button type="button" class="btn" id="btnFile" title="เลือกไฟล์ .html ในเครื่อง แล้วบันทึกทับให้อัตโนมัติทุกครั้งที่แก้ไข">บันทึกลงไฟล์อัตโนมัติ</button>
+        <hr>
+        <button type="button" class="btn" id="btnPrint">พิมพ์ / PDF</button>
+      </div>
+    </div>
+    <label class="zoom"><select id="zoomSel" aria-label="ซูม" title="ซูม">
+      <option value="100">100%</option><option value="125">125%</option><option value="150">150%</option><option value="175">175%</option><option value="200">200%</option>
+    </select></label>
     <button type="button" class="btn primary" id="btnCopy">คัดลอกไป e-Office</button>
   </div>
 </header>
@@ -5129,11 +5146,22 @@ ${body}
     function scheduleSave() { saveLocal(); saveFile(); }
     quill.on('text-change', scheduleSave);
 
+    (() => {
+      const fb = $('#btnFileMenu'), pop = $('#fileMenu');
+      const set = open => { pop.hidden = !open; fb.setAttribute('aria-expanded', String(open)); };
+      fb.addEventListener('click', e => { e.stopPropagation(); set(pop.hidden); });
+      pop.addEventListener('click', e => { if (e.target.closest('button') && e.target.closest('button').id !== 'btnFile') set(false); });
+      document.addEventListener('click', e => { if (!pop.hidden && !pop.contains(e.target)) set(false); });
+      document.addEventListener('keydown', e => { if (e.key === 'Escape' && !pop.hidden) { set(false); fb.focus(); } });
+    })();
     function renderFileBtn() {
       const b = $('#btnFile');
       b.disabled = !file.supported;
       b.classList.toggle('linked', !!file.handle && !file.error);
       b.classList.toggle('warn', !!file.handle && file.error);
+      const fb = $('#btnFileMenu');
+      fb.classList.toggle('linked', !!file.handle && !file.error);
+      fb.classList.toggle('warn', !!file.handle && file.error);
       b.textContent = !file.handle ? 'บันทึกลงไฟล์อัตโนมัติ' : file.error ? `บันทึกต่อลง “${file.handle.name}”` : `✓ ${file.handle.name}`;
       b.title = !file.supported ? 'เบราว์เซอร์นี้ไม่รองรับ — ใช้ Chrome หรือ Edge หรือกด “บันทึกร่าง HTML” แทน'
         : !file.handle ? 'เลือกไฟล์ .html ในเครื่อง แล้วบันทึกทับให้อัตโนมัติทุกครั้งที่แก้ไข'
