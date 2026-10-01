@@ -305,8 +305,7 @@ body.ls-docked .desk{padding-left:240px}
 .fr-bar{pointer-events:auto;display:flex;align-items:center;gap:2px;height:18px;padding:0 3px;cursor:move;user-select:none;background:rgba(255,255,255,.35);border-radius:3px 3px 0 0;touch-action:none;color:var(--fr-ink,#0f172a)}
 .fruler.v .fr-bar{flex-direction:column;width:18px;height:auto;padding:3px 0;border-radius:3px 0 0 3px}
 .fr-bar:focus-visible{outline:2px solid #2563eb}
-.fr-grip{font-size:12px;line-height:1;margin-right:auto}
-.fruler.v .fr-grip{margin:0 0 auto}
+.fr-grip{font-size:12px;line-height:1;flex:1;text-align:center}
 .fr-bar button{pointer-events:auto;width:16px;height:14px;padding:0;border:0;border-radius:3px;background:rgba(255,255,255,.5);font-size:10px;line-height:1;cursor:pointer;color:inherit}
 .fr-bar button:hover{background:rgba(255,255,255,.9)}
 .fr-scale{display:block;flex:none;stroke:var(--fr-ink,#0f172a);stroke-width:1;fill:var(--fr-ink,#0f172a);font:9px Consolas,"Segoe UI",monospace;overflow:visible}
@@ -397,10 +396,10 @@ body.ls-docked .desk{padding-left:240px}
 
 <div class="fruler" id="fruler" hidden role="group" aria-label="ไม้บรรทัดลอย">
   <div class="fr-bar" id="frBar" title="ลากเพื่อย้ายไม้บรรทัด (ใช้ลูกศรเมื่อโฟกัสที่แถบ)" tabindex="0">
-    <span class="fr-grip" aria-hidden="true">⠿</span>
     <button type="button" id="frRot" title="หมุน แนวนอน/แนวตั้ง">↻</button>
     <button type="button" id="frSet" title="สี / ความโปร่ง / จุด 0" aria-expanded="false">🎨</button>
     <button type="button" id="frClose" title="ซ่อนไม้บรรทัด">✕</button>
+    <span class="fr-grip" aria-hidden="true">⠿</span>
   </div>
   <svg class="fr-scale" id="frScale" aria-hidden="true"></svg>
   <div class="fr-cur" id="frCur" hidden></div>
