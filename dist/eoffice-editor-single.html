@@ -390,7 +390,7 @@ body.ls-docked .desk{padding-left:240px}
           <div class="grp">
             <button type="button" class="tb" data-cmd="list" data-val="ordered" aria-pressed="false" aria-label="รายการลำดับเลข" title="รายการลำดับเลข"><svg aria-hidden="true"><use href="#i-ol"/></svg></button>
             <button type="button" class="tb" data-cmd="list" data-val="bullet" aria-pressed="false" aria-label="รายการสัญลักษณ์" title="รายการสัญลักษณ์"><svg aria-hidden="true"><use href="#i-ul"/></svg></button>
-            <button type="button" class="tb menu-btn" data-menu="m-lineheight" aria-haspopup="true" aria-expanded="false" aria-label="ระยะห่างบรรทัด" title="ระยะห่างบรรทัด"><svg aria-hidden="true"><use href="#i-lineheight"/></svg></button>
+            <button type="button" class="tb menu-btn" data-menu="m-lineheight" aria-haspopup="true" aria-expanded="false" aria-label="ระยะห่างบรรทัด" title="ระยะห่างบรรทัด (ปรับด่วน Alt+Shift+↑/↓)"><svg aria-hidden="true"><use href="#i-lineheight"/></svg></button>
           </div>
           <div class="grp">
             <button type="button" class="tb" data-cmd="outdent" aria-label="ลดการเยื้อง" title="ลดการเยื้อง"><svg aria-hidden="true"><use href="#i-outdent"/></svg></button>
@@ -521,9 +521,9 @@ body.ls-docked .desk{padding-left:240px}
   <div class="ls-slider"><span>แน่น</span><input type="range" id="lhRange" min="80" max="400" step="1" value="150" aria-label="ระยะบรรทัด (%) ตั้งแต่ 80 ถึง 400"><span>โปร่ง</span></div>
   <div class="menu-row ls-steps">
     <button type="button" class="chip" data-lh-step="-25" title="ลด 25%">−−</button>
-    <button type="button" class="chip" data-lh-step="-5" title="ลด 5% (Ctrl+Shift+ลูกศรลง)">−</button>
+    <button type="button" class="chip" data-lh-step="-5" title="ลด 5% (Alt+Shift+↓)">−</button>
     <input type="number" id="lhCustom" step="1" min="80" max="400" aria-label="ระยะบรรทัด (%)">
-    <button type="button" class="chip" data-lh-step="5" title="เพิ่ม 5%">+</button>
+    <button type="button" class="chip" data-lh-step="5" title="เพิ่ม 5% (Alt+Shift+↑)">+</button>
     <button type="button" class="chip" data-lh-step="25" title="เพิ่ม 25%">++</button>
   </div>
   <div class="chips">
@@ -3920,6 +3920,15 @@ ${listCss}
       scheduleOverlay();
       say(`ระยะบรรทัด ${v}% (${lhLabel(v)}) — ${$('#lhScope').selectedOptions[0].textContent}`);
     }
+    // ปุ่มลัด Alt+Shift+↑/↓ : ระยะบรรทัดเพิ่ม/ลดทีละ 5% กับย่อหน้าที่เลือก (ถ้าเปิดแผงอยู่จะใช้ขอบเขตตามแผง)
+    function lhNudge(step) {
+      if (lhSession) { lhSet((lhCurrent(lhTarget($('#lhScope').value, lhSession.r)) ?? 150) + step); return; }
+      const r = currentRange(), t = lhTarget('para', r);
+      const v = lhClamp((lhCurrent(t) ?? parseFloat(DEFAULTS.lineHeight) ?? 150) + step);
+      quill.formatLine(t.index, t.length, { lineheight: `${v}%` }, 'user');
+      scheduleOverlay();
+      say(`ระยะบรรทัด ${v}% (${lhLabel(v)})`);
+    }
     function lsClose() {
       if (!lsSession) return;
       mergeHistorySince(lsSession.start);
@@ -4546,6 +4555,12 @@ ${body}
       if (e.key === 'Escape' && openMenu) { closeMenu(); useRange(menuRange); return; }
       // Ctrl+Shift+8 = แสดง/ซ่อนเครื่องหมาย (เหมือน Word)
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && !e.altKey && e.code === 'Digit8') { e.preventDefault(); toggleSetting('showMarks'); return; }
+      // Alt+Shift+↑ / ↓ = ระยะบรรทัดเพิ่ม / ลด 5%
+      if (e.altKey && e.shiftKey && !e.ctrlKey && !e.metaKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown') && quill.hasFocus?.() !== false) {
+        e.preventDefault();
+        lhNudge(e.key === 'ArrowUp' ? 5 : -5);
+        return;
+      }
       // Ctrl+Shift+[ / ] = ช่องไฟแคบลง / กว้างขึ้น 0.005 em
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && !e.altKey && (e.code === 'BracketLeft' || e.code === 'BracketRight') && openMenu?.id !== 'm-charspace') {
         e.preventDefault();
