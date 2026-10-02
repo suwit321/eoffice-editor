@@ -416,7 +416,8 @@ body.ls-docked .desk{padding-left:240px}
         <button type="button" class="btn" id="btnOpenMenu" title="เปิดไฟล์ร่าง (.html / .txt)">เปิดไฟล์…</button>
         <button type="button" class="btn" id="btnAddPageMenu" title="เพิ่มหน้าใหม่ต่อจากหน้านี้">เพิ่มหน้าใหม่</button>
         <hr>
-        <button type="button" class="btn" id="btnSave" title="Ctrl+S">บันทึกร่าง HTML</button>
+        <button type="button" class="btn" id="btnSaveAs" title="Ctrl+Shift+S — เลือกไฟล์ใหม่ แล้วใช้ไฟล์นั้นเป็นที่บันทึก">บันทึกเป็น…</button>
+        <button type="button" class="btn" id="btnSave" title="ดาวน์โหลดสำเนาเป็นไฟล์ .html (ไม่ผูกไฟล์)">ดาวน์โหลดสำเนา .html</button>
         <button type="button" class="btn" id="btnFile" title="เลือกไฟล์ .html ในเครื่อง แล้วบันทึกทับให้อัตโนมัติทุกครั้งที่แก้ไข">บันทึกลงไฟล์อัตโนมัติ</button>
         <hr>
         <button type="button" class="btn" id="btnPrint">พิมพ์ / PDF</button>
@@ -4971,12 +4972,36 @@ ${body}
         $(`#${openMenu?.id} [data-act$="${{ linkUrl: 'link-apply', tRows: 'table-insert', tCols: 'table-insert' }[id]}"]`)?.click();
       });
     }
-    function quickSave() {
+    // บันทึก = บันทึกทับไฟล์เดิมที่ผูกไว้ (ยังไม่เคยผูก → ให้เลือกไฟล์ครั้งแรก, เบราว์เซอร์ที่ไม่รองรับ → ดาวน์โหลดไฟล์ร่าง)
+    async function quickSave() {
       saveLocalNow();
-      if (file.handle && !file.error) queueWrite().then(() => { if (file.handle && !file.error) say(`บันทึกลงไฟล์ “${file.handle.name}” แล้ว`); });
-      else saveDraft();
+      try {
+        if (file.handle && file.error) {
+          if ((await file.handle.requestPermission({ mode: 'readwrite' })) === 'granted') file.error = false;
+        }
+        if (file.handle && !file.error) {
+          await queueWrite();
+          if (!file.error) say(`บันทึกทับไฟล์ “${file.handle.name}” แล้ว`);
+        } else if (file.supported && !file.handle) {
+          await pickAndLink();
+        } else if (!file.supported) {
+          saveDraft();
+        }
+      } catch (err) {
+        if (err?.name !== 'AbortError') say('บันทึกไม่สำเร็จ: ' + err.message);
+      }
+      renderFileBtn();
+      saveInfo();
+    }
+    async function saveAs() {
+      if (!file.supported) { saveDraft(); return; }
+      saveLocalNow();
+      try { await pickAndLink(); } catch (err) { if (err?.name !== 'AbortError') say('บันทึกเป็นไม่สำเร็จ: ' + err.message); }
+      renderFileBtn();
+      saveInfo();
     }
     $('#btnQuickSave').addEventListener('click', quickSave);
+    $('#btnSaveAs').addEventListener('click', saveAs);
     $('#btnUndo').addEventListener('click', () => { quill.history.undo(); schedule(); });
     $('#btnRedo').addEventListener('click', () => { quill.history.redo(); schedule(); });
     document.addEventListener('keydown', e => {
@@ -4995,9 +5020,9 @@ ${body}
         lsNudge(e.code === 'BracketRight' ? 0.005 : -0.005);
         return;
       }
-      if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && e.key.toLowerCase() === 's') {
+      if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === 's') {
         e.preventDefault();
-        quickSave();
+        if (e.shiftKey) saveAs(); else quickSave();
       }
     });
 
@@ -5955,6 +5980,7 @@ ${body}
     })();
     function renderFileBtn() {
       const b = $('#btnFile');
+      $('#btnQuickSave').title = file.handle ? `บันทึกทับไฟล์ “${file.handle.name}” (Ctrl+S) — บันทึกเป็นไฟล์ใหม่: Ctrl+Shift+S` : 'บันทึก (Ctrl+S) — ยังไม่ได้เลือกไฟล์ จะให้เลือกที่บันทึกครั้งแรก แล้วบันทึกทับไฟล์นั้นต่อไป';
       b.disabled = !file.supported;
       b.classList.toggle('linked', !!file.handle && !file.error);
       b.classList.toggle('warn', !!file.handle && file.error);
@@ -5974,19 +6000,23 @@ ${body}
       renderFileBtn();
       saveInfo();
     }
+    // เลือกไฟล์ใหม่ (บันทึกเป็น…) แล้วผูกไฟล์นั้นเป็นปลายทางของการบันทึก/บันทึกอัตโนมัติ
+    async function pickAndLink() {
+      const h = await window.showSaveFilePicker({
+        suggestedName: `${fileSafe(ensureDocName())}.html`,
+        types: [{ description: 'เอกสาร HTML', accept: { 'text/html': ['.html', '.htm'] } }],
+      });
+      Object.assign(file, { handle: h, savedAt: null, error: false });
+      try { await idb.set('file', h); } catch { /* จำไฟล์ข้ามการเปิดใหม่ไม่ได้ */ }
+      await queueWrite();
+      await addRecent(h);
+      if (!file.error) say(`ผูกไฟล์ “${h.name}” แล้ว — จะบันทึกทับให้อัตโนมัติทุกครั้งที่แก้ไข (ทุกหน้า)`);
+    }
     $('#btnFile').addEventListener('click', async () => {
       if (!file.supported) return;
       try {
         if (!file.handle) {
-          const h = await window.showSaveFilePicker({
-            suggestedName: `${fileSafe(ensureDocName())}.html`,
-            types: [{ description: 'เอกสาร HTML', accept: { 'text/html': ['.html', '.htm'] } }],
-          });
-          Object.assign(file, { handle: h, savedAt: null, error: false });
-          try { await idb.set('file', h); } catch { /* จำไฟล์ข้ามการเปิดใหม่ไม่ได้ */ }
-          await queueWrite();
-          await addRecent(h);
-          if (!file.error) say(`ผูกไฟล์ “${h.name}” แล้ว — จะบันทึกทับให้อัตโนมัติทุกครั้งที่แก้ไข (ทุกหน้า)`);
+          await pickAndLink();
         } else if (file.error) {
           if ((await file.handle.requestPermission({ mode: 'readwrite' })) === 'granted') {
             file.error = false;
