@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'sha256-XKldTrvNHsBkKd4zBgWsgq0j2UIlNOgdCva5EhenFnA=' 'sha256-bjNbvI8tl8y+bAasiIIyVXON/+FsTDSS9qAipExqFpE=' 'sha256-zmMoQa2equ5DDT/hOET3afARbQTZ0Hgx388sglEdZcc=' 'sha256-7kpkdh5av+rnKD/089xmomCL+N4W++18vjf33VHxLGY='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.anthropic.com https://api.openai.com https://generativelanguage.googleapis.com http://localhost:* http://127.0.0.1:*; base-uri 'none'; form-action 'none'; object-src 'none'; manifest-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'sha256-XKldTrvNHsBkKd4zBgWsgq0j2UIlNOgdCva5EhenFnA=' 'sha256-bjNbvI8tl8y+bAasiIIyVXON/+FsTDSS9qAipExqFpE=' 'sha256-J0ddS4ypTlMtOjeNhPEmo7KWQjX5PNH29iACRqzd/ag=' 'sha256-7kpkdh5av+rnKD/089xmomCL+N4W++18vjf33VHxLGY='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.anthropic.com https://api.openai.com https://generativelanguage.googleapis.com http://localhost:* http://127.0.0.1:*; base-uri 'none'; form-action 'none'; object-src 'none'; manifest-src 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="robots" content="noindex,nofollow">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -1870,8 +1870,12 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
     <h3>คำห้ามตัด (ไม่ให้ตัดกลางคำตอนขึ้นบรรทัดใหม่)</h3>
     <p class="hint">เบราว์เซอร์ตัดคำไทยด้วยพจนานุกรม จึงมักตัดคำประสม ชื่อหน่วยงาน และชื่อคนกลางคำ เช่น “ผู้อำนวย⏎การ” — ระบบใช้ Intl.Segmenter หาจุดที่อาจถูกตัดภายในคำเหล่านี้
       แล้วใส่ตัวผูกคำ (Word Joiner U+2060 มองไม่เห็น ไม่เปลี่ยนตัวอักษร) เฉพาะจุดนั้น — ดูตำแหน่งตัวผูกได้ด้วยปุ่ม ¶ (เครื่องหมาย ⁀ สีเขียว)</p>
-    <div class="row"><input type="text" id="nbIn" class="grow" placeholder="เพิ่มคำ เช่น ชื่อหน่วยงาน ชื่อคน (คั่นหลายคำด้วยจุลภาค)" maxlength="400"><button type="button" class="tbtn primary" data-act="nbAdd">เพิ่ม</button></div>
+    <div class="row"><input type="text" id="nbIn" class="grow" placeholder="เพิ่มคำ เช่น ชื่อหน่วยงาน ชื่อคน (คั่นหลายคำด้วยจุลภาค)" maxlength="400"><select id="nbGroup" class="sel" aria-label="หมวดของคำที่เพิ่ม" style="width:96px"></select><button type="button" class="tbtn primary" data-act="nbAdd">เพิ่ม</button></div>
     <div class="row"><button type="button" class="tbtn" data-act="nbFromSel">เพิ่มจากข้อความที่เลือก</button><button type="button" class="tbtn" data-act="nbReset">คืนค่ารายการตั้งต้น</button></div>
+    <div class="row"><input type="search" id="nbFind" class="grow" placeholder="ค้นหาในรายการ" aria-label="ค้นหาในรายการคำห้ามตัด"><select id="nbFilter" class="sel" aria-label="กรองตามหมวด" style="width:96px"></select><select id="nbSort" class="sel" aria-label="เรียงลำดับ" style="width:104px"><option value="g">เรียงตามหมวด</option><option value="a">เรียง ก–ฮ</option><option value="len">ยาว → สั้น</option><option value="new">ใหม่สุดก่อน</option></select></div>
+    <div class="row"><button type="button" class="tbtn" data-act="nbOnAll">เปิดที่แสดงทั้งหมด</button><button type="button" class="tbtn" data-act="nbOffAll">ปิดที่แสดงทั้งหมด</button><button type="button" class="tbtn" data-act="nbDelShown">ลบที่แสดง</button></div>
+    <div class="row"><button type="button" class="tbtn primary" data-act="nbExport">💾 บันทึกเป็นไฟล์</button><button type="button" class="tbtn" data-act="nbImport">📂 โหลดจากไฟล์</button><button type="button" class="tbtn" data-act="nbCopy">คัดลอกรายการ</button><input type="file" id="nbFile" accept=".json,.txt,.csv,application/json,text/plain" hidden></div>
+    <div id="nbCount" class="hint"></div>
     <div class="row"><label class="inline">ขอบเขต <select id="nbScope"><option value="page">หน้านี้</option><option value="all">ทุกหน้า</option></select></label>
       <button type="button" class="tbtn primary" data-act="nbApply">ผูกคำในเอกสาร</button><button type="button" class="tbtn" data-act="nbRemove">ถอดตัวผูกทั้งหมด</button></div>
     <div id="nbStatus" class="hint"></div>
@@ -2732,19 +2736,53 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
       'ระเบียบสำนักนายกรัฐมนตรี', 'ข้าราชการ', 'พนักงานราชการ', 'ลูกจ้างประจำ', 'ประชาสัมพันธ์', 'แผนปฏิบัติราชการ', 'ยุทธศาสตร์',
       'จัดซื้อจัดจ้าง', 'ประสิทธิภาพ', 'ประสิทธิผล', 'ท้องถิ่น', 'ส่งเสริม', 'ราชอาณาจักร', 'พุทธศักราช', 'การเลือกตั้ง',
     ];
-    let noBreak = (() => { try { return JSON.parse(store.get(NOBREAK_KEY) || 'null') || [...NOBREAK_DEFAULT]; } catch { return [...NOBREAK_DEFAULT]; } })();
-    const syncNoBreak = () => { store.set(NOBREAK_KEY, JSON.stringify(noBreak)); ed.setNoBreakWords(noBreak); renderNoBreak(); };
+    const NB_GROUPS = [['ตำแหน่ง', '#2563eb'], ['หน่วยงาน', '#16a34a'], ['ชื่อบุคคล', '#c026d3'], ['ศัพท์ราชการ', '#ea580c'], ['ทั่วไป', '#64748b']];
+    const NB_COLOR = Object.fromEntries(NB_GROUPS);
+    const guessGroup = w => (/^(ผู้|รอง|ปลัด|นายก|อธิบดี|รัฐมนตรี|หัวหน้า|เลขานุการ|ประธาน|กรรมการ|นาย|ข้าราชการ|พนักงาน|ลูกจ้าง|เจ้าหน้าที่)/.test(w) ? 'ตำแหน่ง'
+      : /(สำนัก|องค์|เทศบาล|กรม|กระทรวง|จังหวัด|อำเภอ|หน่วยงาน|คณะ|ส่วนราชการ|ศูนย์|โรงพยาบาล|มหาวิทยาลัย|โรงเรียน|สภา)/.test(w) ? 'หน่วยงาน' : 'ศัพท์ราชการ');
+    const cleanWord = w => String(w ?? '').replace(/[\s⁠]/g, '');
+    const toItem = (w, g, on = true, t = 0) => ({ w, g: NB_COLOR[g] ? g : guessGroup(w), on: on !== false, t });
+    const defaultItems = () => NOBREAK_DEFAULT.map(w => toItem(w));
+    let nbItems = (() => {
+      try {
+        const v = JSON.parse(store.get(NOBREAK_KEY) || 'null');
+        if (Array.isArray(v)) return v.map(w => toItem(cleanWord(w))).filter(i => i.w.length > 1);          // รูปแบบเก่า: รายการคำล้วน
+        if (v?.items) return v.items.map(i => toItem(cleanWord(i.w), i.g, i.on, i.t)).filter(i => i.w.length > 1);
+      } catch { /* ใช้ชุดตั้งต้น */ }
+      return defaultItems();
+    })();
+    let noBreak = [];                    // เฉพาะคำที่เปิดใช้ — ส่วนอื่นของแอปอ่านจากตัวแปรนี้
+    const syncNoBreak = () => {
+      noBreak = nbItems.filter(i => i.on).map(i => i.w);
+      store.set(NOBREAK_KEY, JSON.stringify({ v: 2, items: nbItems }));
+      ed.setNoBreakWords(noBreak);
+      renderNoBreak();
+    };
+    const groupOptions = sel => NB_GROUPS.map(([g]) => `<option value="${g}"${g === sel ? ' selected' : ''}>${g}</option>`).join('');
+    const visibleNb = () => {
+      const q = cleanWord($('#nbFind').value), f = $('#nbFilter').value, srt = $('#nbSort').value;
+      const list = nbItems.map((it, i) => ({ it, i })).filter(({ it }) => (!f || it.g === f) && (!q || it.w.includes(q)));
+      if (srt === 'a') list.sort((a, b) => a.it.w.localeCompare(b.it.w, 'th'));
+      else if (srt === 'len') list.sort((a, b) => b.it.w.length - a.it.w.length || a.it.w.localeCompare(b.it.w, 'th'));
+      else if (srt === 'new') list.sort((a, b) => b.it.t - a.it.t);
+      else list.sort((a, b) => NB_GROUPS.findIndex(x => x[0] === a.it.g) - NB_GROUPS.findIndex(x => x[0] === b.it.g) || a.it.w.localeCompare(b.it.w, 'th'));
+      return list;
+    };
     function renderNoBreak() {
-      $('#nbList').innerHTML = noBreak.map((w, i) => {
-        const parts = ed.segmentWords(w);
-        return `<li><span class="phrase" title="${parts.length > 1 ? 'เบราว์เซอร์อาจตัดตรง |' : 'Segmenter มองเป็นคำเดียวอยู่แล้ว'}">${esc(w)} <small style="color:${parts.length > 1 ? '#b91c1c' : 'var(--muted)'}">${esc(parts.join('|'))}</small></span><button type="button" class="del" data-nb-del="${i}" title="ลบ" aria-label="ลบ ${esc(w)}">×</button></li>`;
-      }).join('') || '<li class="hint">ยังไม่มีรายการ</li>';
+      const list = visibleNb();
+      $('#nbList').innerHTML = list.map(({ it, i }) => {
+        const parts = ed.segmentWords(it.w);
+        return `<li style="border-left:4px solid ${NB_COLOR[it.g]};padding-left:4px;opacity:${it.on ? 1 : .5}"><input type="checkbox" data-nb-on="${i}" ${it.on ? 'checked' : ''} title="เปิด/ปิดการใช้คำนี้" aria-label="ใช้คำ ${esc(it.w)}"><span class="phrase" title="${parts.length > 1 ? 'เบราว์เซอร์อาจตัดตรง |' : 'Segmenter มองเป็นคำเดียวอยู่แล้ว'}">${esc(it.w)} <small style="color:${parts.length > 1 ? '#b91c1c' : 'var(--muted)'}">${esc(parts.join('|'))}</small></span><select class="sel" data-nb-g="${i}" style="width:84px;flex:none" aria-label="หมวดของ ${esc(it.w)}">${groupOptions(it.g)}</select><button type="button" class="del" data-nb-edit="${i}" title="แก้ไขคำ" aria-label="แก้ไข ${esc(it.w)}">✎</button><button type="button" class="del" data-nb-del="${i}" title="ลบ" aria-label="ลบ ${esc(it.w)}">×</button></li>`;
+      }).join('') || '<li class="hint">ไม่มีรายการที่ตรงกับตัวกรอง</li>';
+      $('#nbCount').textContent = `เปิดใช้ ${noBreak.length} จาก ${nbItems.length} คำ` + (list.length !== nbItems.length ? ` · แสดง ${list.length} คำตามตัวกรอง` : '');
     }
     // เพิ่มคำ (ตัดเว้นวรรคออก — วลีที่มีเว้นวรรคให้ใช้ “เว้นวรรคห้ามตัดบรรทัด” แทน)
-    function addNoBreak(words, quiet) {
-      const add = words.flatMap(w => String(w).split(/[,\n]/)).map(w => w.replace(/[\s\u2060]/g, '')).filter(w => w.length > 1 && !noBreak.includes(w));
+    function addNoBreak(words, quiet, group) {
+      const have = new Set(nbItems.map(i => i.w));
+      const add = [...new Set(words.flatMap(w => String(w).split(/[,\n]/)).map(cleanWord).filter(w => w.length > 1 && w.length <= 60 && !have.has(w)))];
       if (!add.length) { if (!quiet) say('ไม่มีคำใหม่ให้เพิ่ม (คำต้องยาวอย่างน้อย 2 ตัวอักษรและยังไม่อยู่ในรายการ)'); return 0; }
-      noBreak = [...add, ...noBreak];
+      const t = Date.now();
+      nbItems = [...add.map((w, k) => toItem(w, group, true, t + add.length - k)), ...nbItems];
       syncNoBreak();
       if (!quiet) say(`เพิ่มคำห้ามตัด ${add.length} คำ — กด “ผูกคำในเอกสาร” เพื่อใช้กับข้อความที่มีอยู่`);
       return add.length;
@@ -2762,22 +2800,99 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
       return [...out];
     }
     $('#nbList').addEventListener('click', e => {
-      const b = e.target.closest('[data-nb-del]');
-      if (!b) return;
-      noBreak.splice(+b.dataset.nbDel, 1);
-      syncNoBreak();
+      const del = e.target.closest('[data-nb-del]'), edit = e.target.closest('[data-nb-edit]');
+      if (del) { nbItems.splice(+del.dataset.nbDel, 1); syncNoBreak(); return; }
+      if (edit) {
+        const it = nbItems[+edit.dataset.nbEdit];
+        const w = cleanWord(prompt('แก้ไขคำห้ามตัด', it.w));
+        if (!w || w === it.w) return;
+        if (w.length < 2 || w.length > 60) { say('คำต้องยาว 2–60 ตัวอักษร'); return; }
+        if (nbItems.some(x => x.w === w)) { say('มีคำนี้ในรายการแล้ว'); return; }
+        it.w = w; syncNoBreak();
+      }
     });
-    $('#nbIn').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addNoBreak([e.target.value]); e.target.value = ''; } });
+    $('#nbList').addEventListener('change', e => {
+      const on = e.target.closest('[data-nb-on]'), g = e.target.closest('[data-nb-g]');
+      if (on) { nbItems[+on.dataset.nbOn].on = on.checked; syncNoBreak(); }
+      else if (g) { nbItems[+g.dataset.nbG].g = g.value; syncNoBreak(); }
+    });
+    for (const id of ['nbFind', 'nbFilter', 'nbSort']) $('#' + id).addEventListener(id === 'nbFind' ? 'input' : 'change', renderNoBreak);
+    $('#nbGroup').innerHTML = `<option value="">หมวด: อัตโนมัติ</option>` + groupOptions('');
+    $('#nbFilter').innerHTML = `<option value="">ทุกหมวด</option>` + groupOptions('');
+    // ---- บันทึก/โหลดรายการ (ย้ายเครื่อง) ----
+    const exportNb = () => JSON.stringify({ app: 'eoffice-editor', type: 'nobreak-dictionary', version: 2, exported: new Date().toISOString(), items: nbItems.map(({ w, g, on }) => ({ w, g, on })) }, null, 1);
+    function parseNbFile(text) {
+      const t = text.replace(/^﻿/, '').trim();
+      let rows;
+      if (t.startsWith('{') || t.startsWith('[')) {
+        const v = JSON.parse(t);
+        rows = (Array.isArray(v) ? v : v.items || []).map(x => (typeof x === 'string' ? { w: x } : x));
+      } else rows = t.split(/[,;\n\r\t]+/).map(w => ({ w }));
+      const seen = new Set(), out = [];
+      for (const r of rows.slice(0, 5000)) {
+        const w = cleanWord(r?.w);
+        if (w.length < 2 || w.length > 60 || seen.has(w)) continue;
+        seen.add(w); out.push(toItem(w, r.g, r.on, Date.now()));
+      }
+      return out;
+    }
     Object.assign(actions, {
-      nbAdd() { addNoBreak([$('#nbIn').value]); $('#nbIn').value = ''; },
+      nbExport() {
+        const d = new Date(), pad = n => String(n).padStart(2, '0');
+        const name = `คำห้ามตัด-${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}.json`;
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([exportNb()], { type: 'application/json' }));
+        a.download = name;
+        document.body.append(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+        $('#nbStatus').textContent = `บันทึกไฟล์ “${name}” แล้ว (${nbItems.length} คำ) — นำไปโหลดในเครื่องอื่นด้วยปุ่ม “โหลดจากไฟล์”`;
+      },
+      nbImport() { $('#nbFile').click(); },
+      async nbCopy() {
+        const text = nbItems.filter(i => i.on).map(i => i.w).join('\n');
+        try { await navigator.clipboard.writeText(text); $('#nbStatus').textContent = `คัดลอกคำที่เปิดใช้ ${noBreak.length} คำ (คำละบรรทัด) แล้ว — วางในช่องเพิ่มคำของเครื่องอื่นได้`; }
+        catch { $('#nbStatus').textContent = 'คัดลอกอัตโนมัติไม่ได้ — ใช้ปุ่มบันทึกเป็นไฟล์แทน'; }
+      },
+      nbOnAll() { const v = visibleNb(); v.forEach(({ it }) => { it.on = true; }); syncNoBreak(); $('#nbStatus').textContent = `เปิดใช้ ${v.length} คำที่แสดงอยู่`; },
+      nbOffAll() { const v = visibleNb(); v.forEach(({ it }) => { it.on = false; }); syncNoBreak(); $('#nbStatus').textContent = `ปิดใช้ ${v.length} คำที่แสดงอยู่ (ยังเก็บไว้ในรายการ)`; },
+      nbDelShown() {
+        const v = visibleNb();
+        if (!v.length || !confirm(`ลบ ${v.length} คำที่แสดงอยู่ออกจากรายการ?`)) return;
+        const drop = new Set(v.map(x => x.it));
+        nbItems = nbItems.filter(i => !drop.has(i));
+        syncNoBreak();
+      },
+    });
+    $('#nbFile').addEventListener('change', async e => {
+      const f = e.target.files[0];
+      e.target.value = '';
+      if (!f) return;
+      if (f.size > 1024 * 1024) { $('#nbStatus').textContent = 'ไฟล์ใหญ่เกิน 1 MB'; return; }
+      let items;
+      try { items = parseNbFile(await f.text()); } catch { $('#nbStatus').textContent = 'อ่านไฟล์ไม่ได้ — ต้องเป็นไฟล์ .json ที่บันทึกจากแอปนี้ หรือ .txt ที่มีคำละบรรทัด'; return; }
+      if (!items.length) { $('#nbStatus').textContent = 'ไม่พบคำที่ใช้ได้ในไฟล์'; return; }
+      if (confirm(`พบ ${items.length} คำในไฟล์ “${f.name}”\n\nตกลง = ผสานกับรายการปัจจุบัน (คำซ้ำจะข้าม)\nยกเลิก = ตัวเลือกแทนที่ทั้งหมด`)) {
+        const have = new Set(nbItems.map(i => i.w)), add = items.filter(i => !have.has(i.w));
+        nbItems = [...add, ...nbItems];
+        syncNoBreak();
+        $('#nbStatus').textContent = `ผสานเพิ่ม ${add.length} คำ (ข้ามคำซ้ำ ${items.length - add.length} คำ)`;
+      } else if (confirm(`แทนที่รายการเดิมทั้งหมด (${nbItems.length} คำ) ด้วย ${items.length} คำจากไฟล์?`)) {
+        nbItems = items;
+        syncNoBreak();
+        $('#nbStatus').textContent = `แทนที่รายการด้วย ${items.length} คำจากไฟล์แล้ว`;
+      }
+    });
+    $('#nbIn').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addNoBreak([e.target.value], false, $('#nbGroup').value); e.target.value = ''; } });
+    Object.assign(actions, {
+      nbAdd() { addNoBreak([$('#nbIn').value], false, $('#nbGroup').value); $('#nbIn').value = ''; },
       nbFromSel() {
         const r = ed.range();
         if (!r.length) { say('เลือกคำในเอกสารก่อน'); return; }
-        addNoBreak([quill.getText(r.index, r.length)]);
+        addNoBreak([quill.getText(r.index, r.length)], false, $('#nbGroup').value);
       },
       nbReset() {
         if (!confirm('คืนค่ารายการคำห้ามตัดเป็นชุดตั้งต้น? คำที่เพิ่มเองจะหายไป')) return;
-        noBreak = [...NOBREAK_DEFAULT];
+        nbItems = defaultItems();
         syncNoBreak();
       },
       nbApply() {
@@ -2793,8 +2908,7 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
         $('#nbStatus').textContent = n ? `ถอดตัวผูกคำ ${n} จุดแล้ว` : 'ไม่มีตัวผูกคำในเอกสาร';
       },
     });
-    ed.setNoBreakWords(noBreak);
-    renderNoBreak();
+    syncNoBreak();
 
     // ================= จัดหน้า: ปรับให้สอดคล้องกันทีละย่อหน้า =================
     const ROLE_TH = { title: 'หัวหนังสือ', head: 'ส่วนหัว', body: 'เนื้อความ', list: 'รายการ', sign: 'ลงชื่อ', foot: 'ท้ายหนังสือ', blank: 'บรรทัดว่าง', table: 'ตาราง', other: 'อื่น ๆ' };
