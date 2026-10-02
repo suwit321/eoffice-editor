@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'sha256-XKldTrvNHsBkKd4zBgWsgq0j2UIlNOgdCva5EhenFnA=' 'sha256-bjNbvI8tl8y+bAasiIIyVXON/+FsTDSS9qAipExqFpE=' 'sha256-J0ddS4ypTlMtOjeNhPEmo7KWQjX5PNH29iACRqzd/ag=' 'sha256-7kpkdh5av+rnKD/089xmomCL+N4W++18vjf33VHxLGY='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.anthropic.com https://api.openai.com https://generativelanguage.googleapis.com http://localhost:* http://127.0.0.1:*; base-uri 'none'; form-action 'none'; object-src 'none'; manifest-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'sha256-XKldTrvNHsBkKd4zBgWsgq0j2UIlNOgdCva5EhenFnA=' 'sha256-bjNbvI8tl8y+bAasiIIyVXON/+FsTDSS9qAipExqFpE=' 'sha256-J0ddS4ypTlMtOjeNhPEmo7KWQjX5PNH29iACRqzd/ag=' 'sha256-y4xkLmeYXvVtcnyNUyEN51goV2YXTftV8WPDwIaMQ0o='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.anthropic.com https://api.openai.com https://generativelanguage.googleapis.com http://localhost:* http://127.0.0.1:*; base-uri 'none'; form-action 'none'; object-src 'none'; manifest-src 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="robots" content="noindex,nofollow">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -43,12 +43,23 @@ button,select,input{font:inherit;color:inherit}
 
 /* แถบคำสั่งบนสุด */
 .topbar{position:relative;z-index:60;display:flex;align-items:center;gap:8px;height:36px;padding:0 10px;background:var(--panel);border-bottom:1px solid var(--line);white-space:nowrap}
-.brand{display:flex;align-items:center;gap:8px;min-width:0;flex:1 1 auto}
+.brand{display:flex;align-items:center;gap:8px;min-width:0;flex:1 1 0}
 .brand h1{margin:0;font-size:14px;font-weight:600;flex:none}
 .docname{flex:0 1 300px;min-width:90px;height:24px;padding:0 8px;border:1px solid transparent;border-radius:5px;background:#f3f5f8;font:inherit;font-size:13px;font-weight:400}
 .docname:hover{border-color:var(--line)}
 .docname:focus{background:#fff;border-color:var(--accent);outline:none}
-.actions{display:flex;align-items:center;gap:5px;flex:none}
+.actions{display:flex;align-items:center;justify-content:flex-end;gap:5px;flex:1 1 0;min-width:0}
+.topcenter{display:flex;align-items:center;gap:6px;flex:none}
+.topcenter .tb{height:26px;min-width:0;padding:0 10px 0 7px;gap:5px;border-radius:13px;font-size:13px;font-weight:600;border-width:1px}
+.topcenter .tb svg{width:15px;height:15px}
+.topcenter .tc-undo{background:#fee2e2;border-color:#fca5a5;color:#dc2626}
+.topcenter .tc-undo:hover:not(:disabled){background:#fecaca;border-color:#dc2626}
+.topcenter .tc-redo{background:#dbeafe;border-color:#93c5fd;color:#2563eb}
+.topcenter .tc-redo:hover:not(:disabled){background:#bfdbfe;border-color:#2563eb}
+.topcenter .tc-save{background:#dcfce7;border-color:#86efac;color:#15803d}
+.topcenter .tc-save:hover{background:#bbf7d0;border-color:#15803d}
+.topcenter .tb:disabled{opacity:.4;background:#f1f5f9;border-color:#e2e8f0;color:#64748b}
+@media (max-width:1050px){.topcenter .tb span{display:none}.topcenter .tb{padding:0 7px}}
 .btn{height:26px;padding:0 10px;font-size:13px;border:1px solid var(--line-strong);border-radius:5px;background:#fff;cursor:pointer;white-space:nowrap}
 .fm{position:relative}
 .cpy{display:flex}
@@ -394,6 +405,11 @@ body.ls-docked .desk{padding-left:240px}
     <h1 title="พิมพ์และจัดหน้าแบบออฟไลน์ด้วย Quill • ไม่ส่งเนื้อหาออกนอกเครื่อง">เอดิเตอร์ e-Office</h1>
     <input type="text" id="docName" class="docname" aria-label="ชื่อเอกสาร" title="ชื่อเอกสาร ใช้เป็นชื่อไฟล์ตอนบันทึก — ถ้าเว้นว่าง จะตั้งเป็นวันเวลาที่บันทึกครั้งแรก" placeholder="ชื่อเอกสาร" maxlength="80">
   </div>
+  <div class="topcenter" role="group" aria-label="ย้อนกลับ ทำซ้ำ และบันทึก">
+    <button type="button" class="tb tc-undo" id="btnUndo" aria-label="ย้อนกลับ" title="ย้อนกลับ (Ctrl+Z)"><svg aria-hidden="true"><use href="#i-undo"/></svg><span>ย้อนกลับ</span></button>
+    <button type="button" class="tb tc-redo" id="btnRedo" aria-label="ทำซ้ำ" title="ทำซ้ำ (Ctrl+Y)"><svg aria-hidden="true"><use href="#i-redo"/></svg><span>ทำซ้ำ</span></button>
+    <button type="button" class="tb tc-save" id="btnQuickSave" aria-label="บันทึก" title="บันทึก (Ctrl+S) — ถ้าผูกไฟล์ไว้จะบันทึกทับไฟล์ ไม่งั้นดาวน์โหลดไฟล์ร่าง"><svg aria-hidden="true" viewBox="0 0 20 20"><path d="M4 3h9.5L17 6.5V16a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zm2 1.5v4h6v-4zM6 11v5h8v-5z"/></svg><span>บันทึก</span></button>
+  </div>
   <div class="actions">
     <div class="fm">
       <button type="button" class="btn fmbtn" id="btnFileMenu" aria-haspopup="true" aria-expanded="false">ไฟล์ ▾</button>
@@ -482,10 +498,6 @@ body.ls-docked .desk{padding-left:240px}
           <div class="grp">
             <select id="fontSel" class="sel" aria-label="แบบอักษร" title="แบบอักษร"></select>
             <select id="sizeSel" class="sel" aria-label="ขนาดอักษร (พอยต์)" title="ขนาดอักษร (พอยต์)"></select>
-          </div>
-          <div class="grp">
-            <button type="button" class="tb" id="btnUndo" data-cmd="undo" aria-label="ย้อนกลับ" title="ย้อนกลับ (Ctrl+Z)"><svg aria-hidden="true"><use href="#i-undo"/></svg></button>
-            <button type="button" class="tb" id="btnRedo" data-cmd="redo" aria-label="ทำซ้ำ" title="ทำซ้ำ (Ctrl+Y)"><svg aria-hidden="true"><use href="#i-redo"/></svg></button>
           </div>
           <div class="grp">
             <button type="button" class="tb menu-btn" data-menu="m-table" aria-haspopup="true" aria-expanded="false" aria-label="ตาราง" title="ตาราง"><svg aria-hidden="true"><use href="#i-table"/></svg></button>
@@ -4934,6 +4946,14 @@ ${body}
         $(`#${openMenu?.id} [data-act$="${{ linkUrl: 'link-apply', tRows: 'table-insert', tCols: 'table-insert' }[id]}"]`)?.click();
       });
     }
+    function quickSave() {
+      saveLocalNow();
+      if (file.handle && !file.error) queueWrite().then(() => { if (file.handle && !file.error) say(`บันทึกลงไฟล์ “${file.handle.name}” แล้ว`); });
+      else saveDraft();
+    }
+    $('#btnQuickSave').addEventListener('click', quickSave);
+    $('#btnUndo').addEventListener('click', () => { quill.history.undo(); schedule(); });
+    $('#btnRedo').addEventListener('click', () => { quill.history.redo(); schedule(); });
     document.addEventListener('keydown', e => {
       if (e.key === 'Escape' && openMenu) { closeMenu(); useRange(menuRange); return; }
       // Ctrl+Shift+8 = แสดง/ซ่อนเครื่องหมาย (เหมือน Word)
@@ -4952,9 +4972,7 @@ ${body}
       }
       if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && e.key.toLowerCase() === 's') {
         e.preventDefault();
-        saveLocalNow();
-        if (file.handle && !file.error) queueWrite().then(() => { if (file.handle && !file.error) say(`บันทึกลงไฟล์ “${file.handle.name}” แล้ว`); });
-        else saveDraft();
+        quickSave();
       }
     });
 
