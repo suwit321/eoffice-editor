@@ -48,6 +48,9 @@ button,select,input{font:inherit;color:inherit}
 .actions{display:flex;align-items:center;gap:5px;flex:none}
 .btn{height:26px;padding:0 10px;font-size:13px;border:1px solid var(--line-strong);border-radius:5px;background:#fff;cursor:pointer;white-space:nowrap}
 .fm{position:relative}
+.cpy{display:flex}
+.cpy #btnCopy{border-top-right-radius:0;border-bottom-right-radius:0}
+.cpy #btnCopyMore{padding:0 6px;border-left:1px solid rgba(255,255,255,.45);border-top-left-radius:0;border-bottom-left-radius:0}
 .fm-pop{position:absolute;left:0;top:calc(100% + 4px);min-width:210px;display:flex;flex-direction:column;gap:2px;padding:5px;background:#fff;border:1px solid #c5cad3;border-radius:6px;box-shadow:0 6px 20px rgba(20,30,50,.18)}
 .fm-pop[hidden]{display:none}
 .fm-pop .btn{height:30px;text-align:left;border-color:transparent;background:transparent}
@@ -407,7 +410,13 @@ body.ls-docked .desk{padding-left:240px}
     <label class="zoom"><select id="zoomSel" aria-label="ซูม" title="ซูม">
       <option value="100">100%</option><option value="125">125%</option><option value="150">150%</option><option value="175">175%</option><option value="200">200%</option>
     </select></label>
-    <button type="button" class="btn primary" id="btnCopy">คัดลอกไป e-Office</button>
+    <div class="fm cpy">
+      <button type="button" class="btn primary" id="btnCopy">คัดลอกไป e-Office</button><button type="button" class="btn primary" id="btnCopyMore" aria-haspopup="true" aria-expanded="false" aria-label="ตัวเลือกการคัดลอก" title="เลือกคัดลอกทั้งหน้า หรือเฉพาะที่เลือก">▾</button>
+      <div class="fm-pop" id="copyMenu" hidden style="left:auto;right:0">
+        <button type="button" class="btn" data-copy="page">คัดลอกทั้งหน้านี้</button>
+        <button type="button" class="btn" data-copy="sel">คัดลอกเฉพาะที่เลือก</button>
+      </div>
+    </div>
   </div>
 </header>
 
@@ -1938,7 +1947,7 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
     openBtn.id = 'btnTools';
     openBtn.textContent = 'เครื่องมือเสริม';
     openBtn.setAttribute('aria-controls', 'toolsPanel');
-    $('#btnCopy').before(openBtn);
+    $('.cpy').before(openBtn);
     function setOpen(open) {
       panel.hidden = !open;
       document.body.classList.toggle('tools-open', open);
@@ -4118,10 +4127,10 @@ ${listCss}
     // โปรไฟล์การส่งออกจากผลทดสอบการวางใน e-Office (ตั้งโดย eoffice-tools.js แท็บ “ทดสอบวาง”)
     const exportProfile = { stripWJ: false, tabsAsSpaces: false };
     let copyAdvisor = null;         // (html) => ข้อความเตือนที่จะต่อท้ายสถานะหลังคัดลอก
-    function exportHtml(q = quill) {
+    function exportHtml(q = quill, partial = null) {
       let src = q;
-      const contents = q.getContents();
-      if (contents.ops.some(op => typeof op.insert === 'string' && op.insert.includes(' '))) {
+      const contents = partial || q.getContents();
+      if (partial || contents.ops.some(op => typeof op.insert === 'string' && op.insert.includes(' '))) {
         renderer.setContents(new Delta(contents.ops.map(op => (typeof op.insert === 'string' ? { ...op, insert: op.insert.replace(/ /g, NB) } : op))), 'silent');
         src = renderer;
       }
@@ -4252,14 +4261,42 @@ ${listCss}
         return copyViaEvent(html, text);
       }
     }
-    async function copyToEoffice() {
-      if (isEmpty()) { say('ยังไม่มีข้อความให้คัดลอก'); return; }
-      const html = exportHtml(), text = quill.getText().replace(/\n+$/, '');
-      const warn = copyAdvisor?.(html) || [];
-      const ok = `คัดลอกหน้า ${cur + 1} แล้ว (HTML + ข้อความ) — วางใน e-Office ด้วย Ctrl+V แล้วตรวจผลอีกครั้งหลังบันทึก`
-        + (warn.length ? ` · ⚠ ตามผลทดสอบ e-Office จะไม่รองรับ: ${warn.join(', ')}` : '');
-      say(await writeClipboard(html, text) ? ok : 'คัดลอกอัตโนมัติไม่ได้ — คลิกในกล่องพิมพ์ กด Ctrl+A แล้ว Ctrl+C แทน');
+    // ส่วนที่เลือก (คงรูปแบบระดับย่อหน้าของย่อหน้าท้ายสุดด้วย โดยเติมตัวขึ้นบรรทัดใหม่ที่มีค่ารูปแบบของย่อหน้านั้น)
+    function selectionDelta(r) {
+      let d = quill.getContents(r.index, r.length);
+      const last = d.ops[d.ops.length - 1];
+      if (!(typeof last?.insert === 'string' && last.insert.endsWith('\n'))) {
+        const [line] = quill.getLine(r.index + r.length);
+        if (line) {
+          const nl = quill.getContents(quill.getIndex(line) + line.length() - 1, 1).ops[0];
+          d = d.concat(new Delta().insert('\n', nl?.attributes));
+        }
+      }
+      return d;
     }
+    const selRange = () => { const r = currentRange(); return r.length > 0 ? r : null; };
+    // mode: auto = มีข้อความที่เลือกอยู่ก็คัดลอกเฉพาะที่เลือก ไม่มีก็คัดลอกทั้งหน้า | page | sel
+    async function copyToEoffice(mode = 'auto') {
+      const r = selRange();
+      const useSel = mode === 'sel' || (mode === 'auto' && r);
+      if (useSel && !r) { say('ยังไม่ได้เลือกข้อความ — ลากเลือกข้อความที่ต้องการก่อน'); return; }
+      if (!useSel && isEmpty()) { say('ยังไม่มีข้อความให้คัดลอก'); return; }
+      const html = useSel ? exportHtml(quill, selectionDelta(r)) : exportHtml();
+      const text = (useSel ? quill.getText(r.index, r.length) : quill.getText()).replace(/\n+$/, '');
+      const warn = copyAdvisor?.(html) || [];
+      const what = useSel ? `ส่วนที่เลือก (${text.replace(/\s/g, '').length.toLocaleString()} ตัวอักษร)` : `หน้า ${cur + 1}`;
+      const ok = `คัดลอก${what} แล้ว (HTML + ข้อความ) — วางใน e-Office ด้วย Ctrl+V แล้วตรวจผลอีกครั้ง`
+        + (warn.length ? ` · ⚠ ตามผลทดสอบ e-Office จะไม่รองรับ: ${warn.join(', ')}` : '');
+      say(await writeClipboard(html, text) ? ok : 'คัดลอกอัตโนมัติไม่ได้ — คลิกในกล่องพิมพ์ กด Ctrl+A (หรือเลือกข้อความ) แล้ว Ctrl+C เอง');
+    }
+    // ปุ่มคัดลอกเปลี่ยนป้ายตามว่ามีข้อความที่เลือกอยู่หรือไม่
+    function renderCopyBtn() {
+      const r = selRange(), b = $('#btnCopy');
+      b.textContent = r ? 'คัดลอกที่เลือก → e-Office' : 'คัดลอกไป e-Office';
+      b.title = r ? 'คัดลอกเฉพาะข้อความที่เลือก (กดลูกศรข้างเคียงเพื่อเลือกคัดลอกทั้งหน้า)' : 'คัดลอกทั้งหน้านี้ (ถ้าเลือกข้อความไว้ จะคัดลอกเฉพาะที่เลือก)';
+    }
+    quill.on('selection-change', r => { if (r) renderCopyBtn(); });
+    quill.on('text-change', renderCopyBtn);
 
     const stamp = () => {
       const d = new Date(), p = n => String(n).padStart(2, '0');
@@ -5866,7 +5903,16 @@ ${body}
     });
     $('#btnSave').addEventListener('click', saveDraft);
     $('#btnPrint').addEventListener('click', () => { buildPrintArea(); window.print(); });
-    $('#btnCopy').addEventListener('click', copyToEoffice);
+    $('#btnCopy').addEventListener('click', () => copyToEoffice('auto'));
+    {
+      const mb = $('#btnCopyMore'), pop = $('#copyMenu');
+      const set = open => { pop.hidden = !open; mb.setAttribute('aria-expanded', String(open)); };
+      mb.addEventListener('click', e => { e.stopPropagation(); set(pop.hidden); });
+      pop.addEventListener('click', e => { const m = e.target.closest('button')?.dataset.copy; if (m) { set(false); copyToEoffice(m); } });
+      document.addEventListener('click', e => { if (!pop.hidden && !pop.contains(e.target) && e.target !== mb) set(false); });
+      document.addEventListener('keydown', e => { if (e.key === 'Escape' && !pop.hidden) set(false); });
+      renderCopyBtn();
+    }
 
     // เริ่มต้น: กู้คืนร่างล่าสุดจากเบราว์เซอร์ (รองรับร่างรุ่นเก่าที่มีหน้าเดียว)
     let restored = false;

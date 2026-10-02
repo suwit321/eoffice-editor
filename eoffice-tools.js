@@ -930,7 +930,7 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
     openBtn.id = 'btnTools';
     openBtn.textContent = 'เครื่องมือเสริม';
     openBtn.setAttribute('aria-controls', 'toolsPanel');
-    $('#btnCopy').before(openBtn);
+    $('.cpy').before(openBtn);
     function setOpen(open) {
       panel.hidden = !open;
       document.body.classList.toggle('tools-open', open);
