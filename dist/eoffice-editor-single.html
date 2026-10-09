@@ -269,7 +269,6 @@ body.grid-on .editor-box{background-image:linear-gradient(to right,rgba(59,130,2
 .mi:hover,.mi:focus-visible{background:var(--hover)}
 .mi:disabled{color:#a8aeb8;background:none;cursor:default}
 .mi small{margin-left:auto;color:var(--muted)}
-.tb-more{position:relative}
 .tb-tint .head{background:transparent}
 .tb-tint .topbar{background:var(--tb-bg);backdrop-filter:blur(8px) saturate(1.2);-webkit-backdrop-filter:blur(8px) saturate(1.2)}
 .tb-tint .toolbar{background:var(--tb-bg);backdrop-filter:blur(8px) saturate(1.2);-webkit-backdrop-filter:blur(8px) saturate(1.2)}
@@ -459,7 +458,31 @@ body.ls-docked .desk{padding-left:240px}
         <button type="button" class="btn" id="btnPrint">พิมพ์ / PDF</button>
       </div>
     </div>
+    <div class="fm">
+      <button type="button" class="btn fmbtn" id="btnMore" aria-haspopup="true" aria-expanded="false" aria-label="เครื่องมือเพิ่มเติม" title="เพิ่มเติม: ขีดฆ่า, Tab, ตัวห้อย/ตัวยก, ตัด/คัดลอก, รูปภาพ, เปิดไฟล์, ล้างรูปแบบ">เพิ่มเติม ▾</button>
+      <div class="more-pop" id="morePop" hidden>
+        <button type="button" class="tb" data-cmd="strike" aria-pressed="false" aria-label="ขีดฆ่า" title="ขีดฆ่า"><svg aria-hidden="true"><use href="#i-strike"/></svg></button>
+        <button type="button" class="tb" data-cmd="tab" aria-label="แทรกแท็บ" title="แทรก Tab"><svg aria-hidden="true"><use href="#i-tab"/></svg></button>
+        <button type="button" class="tb" data-cmd="sub" aria-pressed="false" aria-label="ตัวห้อย" title="ตัวห้อย"><svg aria-hidden="true"><use href="#i-sub"/></svg></button>
+        <button type="button" class="tb" data-cmd="sup" aria-pressed="false" aria-label="ตัวยก" title="ตัวยก"><svg aria-hidden="true"><use href="#i-sup"/></svg></button>
+        <button type="button" class="tb" data-cmd="cut" aria-label="ตัด" title="ตัด (Ctrl+X)"><svg aria-hidden="true"><use href="#i-cut"/></svg></button>
+        <button type="button" class="tb" data-cmd="copy" aria-label="คัดลอก" title="คัดลอก (Ctrl+C)"><svg aria-hidden="true"><use href="#i-copy"/></svg></button>
+        <button type="button" class="tb" data-cmd="image" aria-label="แทรกรูปภาพ" title="แทรกรูปภาพ"><svg aria-hidden="true"><use href="#i-image"/></svg></button>
+        <button type="button" class="tb" data-cmd="open" aria-label="เปิดไฟล์ร่าง" title="เปิดไฟล์ร่าง (.html / .txt)"><svg aria-hidden="true"><use href="#i-folder"/></svg></button>
+        <button type="button" class="tb" data-cmd="clean" aria-label="ล้างรูปแบบ" title="ล้างรูปแบบ"><svg aria-hidden="true"><use href="#i-clean"/></svg></button>
+      </div>
+    </div>
     <button type="button" class="btn" id="btnRuler" aria-pressed="false" title="ไม้บรรทัดลอย: โปร่งใส ลากย้าย ปรับสี/ความโปร่ง/ความยาวได้">📏</button>
+    <div class="fm">
+      <button type="button" class="btn" id="btnTbColor" aria-haspopup="true" aria-expanded="false" aria-label="สีพื้นแถบเครื่องมือ" title="สีพื้นแถบบนสุดและแถบเครื่องมือ (เลือกสีและความโปร่งแสงได้)">🎨</button>
+      <div class="tbc-pop" id="tbcPop" hidden>
+        <div class="tbc-title">สีพื้นแถบบนสุด + แถบเครื่องมือ</div>
+        <div class="tbc-sw" id="tbcSw"></div>
+        <div class="tbc-row"><span>สีเอง</span><input type="color" id="tbcColor" aria-label="สีพื้นแถบเครื่องมือ"></div>
+        <div class="tbc-row"><span>โปร่งแสง</span><input type="range" id="tbcAlpha" min="10" max="100" step="1" aria-label="ความทึบของสีพื้น"><b id="tbcAv"></b></div>
+        <div class="tbc-row"><button type="button" class="chip" id="tbcReset">กลับค่าเดิม</button></div>
+      </div>
+    </div>
     <label class="zoom"><select id="zoomSel" aria-label="ซูม" title="ซูม">
       <option value="100">100%</option><option value="125">125%</option><option value="150">150%</option><option value="175">175%</option><option value="200">200%</option>
     </select></label>
@@ -541,28 +564,6 @@ body.ls-docked .desk{padding-left:240px}
             <button type="button" class="tb" id="btnMarks" data-cmd="marks" aria-pressed="false" aria-label="แสดง/ซ่อนเครื่องหมาย" title="แสดง/ซ่อนเครื่องหมาย เว้นวรรค แท็บ ย่อหน้า (Ctrl+Shift+8)"><svg aria-hidden="true"><use href="#i-pilcrow"/></svg></button>
             <button type="button" class="tb" id="btnLines" data-cmd="lines" aria-pressed="false" aria-label="เส้นบรรทัด" title="เส้นบรรทัดแบบเส้นประ สลับสีตามย่อหน้า"><svg aria-hidden="true"><use href="#i-lines"/></svg></button>
             <button type="button" class="tb menu-btn" id="btnNumbers" data-menu="m-numbers" aria-haspopup="true" aria-expanded="false" aria-label="เลขที่ย่อหน้าและเลขที่บรรทัด" title="เลขที่ย่อหน้า / เลขที่บรรทัด"><svg aria-hidden="true"><use href="#i-numbers"/></svg></button>
-          </div>
-          <div class="grp tb-more">
-            <button type="button" class="tb" id="btnMore" aria-haspopup="true" aria-expanded="false" aria-label="เครื่องมือเพิ่มเติม" title="เพิ่มเติม: ขีดฆ่า, Tab, ตัวห้อย/ตัวยก, ตัด/คัดลอก, รูปภาพ, เปิดไฟล์, ล้างรูปแบบ" style="padding:0 6px;font-size:13px">เพิ่มเติม ▾</button>
-            <button type="button" class="tb" id="btnTbColor" aria-haspopup="true" aria-expanded="false" aria-label="สีพื้นแถบเครื่องมือ" title="สีพื้นแถบบนสุดและแถบเครื่องมือ (เลือกสีและความโปร่งแสงได้)" style="padding:0 5px;font-size:13px">🎨</button>
-            <div class="tbc-pop" id="tbcPop" hidden>
-              <div class="tbc-title">สีพื้นแถบบนสุด + แถบเครื่องมือ</div>
-              <div class="tbc-sw" id="tbcSw"></div>
-              <div class="tbc-row"><span>สีเอง</span><input type="color" id="tbcColor" aria-label="สีพื้นแถบเครื่องมือ"></div>
-              <div class="tbc-row"><span>โปร่งแสง</span><input type="range" id="tbcAlpha" min="10" max="100" step="1" aria-label="ความทึบของสีพื้น"><b id="tbcAv"></b></div>
-              <div class="tbc-row"><button type="button" class="chip" id="tbcReset">กลับค่าเดิม</button></div>
-            </div>
-            <div class="more-pop" id="morePop" hidden>
-              <button type="button" class="tb" data-cmd="strike" aria-pressed="false" aria-label="ขีดฆ่า" title="ขีดฆ่า"><svg aria-hidden="true"><use href="#i-strike"/></svg></button>
-              <button type="button" class="tb" data-cmd="tab" aria-label="แทรกแท็บ" title="แทรก Tab"><svg aria-hidden="true"><use href="#i-tab"/></svg></button>
-              <button type="button" class="tb" data-cmd="sub" aria-pressed="false" aria-label="ตัวห้อย" title="ตัวห้อย"><svg aria-hidden="true"><use href="#i-sub"/></svg></button>
-              <button type="button" class="tb" data-cmd="sup" aria-pressed="false" aria-label="ตัวยก" title="ตัวยก"><svg aria-hidden="true"><use href="#i-sup"/></svg></button>
-              <button type="button" class="tb" data-cmd="cut" aria-label="ตัด" title="ตัด (Ctrl+X)"><svg aria-hidden="true"><use href="#i-cut"/></svg></button>
-              <button type="button" class="tb" data-cmd="copy" aria-label="คัดลอก" title="คัดลอก (Ctrl+C)"><svg aria-hidden="true"><use href="#i-copy"/></svg></button>
-              <button type="button" class="tb" data-cmd="image" aria-label="แทรกรูปภาพ" title="แทรกรูปภาพ"><svg aria-hidden="true"><use href="#i-image"/></svg></button>
-              <button type="button" class="tb" data-cmd="open" aria-label="เปิดไฟล์ร่าง" title="เปิดไฟล์ร่าง (.html / .txt)"><svg aria-hidden="true"><use href="#i-folder"/></svg></button>
-              <button type="button" class="tb" data-cmd="clean" aria-label="ล้างรูปแบบ" title="ล้างรูปแบบ"><svg aria-hidden="true"><use href="#i-clean"/></svg></button>
-            </div>
           </div>
         </div>
       </div>
@@ -709,6 +710,7 @@ body.ls-docked .desk{padding-left:240px}
     <button type="button" class="chip" data-act="table-select-all" title="เลือกทั้งตาราง">✥ เลือกตาราง</button>
     <button type="button" class="chip" data-act="table-copy" title="คัดลอกเฉพาะตาราง">📋 คัดลอกตาราง</button>
     <button type="button" class="chip" data-act="table-cut" title="ตัดเฉพาะตาราง">✂️ ตัดตาราง</button>
+    <button type="button" class="chip primary" data-act="table-paste" id="btnPasteTable" title="วางตารางที่คัดลอกไว้ลงที่ตำแหน่งเคอร์เซอร์">📥 วางตาราง</button>
   </div>
   <div class="menu-row" style="gap:4px">
     <button type="button" class="chip" data-act="table-move-up" title="ย้ายตารางขึ้น 1 ย่อหน้า">⬆️ ย้ายขึ้น</button>
@@ -4409,6 +4411,8 @@ ${listCss}
       say('เลือกทั้งตารางแล้ว');
     }
 
+    let lastCopiedTableData = null;
+
     async function copyTableOnly(tbl) {
       tbl = tbl || getActiveTable();
       if (!tbl) { say('กรุณาคลิกในตารางที่ต้องการคัดลอก'); return; }
@@ -4423,12 +4427,23 @@ ${listCss}
           else td.style.border = '1px solid #000';
         }
         if (!td.style.padding) td.style.padding = '3px 6px';
-        fontDefaults(td);
+        if (!td.style.fontFamily) td.style.fontFamily = FONT_STACK;
+        if (!td.style.fontSize) td.style.fontSize = DEFAULTS.size;
       }
       const html = clone.outerHTML;
       const tsv = [...clone.querySelectorAll('tr')].map(tr =>
         [...tr.querySelectorAll('td')].map(td => td.innerText.replace(/[\r\n]+/g, ' ').trim()).join('\t')
       ).join('\n');
+
+      lastCopiedTableData = {
+        html,
+        border: tbl.dataset.border || 'all',
+        align: tbl.dataset.align || 'left',
+        width: tbl.style.width || '100%',
+        cellWidths: [...tbl.querySelectorAll('tr:first-child td')].map(td => td.style.width),
+        cellBgs: [...tbl.querySelectorAll('td')].map(td => td.style.backgroundColor)
+      };
+
       await writeClipboard(html, tsv);
       say('คัดลอกเฉพาะตารางแล้ว');
     }
@@ -4439,6 +4454,124 @@ ${listCss}
       await copyTableOnly(tbl);
       deleteTableOnly(tbl);
       say('ตัดตารางแล้ว');
+    }
+
+    async function pasteTableOnly() {
+      let htmlToPaste = null;
+      let borderMode = lastCopiedTableData?.border || 'all';
+      let alignMode = lastCopiedTableData?.align || 'left';
+      let tblWidth = lastCopiedTableData?.width || '100%';
+      let cellWidths = lastCopiedTableData?.cellWidths || [];
+      let cellBgs = lastCopiedTableData?.cellBgs || [];
+
+      // 1. ลองอ่านจากคลิปบอร์ดระบบ (ถ้ามีสิทธิ์และมีตาราง)
+      try {
+        if (navigator.clipboard?.read) {
+          const items = await navigator.clipboard.read();
+          for (const item of items) {
+            if (item.types.includes('text/html')) {
+              const blob = await item.getType('text/html');
+              const text = await blob.text();
+              if (/<table[\s>]/i.test(text)) {
+                htmlToPaste = text;
+                const parser = new DOMParser().parseFromString(text, 'text/html');
+                const parsedTbl = parser.querySelector('table');
+                if (parsedTbl) {
+                  if (parsedTbl.dataset.border) borderMode = parsedTbl.dataset.border;
+                  if (parsedTbl.dataset.align) alignMode = parsedTbl.dataset.align;
+                  if (parsedTbl.style.width) tblWidth = parsedTbl.style.width;
+                  cellWidths = [...parsedTbl.querySelectorAll('tr:first-child td')].map(td => td.style.width);
+                  cellBgs = [...parsedTbl.querySelectorAll('td')].map(td => td.style.backgroundColor);
+                }
+                break;
+              }
+            }
+          }
+        }
+      } catch (_) {}
+
+      // 2. หากยังไม่มี HTML ลองอ่าน Plain text แบบ TSV (เช่น คัดลอกจาก Excel หรือสเปรดชีต)
+      if (!htmlToPaste) {
+        try {
+          if (navigator.clipboard?.readText) {
+            const plain = await navigator.clipboard.readText();
+            if (plain && plain.includes('\t') && plain.includes('\n')) {
+              const rows = plain.trim().split(/\r?\n/).map(r => r.split('\t'));
+              if (rows.length && rows[0].length) {
+                htmlToPaste = '<table><tbody>' + rows.map(r =>
+                  '<tr>' + r.map(c => `<td>${c.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</td>`).join('') + '</tr>'
+                ).join('') + '</tbody></table>';
+              }
+            }
+          }
+        } catch (_) {}
+      }
+
+      // 3. หากคลิปบอร์ดระบบไม่มีตาราง ใช้ตารางที่คัดลอกล่าสุดในเอดิเตอร์
+      if (!htmlToPaste && lastCopiedTableData?.html) {
+        htmlToPaste = lastCopiedTableData.html;
+      }
+
+      if (!htmlToPaste) {
+        say('ไม่พบข้อมูลตารางในคลิปบอร์ด (กรุณาคัดลอกตารางก่อน)');
+        return;
+      }
+
+      // 4. คำนวณตำแหน่งวาง
+      const curTbl = getActiveTable();
+      const r = useRange(activeRange());
+      let at = r.index;
+      if (curTbl) {
+        const cells = [...curTbl.querySelectorAll('td')];
+        const lastCellBlot = cells.length ? Quill.find(cells[cells.length - 1]) : null;
+        if (lastCellBlot) {
+          at = quill.getIndex(lastCellBlot) + lastCellBlot.length();
+          quill.insertText(at, '\n', 'user');
+          at += 1;
+        }
+      } else {
+        const [line] = quill.getLine(at);
+        if (line && line.length() > 1 && at > quill.getIndex(line)) {
+          quill.insertText(at, '\n', 'user');
+          at += 1;
+        }
+      }
+
+      const delta = quill.clipboard.convert({ html: htmlToPaste });
+      if (!delta || !delta.ops || !delta.ops.length) {
+        say('ไม่สามารถแปลงข้อมูลตารางได้');
+        return;
+      }
+
+      quill.updateContents(new Delta().retain(at).concat(delta), 'user');
+      quill.setSelection(at + delta.length(), 0, 'user');
+      say('วางตารางเรียบร้อยแล้ว');
+
+      setTimeout(() => {
+        const [line] = quill.getLine(at);
+        const cellNode = line?.domNode?.closest ? line.domNode.closest('td') : null;
+        const pastedTbl = cellNode ? cellNode.closest('table') : (getActiveTable() || quill.root.querySelector('table'));
+        if (pastedTbl) {
+          if (tblWidth) pastedTbl.style.width = tblWidth;
+          if (borderMode && borderMode !== 'all') {
+            pastedTbl.dataset.border = borderMode;
+            setTableBorder(borderMode, pastedTbl);
+          }
+          if (alignMode && alignMode !== 'left') {
+            pastedTbl.dataset.align = alignMode;
+            setTableAlign(alignMode, pastedTbl);
+          }
+          if (cellWidths.length) {
+            const firstRowCells = pastedTbl.querySelectorAll('tr:first-child td');
+            firstRowCells.forEach((td, i) => { if (cellWidths[i]) td.style.width = cellWidths[i]; });
+          }
+          if (cellBgs.length) {
+            const allCells = pastedTbl.querySelectorAll('td');
+            allCells.forEach((td, i) => { if (cellBgs[i]) td.style.backgroundColor = cellBgs[i]; });
+          }
+          updateTableOverlay(pastedTbl);
+        }
+      }, 60);
     }
 
     function deleteTableOnly(tbl) {
@@ -4500,8 +4633,7 @@ ${listCss}
       }, 50);
     }
 
-    function setTableBorder(mode) {
-      const tbl = getActiveTable();
+    function setTableBorder(mode, tbl = getActiveTable()) {
       if (!tbl) return;
       tbl.dataset.border = mode;
       for (const td of tbl.querySelectorAll('td')) {
@@ -4539,8 +4671,7 @@ ${listCss}
       schedule();
     }
 
-    function setTableAlign(align) {
-      const tbl = getActiveTable();
+    function setTableAlign(align, tbl = getActiveTable()) {
       if (!tbl) return;
       tbl.dataset.align = align;
       if (align === 'center') {
@@ -5179,6 +5310,7 @@ ${body}
       'table-select-all': () => { selectEntireTable(); return 'keep'; },
       'table-copy': () => { copyTableOnly(); return 'keep'; },
       'table-cut': () => { cutTableOnly(); return 'keep'; },
+      'table-paste': () => { pasteTableOnly(); return 'keep'; },
       'table-move-up': () => { moveTableByStep(-1); return 'keep'; },
       'table-move-down': () => { moveTableByStep(1); return 'keep'; },
       'table-distribute-cols': () => { distributeColumns(); return 'keep'; },
@@ -5196,7 +5328,15 @@ ${body}
       const mb = $('#btnMore'), mp = $('#morePop');
       const set = open => { mp.hidden = !open; mb.setAttribute('aria-expanded', String(open)); };
       mb.addEventListener('click', e => { e.stopPropagation(); set(mp.hidden); });
-      mp.addEventListener('click', () => set(false));
+      mp.addEventListener('click', e => {
+        const b = e.target.closest('button');
+        if (b && commands[b.dataset.cmd]) {
+          closeMenu();
+          commands[b.dataset.cmd](b.dataset.val);
+          schedule();
+        }
+        set(false);
+      });
       document.addEventListener('click', e => { if (!mp.hidden && !mp.contains(e.target)) set(false); });
       document.addEventListener('keydown', e => { if (e.key === 'Escape' && !mp.hidden) set(false); });
     })();
@@ -7003,6 +7143,7 @@ ${body}
       selectEntireTable,
       copyTableOnly,
       cutTableOnly,
+      pasteTableOnly,
       deleteTableOnly,
       moveTableByStep,
       setTableBorder,

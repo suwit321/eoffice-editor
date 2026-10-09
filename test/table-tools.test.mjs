@@ -25,10 +25,11 @@ describe('Table Enhancement (เครื่องมือตาราง ว�
     assert.ok(html.includes('id="btnDrawTable"'), 'ต้องมีปุ่มเปิดโหมดวาดตาราง');
     assert.ok(html.includes('data-act="table-draw"'), 'ต้องมี act table-draw');
 
-    // การเลือก คัดลอก ตัด ย้าย
+    // การเลือก คัดลอก ตัด วาง ย้าย
     assert.ok(html.includes('data-act="table-select-all"'), 'ต้องมี act table-select-all (เลือกทั้งตาราง)');
     assert.ok(html.includes('data-act="table-copy"'), 'ต้องมี act table-copy (คัดลอกเฉพาะตาราง)');
     assert.ok(html.includes('data-act="table-cut"'), 'ต้องมี act table-cut (ตัดเฉพาะตาราง)');
+    assert.ok(html.includes('data-act="table-paste"'), 'ต้องมี act table-paste (วางตาราง)');
     assert.ok(html.includes('data-act="table-move-up"'), 'ต้องมี act table-move-up (ย้ายตารางขึ้น)');
     assert.ok(html.includes('data-act="table-move-down"'), 'มี act table-move-down (ย้ายตารางลง)');
 
@@ -65,6 +66,7 @@ describe('Table Enhancement (เครื่องมือตาราง ว�
     assert.ok(distSingle.includes('id="btnDrawTable"'));
     assert.ok(distSingle.includes('tbl-handle-move'));
     assert.ok(distSingle.includes('tbl-draw-box'));
+    assert.ok(distSingle.includes('btnPasteTable'));
   });
 
   test('ทดสอบการทำงานของตารางในเบราว์เซอร์จริง (Edge Headless)', async (t) => {
@@ -240,6 +242,34 @@ describe('Table Enhancement (เครื่องมือตาราง ว�
       });
       assert.equal(drawModeRes.value.isDrawingActive, true);
       assert.equal(drawModeRes.value.isDrawingStopped, true);
+
+      // 8. ทดสอบการคัดลอกและวางตาราง (copyTableOnly / pasteTableOnly)
+      const pasteRes = await send('Runtime.evaluate', {
+        expression: `(async () => {
+          const firstCell = document.querySelector('#editor td');
+          firstCell.focus();
+          await window.eofficeEditor.copyTableOnly();
+          // ลบตารางออก
+          window.eofficeEditor.deleteTableOnly();
+          const countAfterDelete = document.querySelectorAll('#editor table').length;
+          // สั่งวางตารางกลับคืน
+          await window.eofficeEditor.pasteTableOnly();
+          await new Promise(r => setTimeout(r, 100));
+          const tblPasted = document.querySelector('#editor table');
+          return {
+            countAfterDelete,
+            hasPastedTable: !!tblPasted,
+            pastedRows: tblPasted ? tblPasted.querySelectorAll('tr').length : 0,
+            pastedCols: tblPasted ? tblPasted.querySelectorAll('tr:first-child td').length : 0
+          };
+        })()`,
+        awaitPromise: true,
+        returnByValue: true
+      });
+      assert.equal(pasteRes.value.countAfterDelete, 0, 'ตารางต้องถูกลบออกก่อนวาง');
+      assert.equal(pasteRes.value.hasPastedTable, true, 'ต้องมีตารางที่ถูกวางใหม่');
+      assert.equal(pasteRes.value.pastedRows, 3, 'ตารางที่วางต้องมี 3 แถว');
+      assert.equal(pasteRes.value.pastedCols, 3, 'ตารางที่วางต้องมี 3 คอลัมน์');
 
       ws.close();
     } finally {
