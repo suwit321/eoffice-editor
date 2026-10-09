@@ -165,6 +165,30 @@ button,select,input{font:inherit;color:inherit}
 #editor .ql-editor img{max-width:100%}
 .guide{position:absolute;top:0;bottom:0;border-left:1px dashed var(--accent);pointer-events:none}
 
+/* จัดการตารางสไตล์ Word */
+#editor table{border-collapse:collapse;margin:4px 0;transition:outline .15s}
+#editor table.table-selected{outline:2px solid var(--accent);background:rgba(27,95,180,.04)}
+#editor table[data-align="center"]{margin-left:auto;margin-right:auto}
+#editor table[data-align="right"]{margin-left:auto;margin-right:0}
+#editor table[data-align="left"]{margin-left:0;margin-right:auto}
+#editor table[data-border="none"] td{border:1px dashed rgba(0,0,0,.18)!important}
+#editor table[data-border="outside"]{border:1px solid #000}
+#editor table[data-border="outside"] td{border:none!important}
+#editor table[data-border="topbottom"]{border-top:1px solid #000;border-bottom:1px solid #000}
+#editor table[data-border="topbottom"] td{border:none!important}
+#editor table[data-border="all"] td{border:1px solid #000}
+.tbl-menu{min-width:280px;max-width:320px}
+.tbl-overlay{position:absolute;pointer-events:none;z-index:15}
+.tbl-handle-move{position:absolute;pointer-events:auto;width:22px;height:22px;padding:2px;margin-left:-26px;margin-top:-6px;border:1px solid var(--line-strong);border-radius:4px;background:#fff;color:var(--accent);cursor:grab;box-shadow:0 1px 4px rgba(0,0,0,.18);display:flex;align-items:center;justify-content:center}
+.tbl-handle-move:hover{background:var(--hover);border-color:var(--accent)}
+.tbl-handle-move:active{cursor:grabbing}
+.tbl-handle-move svg{width:15px;height:15px}
+.tbl-handle-resize{position:absolute;pointer-events:auto;width:16px;height:16px;line-height:14px;text-align:center;font-size:12px;margin-left:2px;margin-top:2px;border:1px solid var(--line-strong);border-radius:2px;background:#fff;color:var(--muted);cursor:nwse-resize;user-select:none;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.tbl-handle-resize:hover{background:var(--hover);color:var(--accent);border-color:var(--accent)}
+body.table-drawing-mode #editor .ql-editor{cursor:crosshair!important}
+.tbl-draw-box{position:absolute;border:2px dashed var(--accent);background:rgba(27,95,180,.12);pointer-events:none;z-index:25;border-radius:2px}
+.tbl-draw-box span{position:absolute;right:4px;bottom:4px;padding:1px 6px;background:var(--accent);color:#fff;border-radius:4px;font:600 11px/1.4 Consolas,sans-serif}
+
 /* หน้ากระดาษ A4: ขอบกระดาษสีจาง + กรอบขอบพิมพ์เส้นประจาง */
 .editor-box{position:relative}
 body.a4 .editor-box{border:1px solid #d5d9df;box-shadow:0 1px 6px rgba(15,23,42,.10)}
@@ -550,7 +574,14 @@ body.ls-docked .desk{padding-left:240px}
     </div>
     <div class="editorwrap">
       <div class="vruler" id="vruler" aria-label="ไม้บรรทัดแนวดิ่ง (ซม.)"><div class="vruler-scale" id="vrulerScale"></div></div>
-      <div class="editor-box"><div id="editor"></div></div>
+      <div class="editor-box">
+        <div id="editor"></div>
+        <div class="tbl-overlay" id="tblOverlay" hidden>
+          <button type="button" class="tbl-handle-move" id="tblHandleMove" title="เลือกทั้งตาราง (คลิก) / ลากเพื่อย้ายตาราง (คลิกขวาเพื่อดูคำสั่งตาราง)" aria-label="ตัวจัดการตาราง"><svg viewBox="0 0 16 16"><path d="M8 1l2.5 2.5h-2v3h3v-2L14 7l-2.5 2.5v-2h-3v3h2L8 13l-2.5-2.5h2v-3h-3v2L2 7l2.5-2.5v2h3v-3h-2z" fill="currentColor"/></svg></button>
+          <div class="tbl-handle-resize" id="tblHandleResize" title="ลากเพื่อปรับขนาดตาราง" aria-label="ปรับขนาดตาราง">⤡</div>
+        </div>
+        <div class="tbl-draw-box" id="tblDrawBox" hidden><span id="tblDrawLabel">2 × 2</span></div>
+      </div>
       <div class="paper-edge-handle" id="paperEdgeHandle" title="ลากเพื่อขยาย/ลดความกว้างหน้ากระดาษ (ดับเบิลคลิกเพื่อคืนค่า 16 ซม.)" aria-label="ขอบกระดาษด้านขวา"></div>
       <div class="guide" id="guide" hidden></div>
       <div class="guide-h" id="guideH" hidden></div>
@@ -653,11 +684,66 @@ body.ls-docked .desk{padding-left:240px}
   <div class="menu-row"><label>สีอื่น <input type="color" data-kind="background" value="#fff2cc"></label></div>
 </div>
 
-<div class="menu" id="m-table" role="menu" aria-label="ตาราง" hidden>
-  <div class="menu-title">แทรกตาราง <span id="tgridLabel">1 × 1</span></div>
+<div class="menu tbl-menu" id="m-table" role="menu" aria-label="ตาราง" hidden>
+  <div class="menu-title">แทรก & วาดตาราง <span id="tgridLabel">1 × 1</span></div>
   <div class="tgrid" id="tgrid"></div>
-  <div class="menu-row"><label>แถว <input type="number" id="tRows" min="1" max="30" value="2"></label><label>คอลัมน์ <input type="number" id="tCols" min="1" max="12" value="2"></label><button type="button" class="chip" id="tInsert" data-act="table-insert">แทรก</button></div>
+  <div class="menu-row">
+    <label>แถว <input type="number" id="tRows" min="1" max="30" value="2"></label>
+    <label>คอลัมน์ <input type="number" id="tCols" min="1" max="12" value="2"></label>
+    <button type="button" class="chip primary" id="tInsert" data-act="table-insert">แทรก</button>
+  </div>
+  <button type="button" class="btn" id="btnDrawTable" data-act="table-draw" style="width:calc(100% - 16px);margin:4px 8px;display:flex;align-items:center;justify-content:center;gap:6px;font-weight:600;border-color:var(--accent);color:var(--accent)">✏️ วาดตาราง (Draw Table)</button>
+
   <div class="sep"></div>
+  <div class="menu-title">จัดการตาราง & ย้าย</div>
+  <div class="menu-row" style="gap:4px">
+    <button type="button" class="chip" data-act="table-select-all" title="เลือกทั้งตาราง">✥ เลือกตาราง</button>
+    <button type="button" class="chip" data-act="table-copy" title="คัดลอกเฉพาะตาราง">📋 คัดลอกตาราง</button>
+    <button type="button" class="chip" data-act="table-cut" title="ตัดเฉพาะตาราง">✂️ ตัดตาราง</button>
+  </div>
+  <div class="menu-row" style="gap:4px">
+    <button type="button" class="chip" data-act="table-move-up" title="ย้ายตารางขึ้น 1 ย่อหน้า">⬆️ ย้ายขึ้น</button>
+    <button type="button" class="chip" data-act="table-move-down" title="ย้ายตารางลง 1 ย่อหน้า">⬇️ ย้ายลง</button>
+    <button type="button" class="chip" data-act="table-distribute-cols" title="ปรับความกว้างทุกคอลัมน์ให้เท่ากัน">↔ คอลัมน์เท่ากัน</button>
+  </div>
+
+  <div class="sep"></div>
+  <div class="menu-title">เส้นขอบตาราง (Borders)</div>
+  <div class="chips" style="gap:4px">
+    <button type="button" class="chip" data-act="table-border" data-val="all" title="มีเส้นขอบทุกช่อง">▦ ทุกเส้น</button>
+    <button type="button" class="chip" data-act="table-border" data-val="none" title="ไม่มีเส้นขอบ (สำหรับฟอร์มลงนามราชการ)">⬚ ไม่มีขอบ</button>
+    <button type="button" class="chip" data-act="table-border" data-val="outside" title="เฉพาะกรอบนอก">▢ กรอบนอก</button>
+    <button type="button" class="chip" data-act="table-border" data-val="topbottom" title="เฉพาะเส้นขอบบนและล่าง">═ บน-ล่าง</button>
+  </div>
+
+  <div class="sep"></div>
+  <div class="menu-title">สีพื้นหลังเซลล์ (แรเงา)</div>
+  <div class="menu-row" style="gap:4px">
+    <button type="button" class="chip" data-act="table-cell-bg" data-val="" title="ล้างสีพื้น">ไม่มีสี</button>
+    <button type="button" class="chip" data-act="table-cell-bg" data-val="#f2f2f2" style="background:#f2f2f2" title="เทาอ่อนราชการ">เทาอ่อน</button>
+    <button type="button" class="chip" data-act="table-cell-bg" data-val="#e6f2ff" style="background:#e6f2ff" title="ฟ้าอ่อน">ฟ้าอ่อน</button>
+    <button type="button" class="chip" data-act="table-cell-bg" data-val="#fff9e6" style="background:#fff9e6" title="เหลืองอ่อน">เหลืองอ่อน</button>
+    <button type="button" class="chip" data-act="table-cell-bg" data-val="#eef8ef" style="background:#eef8ef" title="เขียวอ่อน">เขียวอ่อน</button>
+    <input type="color" id="tCellColor" style="width:28px;height:24px;padding:0;border:1px solid var(--line-strong);border-radius:4px;cursor:pointer" title="เลือกสีเอง">
+  </div>
+
+  <div class="sep"></div>
+  <div class="menu-title">ตำแหน่งตาราง & การจัดแนว</div>
+  <div class="menu-row" style="gap:4px">
+    <span style="font-size:12px;color:var(--muted)">ตาราง:</span>
+    <button type="button" class="chip" data-act="table-align" data-val="left" title="ตารางชิดซ้าย">ชิดซ้าย</button>
+    <button type="button" class="chip" data-act="table-align" data-val="center" title="ตารางกึ่งกลาง">กึ่งกลาง</button>
+    <button type="button" class="chip" data-act="table-align" data-val="right" title="ตารางชิดขวา">ชิดขวา</button>
+  </div>
+  <div class="menu-row" style="gap:4px">
+    <span style="font-size:12px;color:var(--muted)">แนวดิ่ง:</span>
+    <button type="button" class="chip" data-act="table-valign" data-val="top" title="ชิดบน">ชิดบน</button>
+    <button type="button" class="chip" data-act="table-valign" data-val="middle" title="กึ่งกลางแนวดิ่ง">กึ่งกลาง</button>
+    <button type="button" class="chip" data-act="table-valign" data-val="bottom" title="ชิดล่าง">ชิดล่าง</button>
+  </div>
+
+  <div class="sep"></div>
+  <div class="menu-title">แทรก / ลบ แถวและคอลัมน์</div>
   <button type="button" class="mi" data-act="table-op" data-val="insertRowAbove">แทรกแถวด้านบน</button>
   <button type="button" class="mi" data-act="table-op" data-val="insertRowBelow">แทรกแถวด้านล่าง</button>
   <button type="button" class="mi" data-act="table-op" data-val="insertColumnLeft">แทรกคอลัมน์ด้านซ้าย</button>
@@ -665,7 +751,7 @@ body.ls-docked .desk{padding-left:240px}
   <div class="sep"></div>
   <button type="button" class="mi" data-act="table-op" data-val="deleteRow">ลบแถว</button>
   <button type="button" class="mi" data-act="table-op" data-val="deleteColumn">ลบคอลัมน์</button>
-  <button type="button" class="mi" data-act="table-op" data-val="deleteTable">ลบตาราง</button>
+  <button type="button" class="mi" data-act="table-op" data-val="deleteTable" style="color:#dc2626">ลบทั้งตาราง</button>
 </div>
 
 <div class="menu" id="m-link" role="dialog" aria-label="ลิงก์" hidden>
@@ -1259,12 +1345,32 @@ ${listCss}
       say(ok ? (kind === 'cut' ? 'ตัดแล้ว' : 'คัดลอกแล้ว') : `เบราว์เซอร์ไม่อนุญาตจากปุ่มนี้ — ใช้ ${kind === 'cut' ? 'Ctrl+X' : 'Ctrl+C'} แทน`);
     }
 
-    // ---------- ตาราง ----------
+    // ---------- ตาราง & การจัดการตารางสไตล์ Word ----------
+    let activeTableEl = null;
+    let activeCellEl = null;
+
+    function getActiveTable() {
+      if (activeTableEl && activeTableEl.isConnected) return activeTableEl;
+      const sel = quill.getSelection();
+      if (sel) {
+        const [line] = quill.getLine(sel.index);
+        const tbl = line?.domNode?.closest('table');
+        if (tbl) return tbl;
+      }
+      const anchorNode = window.getSelection()?.anchorNode;
+      return (anchorNode instanceof Element ? anchorNode : anchorNode?.parentElement)?.closest('table') || null;
+    }
+
+    function getActiveCell() {
+      if (activeCellEl && activeCellEl.isConnected) return activeCellEl;
+      const anchorNode = window.getSelection()?.anchorNode;
+      return (anchorNode instanceof Element ? anchorNode : anchorNode?.parentElement)?.closest('td') || null;
+    }
+
     function insertTable(rows, cols) {
       const r = useRange(activeRange());
       const [line] = quill.getLine(r.index);
       if (!line || !tableMod) return;
-      // แทรกที่ย่อหน้าว่างเสมอ ไม่ให้ข้อความหน้าเคอร์เซอร์ถูกดูดเข้าไปเป็นเซลล์แรก
       let at = quill.getIndex(line);
       if (line.length() > 1) {
         at += line.length();
@@ -1273,10 +1379,268 @@ ${listCss}
       quill.setSelection(at, 0, 'silent');
       tableMod.insertTable(rows, cols);
       say(`แทรกตาราง ${rows} × ${cols} แล้ว`);
+      setTimeout(() => {
+        const tbl = getActiveTable();
+        if (tbl) updateTableOverlay(tbl);
+      }, 50);
     }
+
     function tableOp(name) {
       useRange(activeRange());
       if (typeof tableMod?.[name] === 'function') tableMod[name]();
+      setTimeout(() => {
+        const tbl = getActiveTable();
+        if (tbl) updateTableOverlay(tbl);
+        else hideTableOverlay();
+      }, 50);
+    }
+
+    function selectEntireTable(tbl) {
+      tbl = tbl || getActiveTable();
+      if (!tbl) return;
+      const cells = [...tbl.querySelectorAll('td')];
+      if (!cells.length) return;
+      const firstBlot = Quill.find(cells[0]);
+      const lastBlot = Quill.find(cells[cells.length - 1]);
+      if (firstBlot && lastBlot) {
+        const start = quill.getIndex(firstBlot);
+        const end = quill.getIndex(lastBlot) + lastBlot.length();
+        quill.setSelection(start, end - start, 'user');
+      }
+      $$('#editor table').forEach(t => t.classList.remove('table-selected'));
+      tbl.classList.add('table-selected');
+      updateTableOverlay(tbl);
+      say('เลือกทั้งตารางแล้ว');
+    }
+
+    async function copyTableOnly(tbl) {
+      tbl = tbl || getActiveTable();
+      if (!tbl) { say('กรุณาคลิกในตารางที่ต้องการคัดลอก'); return; }
+      const clone = tbl.cloneNode(true);
+      clone.classList.remove('table-selected', 'tbl-focused');
+      clone.style.borderCollapse = 'collapse';
+      if (!clone.style.width) clone.style.width = '100%';
+      for (const td of clone.querySelectorAll('td')) {
+        if (!td.style.border) {
+          if (tbl.dataset.border === 'none') td.style.border = 'none';
+          else if (tbl.dataset.border === 'outside' || tbl.dataset.border === 'topbottom') td.style.border = 'none';
+          else td.style.border = '1px solid #000';
+        }
+        if (!td.style.padding) td.style.padding = '3px 6px';
+        fontDefaults(td);
+      }
+      const html = clone.outerHTML;
+      const tsv = [...clone.querySelectorAll('tr')].map(tr =>
+        [...tr.querySelectorAll('td')].map(td => td.innerText.replace(/[\r\n]+/g, ' ').trim()).join('\t')
+      ).join('\n');
+      await writeClipboard(html, tsv);
+      say('คัดลอกเฉพาะตารางแล้ว');
+    }
+
+    async function cutTableOnly(tbl) {
+      tbl = tbl || getActiveTable();
+      if (!tbl) return;
+      await copyTableOnly(tbl);
+      deleteTableOnly(tbl);
+      say('ตัดตารางแล้ว');
+    }
+
+    function deleteTableOnly(tbl) {
+      tbl = tbl || getActiveTable();
+      if (!tbl) return;
+      const cells = [...tbl.querySelectorAll('td')];
+      if (!cells.length) return;
+      const firstBlot = Quill.find(cells[0]);
+      const lastBlot = Quill.find(cells[cells.length - 1]);
+      if (firstBlot && lastBlot) {
+        const start = quill.getIndex(firstBlot);
+        const len = (quill.getIndex(lastBlot) + lastBlot.length()) - start;
+        quill.deleteText(start, len, 'user');
+      } else {
+        tableMod?.deleteTable();
+      }
+      hideTableOverlay();
+      say('ลบตารางแล้ว');
+    }
+
+    function moveTableByStep(direction) {
+      const tbl = getActiveTable();
+      if (!tbl) return;
+      const cells = [...tbl.querySelectorAll('td')];
+      if (!cells.length) return;
+      const firstBlot = Quill.find(cells[0]);
+      const lastBlot = Quill.find(cells[cells.length - 1]);
+      if (!firstBlot || !lastBlot) return;
+      const start = quill.getIndex(firstBlot);
+      const len = (quill.getIndex(lastBlot) + lastBlot.length()) - start;
+      const delta = quill.getContents(start, len);
+
+      if (direction < 0) {
+        if (start <= 0) { say('ตารางอยู่บนสุดแล้ว'); return; }
+        const [prevLine] = quill.getLine(start - 1);
+        if (!prevLine) return;
+        const targetIdx = quill.getIndex(prevLine);
+        quill.deleteText(start, len, 'user');
+        quill.updateContents(new Delta().retain(targetIdx).concat(delta), 'user');
+        quill.setSelection(targetIdx, 0, 'silent');
+        say('ย้ายตารางขึ้นแล้ว');
+      } else {
+        const afterIdx = start + len;
+        if (afterIdx >= quill.getLength() - 1) {
+          quill.insertText(afterIdx, '\n', 'user');
+        }
+        const [nextLine] = quill.getLine(afterIdx);
+        if (!nextLine) return;
+        const step = nextLine.length();
+        quill.deleteText(start, len, 'user');
+        const targetIdx = start + step;
+        quill.updateContents(new Delta().retain(targetIdx).concat(delta), 'user');
+        quill.setSelection(targetIdx, 0, 'silent');
+        say('ย้ายตารางลงแล้ว');
+      }
+      setTimeout(() => {
+        const newTbl = getActiveTable();
+        if (newTbl) updateTableOverlay(newTbl);
+      }, 50);
+    }
+
+    function setTableBorder(mode) {
+      const tbl = getActiveTable();
+      if (!tbl) return;
+      tbl.dataset.border = mode;
+      for (const td of tbl.querySelectorAll('td')) {
+        if (mode === 'none') td.style.border = 'none';
+        else if (mode === 'outside' || mode === 'topbottom') td.style.border = 'none';
+        else td.style.border = '1px solid #000';
+      }
+      if (mode === 'outside') {
+        tbl.style.border = '1px solid #000';
+      } else if (mode === 'topbottom') {
+        tbl.style.borderTop = '1px solid #000';
+        tbl.style.borderBottom = '1px solid #000';
+        tbl.style.borderLeft = 'none';
+        tbl.style.borderRight = 'none';
+      } else if (mode === 'none') {
+        tbl.style.border = 'none';
+      } else {
+        tbl.style.border = 'none';
+      }
+      const labels = { all: 'มีเส้นขอบทุกช่อง', none: 'ไม่มีเส้นขอบ (สำหรับฟอร์มลงนาม)', outside: 'เฉพาะกรอบนอก', topbottom: 'เฉพาะเส้นขอบบน-ล่าง' };
+      say(`ตั้งค่าเส้นขอบตาราง: ${labels[mode] || mode}`);
+      schedule();
+    }
+
+    function setTableCellBg(color) {
+      const tbl = getActiveTable();
+      if (!tbl) return;
+      const isTableSelected = tbl.classList.contains('table-selected');
+      const cell = getActiveCell();
+      const targets = isTableSelected || !cell ? [...tbl.querySelectorAll('td')] : [cell];
+      for (const td of targets) {
+        td.style.backgroundColor = color || '';
+      }
+      say(color ? `ใส่สีพื้นหลังเซลล์แล้ว` : 'ล้างสีพื้นหลังเซลล์แล้ว');
+      schedule();
+    }
+
+    function setTableAlign(align) {
+      const tbl = getActiveTable();
+      if (!tbl) return;
+      tbl.dataset.align = align;
+      if (align === 'center') {
+        tbl.style.marginLeft = 'auto'; tbl.style.marginRight = 'auto';
+      } else if (align === 'right') {
+        tbl.style.marginLeft = 'auto'; tbl.style.marginRight = '0';
+      } else {
+        tbl.style.marginLeft = '0'; tbl.style.marginRight = 'auto';
+      }
+      say(`จัดตำแหน่งตาราง: ${align === 'center' ? 'กึ่งกลาง' : align === 'right' ? 'ชิดขวา' : 'ชิดซ้าย'}`);
+      schedule();
+    }
+
+    function setTableCellVAlign(valign) {
+      const tbl = getActiveTable();
+      if (!tbl) return;
+      const isTableSelected = tbl.classList.contains('table-selected');
+      const cell = getActiveCell();
+      const targets = isTableSelected || !cell ? [...tbl.querySelectorAll('td')] : [cell];
+      for (const td of targets) {
+        td.style.verticalAlign = valign;
+      }
+      say(`จัดแนวข้อความในเซลล์: ${valign === 'middle' ? 'กึ่งกลาง' : valign === 'bottom' ? 'ชิดล่าง' : 'ชิดบน'}`);
+      schedule();
+    }
+
+    function distributeColumns() {
+      const tbl = getActiveTable();
+      if (!tbl) return;
+      const rows = [...tbl.querySelectorAll('tr')];
+      if (!rows.length) return;
+      const maxCols = Math.max(...rows.map(r => r.querySelectorAll('td').length));
+      if (!maxCols) return;
+      const colWidth = (100 / maxCols).toFixed(2) + '%';
+      for (const td of tbl.querySelectorAll('td')) {
+        td.style.width = colWidth;
+      }
+      tbl.style.width = '100%';
+      updateTableOverlay(tbl);
+      say('กระจายความกว้างคอลัมน์เท่ากันแล้ว (100%)');
+      schedule();
+    }
+
+    // ---------- ตัวจัดการตารางลอย (Table Overlay ✥ & ⤡) ----------
+    function updateTableOverlay(tbl) {
+      const overlay = $('#tblOverlay');
+      if (!overlay) return;
+      if (!tbl || !tbl.isConnected) {
+        overlay.hidden = true;
+        return;
+      }
+      activeTableEl = tbl;
+      const box = $('.editor-box');
+      if (!box) return;
+      const boxRect = box.getBoundingClientRect();
+      const tblRect = tbl.getBoundingClientRect();
+
+      overlay.style.left = `${tblRect.left - boxRect.left}px`;
+      overlay.style.top = `${tblRect.top - boxRect.top}px`;
+      overlay.style.width = `${tblRect.width}px`;
+      overlay.style.height = `${tblRect.height}px`;
+      overlay.hidden = false;
+
+      const moveBtn = $('#tblHandleMove');
+      if (moveBtn) {
+        moveBtn.style.left = '0px';
+        moveBtn.style.top = '0px';
+      }
+      const resizeHandle = $('#tblHandleResize');
+      if (resizeHandle) {
+        resizeHandle.style.left = `${tblRect.width - 16}px`;
+        resizeHandle.style.top = `${tblRect.height - 16}px`;
+      }
+    }
+
+    function hideTableOverlay() {
+      const overlay = $('#tblOverlay');
+      if (overlay) overlay.hidden = true;
+      activeTableEl = null;
+      activeCellEl = null;
+      $$('#editor table').forEach(t => t.classList.remove('table-selected', 'tbl-focused'));
+    }
+
+    // ---------- โหมดวาดตาราง (Draw Table Mode) ----------
+    let isDrawTableActive = false;
+    function startDrawTableMode() {
+      isDrawTableActive = true;
+      document.body.classList.add('table-drawing-mode');
+      say('โหมดวาดตาราง: คลิกแล้วลากเมาส์บนหน้ากระดาษเพื่อสร้างตาราง (กด Esc เพื่อยกเลิก)');
+    }
+
+    function stopDrawTableMode() {
+      isDrawTableActive = false;
+      document.body.classList.remove('table-drawing-mode');
+      const box = $('#tblDrawBox');
+      if (box) box.hidden = true;
     }
 
     // ---------- ลิงก์ ----------
@@ -1339,6 +1703,25 @@ ${listCss}
       const srcItems = src.root.querySelectorAll('li'), outItems = root.querySelectorAll('li');
       if (srcItems.length === outItems.length) {
         srcItems.forEach((li, i) => { const st = li.getAttribute('style'); if (st) outItems[i].setAttribute('style', st); });
+      }
+      // getSemanticHTML ทิ้ง attributes/styles ของ table และ td (data-border, dataset.align, สีพื้นหลัง, ความกว้าง) — คัดลอกกลับตามลำดับ
+      const srcTables = (q?.root || quill.root).querySelectorAll('table'), outTables = root.querySelectorAll('table');
+      if (srcTables.length === outTables.length) {
+        srcTables.forEach((srcTbl, i) => {
+          const outTbl = outTables[i];
+          if (srcTbl.dataset.border) outTbl.dataset.border = srcTbl.dataset.border;
+          if (srcTbl.dataset.align) outTbl.dataset.align = srcTbl.dataset.align;
+          if (srcTbl.style.width) outTbl.style.width = srcTbl.style.width;
+          const srcCells = srcTbl.querySelectorAll('td'), outCells = outTbl.querySelectorAll('td');
+          if (srcCells.length === outCells.length) {
+            srcCells.forEach((srcTd, j) => {
+              const outTd = outCells[j];
+              if (srcTd.style.backgroundColor) outTd.style.backgroundColor = srcTd.style.backgroundColor;
+              if (srcTd.style.width) outTd.style.width = srcTd.style.width;
+              if (srcTd.style.verticalAlign) outTd.style.verticalAlign = srcTd.style.verticalAlign;
+            });
+          }
+        });
       }
       for (const el of [...root.querySelectorAll('*')].reverse()) {
         if (DROP_TAGS.has(el.tagName)) { el.remove(); continue; }
@@ -1422,13 +1805,36 @@ ${listCss}
       }
       for (const t of root.querySelectorAll('table')) {
         setIf(t, 'border-collapse', 'collapse');
-        setIf(t, 'width', '100%');
+        setIf(t, 'width', t.style.width || '100%');
+        if (t.dataset.align === 'center') {
+          t.style.marginLeft = 'auto'; t.style.marginRight = 'auto';
+        } else if (t.dataset.align === 'right') {
+          t.style.marginLeft = 'auto'; t.style.marginRight = '0';
+        } else if (t.dataset.align === 'left') {
+          t.style.marginLeft = '0'; t.style.marginRight = 'auto';
+        }
+        if (t.dataset.border === 'outside') {
+          t.style.border = '1px solid #000';
+        } else if (t.dataset.border === 'topbottom') {
+          t.style.borderTop = '1px solid #000';
+          t.style.borderBottom = '1px solid #000';
+          t.style.borderLeft = 'none';
+          t.style.borderRight = 'none';
+        } else if (t.dataset.border === 'none') {
+          t.style.border = 'none';
+        }
       }
       for (const td of root.querySelectorAll('td')) {
         fontDefaults(td);
-        setIf(td, 'border', '1px solid #000');
-        setIf(td, 'padding', '2px 6px');
-        setIf(td, 'vertical-align', 'top');
+        const parentT = td.closest('table');
+        const bMode = parentT?.dataset.border;
+        if (bMode === 'none' || bMode === 'outside' || bMode === 'topbottom') {
+          td.style.border = 'none';
+        } else {
+          td.style.border = '1px solid #000';
+        }
+        setIf(td, 'padding', '3px 6px');
+        setIf(td, 'vertical-align', td.style.verticalAlign || 'top');
       }
       return root.innerHTML;
     }
@@ -1571,10 +1977,19 @@ ${body}
         }
       },
       'm-table'(f, m) {
-        const inTable = !!f.table;
-        for (const b of $$('[data-act=table-op]', m)) b.disabled = !inTable || !tableMod;
+        const inTable = !!f.table || !!getActiveTable();
+        for (const b of $$('[data-act^="table-op"], [data-act^="table-border"], [data-act^="table-cell"], [data-act^="table-align"], [data-act^="table-valign"], [data-act="table-select-all"], [data-act="table-copy"], [data-act="table-cut"], [data-act="table-move-up"], [data-act="table-move-down"], [data-act="table-distribute-cols"]', m)) {
+          b.disabled = !inTable;
+        }
         $('#tgrid').classList.toggle('off', inTable || !tableMod);
         $('#tInsert').disabled = inTable || !tableMod;
+        const curTbl = getActiveTable();
+        if (curTbl) {
+          const bMode = curTbl.dataset.border || 'all';
+          for (const b of $$('[data-act="table-border"]', m)) b.setAttribute('aria-checked', String(b.dataset.val === bMode));
+          const aMode = curTbl.dataset.align || 'left';
+          for (const b of $$('[data-act="table-align"]', m)) b.setAttribute('aria-checked', String(b.dataset.val === aMode));
+        }
       },
       'm-link'(f) {
         $('#linkUrl').value = typeof f.link === 'string' ? f.link : '';
@@ -1764,6 +2179,17 @@ ${body}
       color: v => setInline('color', v),
       background: v => setInline('background', v),
       'table-insert': () => insertTable(intIn($('#tRows').value, 1, 30), intIn($('#tCols').value, 1, 12)),
+      'table-draw': () => { startDrawTableMode(); },
+      'table-select-all': () => { selectEntireTable(); return 'keep'; },
+      'table-copy': () => { copyTableOnly(); return 'keep'; },
+      'table-cut': () => { cutTableOnly(); return 'keep'; },
+      'table-move-up': () => { moveTableByStep(-1); return 'keep'; },
+      'table-move-down': () => { moveTableByStep(1); return 'keep'; },
+      'table-distribute-cols': () => { distributeColumns(); return 'keep'; },
+      'table-border': v => { setTableBorder(v); return 'keep'; },
+      'table-cell-bg': v => { setTableCellBg(v); return 'keep'; },
+      'table-align': v => { setTableAlign(v); return 'keep'; },
+      'table-valign': v => { setTableCellVAlign(v); return 'keep'; },
       'table-op': v => tableOp(v),
       'link-apply': () => (applyLink() ? undefined : 'keep'),
       'link-remove': removeLink,
@@ -1792,6 +2218,158 @@ ${body}
       else closeMenu();
       schedule();
     });
+
+    // ---------- ตัวควบคุมระบบตาราง & มือจับ (Table Controller) ----------
+    (() => {
+      const moveHandle = $('#tblHandleMove');
+      const resizeHandle = $('#tblHandleResize');
+      const drawBox = $('#tblDrawBox');
+      const drawLabel = $('#tblDrawLabel');
+      const cellColorInput = $('#tCellColor');
+
+      if (cellColorInput) {
+        cellColorInput.addEventListener('input', e => setTableCellBg(e.target.value));
+      }
+
+      // ตรวจจับการเลื่อนเมาส์ชี้ตาราง และการคลิกในตาราง
+      $('#editor').addEventListener('mouseover', e => {
+        if (isDrawTableActive) return;
+        const tbl = e.target.closest('table');
+        if (tbl) updateTableOverlay(tbl);
+      });
+
+      $('#editor').addEventListener('click', e => {
+        if (isDrawTableActive) return;
+        const tbl = e.target.closest('table');
+        if (tbl) {
+          activeTableEl = tbl;
+          activeCellEl = e.target.closest('td');
+          updateTableOverlay(tbl);
+        } else if (!e.target.closest('#tblOverlay')) {
+          hideTableOverlay();
+        }
+      });
+
+      // คลิกขวาบนตารางหรือมือจับ: เปิดเมนูตารางทันที
+      document.addEventListener('contextmenu', e => {
+        const tbl = e.target.closest('#editor table') || (e.target.closest('#tblHandleMove') ? activeTableEl : null);
+        if (tbl) {
+          e.preventDefault();
+          activeTableEl = tbl;
+          activeCellEl = e.target.closest('td');
+          updateTableOverlay(tbl);
+          toggleMenu('m-table', tbl);
+          const menu = $('#m-table');
+          if (menu) {
+            menu.style.left = `${clamp(e.clientX, 8, innerWidth - 300)}px`;
+            menu.style.top = `${clamp(e.clientY, 8, innerHeight - menu.offsetHeight - 8)}px`;
+          }
+        }
+      });
+
+      // อัปเดตตำแหน่งมือจับเมื่อเลื่อนหน้าจอหรือเปลี่ยนขนาด
+      addEventListener('scroll', () => { if (activeTableEl) updateTableOverlay(activeTableEl); }, { passive: true });
+      addEventListener('resize', () => { if (activeTableEl) updateTableOverlay(activeTableEl); });
+
+      // คลิกมือจับ ✥: เลือกทั้งตาราง
+      if (moveHandle) {
+        moveHandle.addEventListener('click', e => {
+          e.stopPropagation();
+          selectEntireTable(activeTableEl);
+        });
+      }
+
+      // ปรับขนาดตารางด้วยมือจับ ⤡
+      if (resizeHandle) {
+        let isResizing = false, startX = 0, startW = 0;
+        resizeHandle.addEventListener('pointerdown', e => {
+          if (!activeTableEl) return;
+          e.preventDefault(); e.stopPropagation();
+          isResizing = true;
+          startX = e.clientX;
+          startW = activeTableEl.getBoundingClientRect().width;
+          const onMove = ev => {
+            if (!isResizing || !activeTableEl) return;
+            const newW = Math.max(100, Math.min($('.editor-box').clientWidth - 40, startW + (ev.clientX - startX)));
+            activeTableEl.style.width = `${newW}px`;
+            updateTableOverlay(activeTableEl);
+          };
+          const onUp = () => {
+            isResizing = false;
+            window.removeEventListener('pointermove', onMove);
+            window.removeEventListener('pointerup', onUp);
+            schedule();
+          };
+          window.addEventListener('pointermove', onMove);
+          window.addEventListener('pointerup', onUp);
+        });
+      }
+
+      // ระบบลากวาดตาราง (Draw Table)
+      let drawStart = null;
+      $('.editor-box').addEventListener('pointerdown', e => {
+        if (!isDrawTableActive || e.button !== 0) return;
+        e.preventDefault();
+        const boxRect = $('.editor-box').getBoundingClientRect();
+        drawStart = { x: e.clientX - boxRect.left, y: e.clientY - boxRect.top, clientX: e.clientX, clientY: e.clientY };
+        if (drawBox) {
+          drawBox.style.left = `${drawStart.x}px`;
+          drawBox.style.top = `${drawStart.y}px`;
+          drawBox.style.width = '0px';
+          drawBox.style.height = '0px';
+          drawBox.hidden = false;
+          if (drawLabel) drawLabel.textContent = '1 × 1';
+        }
+
+        const onDrawMove = ev => {
+          if (!drawStart || !drawBox) return;
+          const curX = ev.clientX - boxRect.left, curY = ev.clientY - boxRect.top;
+          const left = Math.min(drawStart.x, curX);
+          const top = Math.min(drawStart.y, curY);
+          const w = Math.abs(curX - drawStart.x);
+          const h = Math.abs(curY - drawStart.y);
+
+          drawBox.style.left = `${left}px`;
+          drawBox.style.top = `${top}px`;
+          drawBox.style.width = `${w}px`;
+          drawBox.style.height = `${h}px`;
+
+          const cols = Math.max(1, Math.min(10, Math.round(w / 80) || 1));
+          const rows = Math.max(1, Math.min(15, Math.round(h / 32) || 1));
+          if (drawLabel) drawLabel.textContent = `${rows} × ${cols}`;
+        };
+
+        const onDrawUp = ev => {
+          window.removeEventListener('pointermove', onDrawMove);
+          window.removeEventListener('pointerup', onDrawUp);
+          if (!drawStart) return;
+          const w = Math.abs((ev.clientX - boxRect.left) - drawStart.x);
+          const h = Math.abs((ev.clientY - boxRect.top) - drawStart.y);
+          const cols = w >= 30 ? Math.max(1, Math.min(10, Math.round(w / 80) || 1)) : 2;
+          const rows = h >= 25 ? Math.max(1, Math.min(15, Math.round(h / 32) || 1)) : 2;
+
+          stopDrawTableMode();
+          const targetEl = document.elementFromPoint(drawStart.clientX, drawStart.clientY)?.closest('.ql-editor *');
+          const blot = targetEl ? Quill.find(targetEl) : null;
+          if (blot) {
+            quill.setSelection(quill.getIndex(blot), 0, 'silent');
+          }
+          insertTable(rows, cols);
+          drawStart = null;
+          say(`วาดตาราง ${rows} × ${cols} สำเร็จ`);
+        };
+
+        window.addEventListener('pointermove', onDrawMove);
+        window.addEventListener('pointerup', onDrawUp);
+      });
+
+      document.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && isDrawTableActive) {
+          stopDrawTableMode();
+          say('ยกเลิกโหมดวาดตาราง');
+        }
+      });
+    })();
     // ปุ่มในแถบเครื่องมือ/เมนูไม่ดึงโฟกัสออกจากกล่องพิมพ์ ทำให้ส่วนที่เลือกไว้ไม่หาย
     document.addEventListener('mousedown', e => {
       if (openMenu && !openMenu.m.contains(e.target) && !openMenu.btn.contains(e.target)) closeMenu();
@@ -3422,6 +4000,23 @@ ${body}
         pages[i] = { delta, stack: emptyStack() };
         scheduleSave();
       },
+      // ฟังก์ชันตารางขั้นสูง (แบบ Word)
+      insertTable,
+      getActiveTable,
+      getActiveCell,
+      selectEntireTable,
+      copyTableOnly,
+      cutTableOnly,
+      deleteTableOnly,
+      moveTableByStep,
+      setTableBorder,
+      setTableCellBg,
+      setTableAlign,
+      setTableCellVAlign,
+      distributeColumns,
+      startDrawTableMode,
+      stopDrawTableMode,
+      cleanHtml: exportHtml,
     };
     document.dispatchEvent(new CustomEvent('eoffice:ready'));
   }
