@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'sha256-XKldTrvNHsBkKd4zBgWsgq0j2UIlNOgdCva5EhenFnA=' 'sha256-bjNbvI8tl8y+bAasiIIyVXON/+FsTDSS9qAipExqFpE=' 'sha256-J0ddS4ypTlMtOjeNhPEmo7KWQjX5PNH29iACRqzd/ag=' 'sha256-WGU2e481b/iUTcCauFGbFv/U74123UWZ5jjdRTnIpO4='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.anthropic.com https://api.openai.com https://generativelanguage.googleapis.com http://localhost:* http://127.0.0.1:*; base-uri 'none'; form-action 'none'; object-src 'none'; manifest-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'sha256-XKldTrvNHsBkKd4zBgWsgq0j2UIlNOgdCva5EhenFnA=' 'sha256-bjNbvI8tl8y+bAasiIIyVXON/+FsTDSS9qAipExqFpE=' 'sha256-pSbJF2z3Snzt9GDNR8LwkNRp0R933MKEGp3EG6GabH8=' 'sha256-D1AAHw8FpxJqd7dO8DQw+7bHbciqxmtaeoTyuG6G5pY='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.anthropic.com https://api.openai.com https://generativelanguage.googleapis.com http://localhost:* http://127.0.0.1:*; base-uri 'none'; form-action 'none'; object-src 'none'; manifest-src 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="robots" content="noindex,nofollow">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -32,8 +32,8 @@
 html,body{margin:0}
 /* ระยะขอบกระดาษ: โหมดกะทัดรัด = 8px รอบด้าน, โหมด A4 = ขอบพิมพ์ บน 2.5 ขวา 2 ล่าง 2 ซ้าย 3 ซม. (กระดาษกว้าง 21 ซม.)
    --edge-x/--edge-y = ตำแหน่ง 0 ซม. ของไม้บรรทัด (ขอบกล่อง 1px + ระยะขอบ) */
-body{--pl:8px;--pr:8px;--pt:8px;--pb:8px;--min-h:18cm;
-  --edge-x:calc(1px + var(--pl));--edge-y:calc(1px + var(--pt));--paper-w:calc(16cm + var(--pl) + var(--pr) + 2px)}
+body{--pl:8px;--pr:8px;--pt:8px;--pb:8px;--min-h:18cm;--text-w:16cm;
+  --edge-x:calc(1px + var(--pl));--edge-y:calc(1px + var(--pt));--paper-w:calc(var(--text-w) + var(--pl) + var(--pr) + 2px)}
 body.a4{--pl:3cm;--pr:2cm;--pt:2.5cm;--pb:2cm;--min-h:25.2cm}
 /* โหมดกะทัดรัดไม่มีขอบกระดาษ: เปิดเลขที่ย่อหน้า/บรรทัดแล้วเว้นที่ด้านซ้ายให้ตัวเลข */
 body.numbers-on:not(.a4){--pl:44px}
@@ -82,8 +82,8 @@ button,select,input{font:inherit;color:inherit}
 .zoom select{height:26px;border:1px solid var(--line-strong);border-radius:6px;background:#fff;padding:0 6px}
 
 /* พื้นที่เอกสาร */
-.desk{padding:16px 16px 24px}
-.sheet{width:max-content;max-width:100%;margin:0 auto;background:var(--panel);border:1px solid var(--line);box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.desk{padding:16px 16px 24px;overflow-x:auto}
+.sheet{position:relative;width:max-content;margin:0 auto;background:var(--panel);border:1px solid var(--line);box-shadow:0 1px 3px rgba(0,0,0,.06)}
 .head{position:sticky;top:0;z-index:5;background:var(--panel)}
 
 /* แถบเครื่องมือ */
@@ -127,7 +127,7 @@ button,select,input{font:inherit;color:inherit}
 .rulerwrap::after,.editorwrap::after{content:"";flex:none;width:var(--vr);background:var(--ruler);border-left:1px solid #c2c2c2}
 .ruler-corner{flex:none;width:var(--vr);background:var(--ruler);border-bottom:1px solid #c2c2c2;border-right:1px solid #c2c2c2}
 .ruler{flex:1;position:relative;height:20px;background:var(--ruler);border-bottom:1px solid #c2c2c2;user-select:none;touch-action:none}
-.ruler-scale,.ruler-marks{position:absolute;left:var(--edge-x);width:16cm}
+.ruler-scale,.ruler-marks{position:absolute;left:var(--edge-x);width:var(--text-w)}
 .ruler-scale{top:4px;bottom:4px;background:var(--ruler-scale)}
 .ruler-marks{top:0;bottom:0}
 .tick{position:absolute;top:50%;width:1px;background:var(--ruler-ink);transform:translate(-50%,-50%)}
@@ -144,6 +144,17 @@ button,select,input{font:inherit;color:inherit}
 .ruler-marks{cursor:crosshair}
 .ruler-tip{position:absolute;z-index:6;bottom:calc(100% + 3px);transform:translateX(-50%);background:#1f2328;color:#fff;font-size:12px;line-height:1;padding:4px 6px;border-radius:4px;white-space:nowrap;pointer-events:none}
 .ruler-band{position:absolute;top:4px;bottom:4px;background:rgba(27,95,180,.25);border-left:1px solid var(--accent);border-right:1px solid var(--accent);pointer-events:none}
+/* มือจับลากขยายขอบกระดาษ */
+.ruler-edge-handle{position:absolute;left:calc(var(--edge-x) + var(--text-w));top:0;bottom:0;width:12px;margin-left:-6px;cursor:ew-resize;z-index:8;touch-action:none;display:flex;align-items:center;justify-content:center}
+.ruler-edge-handle::before{content:"";width:2px;height:100%;background:rgba(0,0,0,.28);border-radius:1px;transition:background .15s,width .15s}
+.ruler-edge-handle:hover::before,.ruler-edge-handle.dragging::before{background:var(--accent);width:3px}
+.ruler-edge-handle:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+
+.paper-edge-handle{position:absolute;left:calc(var(--vr) + var(--paper-w));top:0;bottom:0;width:14px;margin-left:-7px;cursor:ew-resize;z-index:8;touch-action:none}
+.paper-edge-handle::before{content:"";position:absolute;left:6px;top:0;bottom:0;width:2px;background:transparent;transition:background .15s}
+.paper-edge-handle:hover::before,.paper-edge-handle.dragging::before{background:var(--accent);box-shadow:0 0 6px rgba(27,95,180,.4)}
+.paper-edge-handle::after{content:"↔";position:absolute;left:50%;top:12px;transform:translateX(-50%);width:20px;height:20px;line-height:18px;text-align:center;font-size:11px;background:#fff;border:1px solid var(--line-strong);border-radius:50%;color:var(--muted);box-shadow:0 1px 4px rgba(0,0,0,.15);opacity:0;transition:opacity .2s,color .15s,border-color .15s;pointer-events:none}
+.paper-edge-handle:hover::after,.paper-edge-handle.dragging::after{opacity:1;color:var(--accent);border-color:var(--accent)}
 
 /* ไม้บรรทัดแนวดิ่ง (0 ซม. = บรรทัดแรกของข้อความ) */
 .vruler{position:relative;flex:none;width:var(--vr);background:var(--ruler);border-right:1px solid #c2c2c2;overflow:hidden;user-select:none;touch-action:none;cursor:crosshair}
@@ -544,12 +555,14 @@ body.ls-docked .desk{padding-left:240px}
             <button type="button" class="mk mk-right" data-kind="right" role="slider" aria-valuemin="0" aria-valuemax="16" aria-label="กั้นขวา"><svg viewBox="0 0 13 8" aria-hidden="true"><path d="M6.5.5l6 7H.5z"/></svg></button>
             <div class="ruler-tip" id="rulerTip" hidden></div>
           </div>
+          <div class="ruler-edge-handle" id="rulerEdgeHandle" title="ลากเพื่อขยาย/ลดความกว้างหน้ากระดาษ (ดับเบิลคลิกเพื่อคืนค่า 16 ซม.)" role="separator" aria-label="ขอบกระดาษด้านขวา" tabindex="0"></div>
         </div>
       </div>
     </div>
     <div class="editorwrap">
       <div class="vruler" id="vruler" aria-label="ไม้บรรทัดแนวดิ่ง (ซม.)"><div class="vruler-scale" id="vrulerScale"></div></div>
       <div class="editor-box"><div id="editor"></div></div>
+      <div class="paper-edge-handle" id="paperEdgeHandle" title="ลากเพื่อขยาย/ลดความกว้างหน้ากระดาษ (ดับเบิลคลิกเพื่อคืนค่า 16 ซม.)" aria-label="ขอบกระดาษด้านขวา"></div>
       <div class="guide" id="guide" hidden></div>
       <div class="guide-h" id="guideH" hidden></div>
       <div class="vtip" id="vrulerTip" hidden></div>
@@ -1912,6 +1925,17 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
     <div class="row"><label class="inline"><input type="checkbox" id="vwPaper"> แสดงเป็นกระดาษ A4 แนวตั้ง (ขอบกระดาษ + กรอบขอบพิมพ์สีจาง)</label></div>
     <div class="row"><label class="inline"><input type="checkbox" id="vwBreaks"> เส้นแบ่งหน้าโดยประมาณ</label></div>
     <div class="row"><label class="inline"><input type="checkbox" id="vwGrid"> กระดาษกราฟ ตาราง 1 ซม.</label></div>
+    <div class="row">
+      <label class="inline grow">ความกว้างพิมพ์ <select id="vwPaperWidth" class="grow">
+        <option value="16">16 ซม. (A4 แนวตั้ง — มาตรฐานราชการ)</option>
+        <option value="18">18 ซม. (กว้างปานกลาง)</option>
+        <option value="20">20 ซม. (กว้างพิเศษ)</option>
+        <option value="24.7">24.7 ซม. (A4 แนวนอน)</option>
+        <option value="custom" id="vwCustomOpt">กำหนดเอง (ลากขอบกระดาษ)</option>
+      </select></label>
+      <button type="button" class="tbtn" id="btnResetWidth" title="คืนค่า 16 ซม. (มาตรฐาน A4)">คืนค่า 16 ซม.</button>
+    </div>
+    <p class="hint">สามารถชี้ที่ขอบขวาของกระดาษหรือปลายไม้บรรทัด แล้วคลิกลากเพื่อขยาย/ลดความกว้างได้อิสระ (ดับเบิลคลิกเพื่อคืนค่า 16 ซม.)</p>
     <h3>เส้นบรรทัด (สลับสีตามย่อหน้า)</h3>
     <div class="row"><label class="inline"><input type="checkbox" id="vwLines"> แสดงเส้นประใต้ทุกบรรทัด</label></div>
     <div class="row" id="vwLineColors"></div>
@@ -2709,10 +2733,45 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
       $('#vwMarks').checked = s.showMarks;
       $('#vwParaNum').checked = s.paraNumbers;
       $('#vwLineNum').checked = s.lineNumbers;
+      const wVal = ed.textWidth?.() || 16;
+      const wSel = $('#vwPaperWidth'), wOpt = $('#vwCustomOpt');
+      if (wSel) {
+        if (['16', '18', '20', '24.7'].includes(String(wVal))) {
+          wSel.value = String(wVal);
+          if (wOpt) wOpt.textContent = 'กำหนดเอง (ลากขอบกระดาษ)';
+        } else {
+          if (wOpt) wOpt.textContent = `กำหนดเอง (${wVal} ซม.)`;
+          wSel.value = 'custom';
+        }
+      }
       $('#vwLineColors').innerHTML = s.lineColors.map((c, i) => `<label class="inline">สี ${i + 1} <input type="color" data-linecolor="${i}" value="${c}"></label>`).join('');
       $('#vwMarkList').innerHTML = MARK_TYPES.map(([k, label, sym]) => `<div class="row"><label class="inline grow"><input type="checkbox" data-mark="${k}"${s.marks[k] ? ' checked' : ''}> <b class="mk-sym" style="color:${s.markColors[k]}">${sym}</b> ${label}</label><input type="color" data-markcolor="${k}" value="${s.markColors[k]}" aria-label="สี${label}"></div>`).join('');
     }
     onTab.theme = renderView;
+    document.addEventListener('eoffice:paperwidth', e => {
+      const sel = $('#vwPaperWidth');
+      if (!sel) return;
+      const w = e.detail.width;
+      const opt = $('#vwCustomOpt');
+      if (['16', '18', '20', '24.7'].includes(String(w))) {
+        sel.value = String(w);
+        if (opt) opt.textContent = 'กำหนดเอง (ลากขอบกระดาษ)';
+      } else {
+        if (opt) opt.textContent = `กำหนดเอง (${w} ซม.)`;
+        sel.value = 'custom';
+      }
+    });
+    $('#vwPaperWidth')?.addEventListener('change', e => {
+      if (e.target.value !== 'custom' && ed.setTextWidth) {
+        ed.setTextWidth(+e.target.value);
+      }
+    });
+    $('#btnResetWidth')?.addEventListener('click', () => {
+      if (ed.resetTextWidth) ed.resetTextWidth();
+      else if (ed.setTextWidth) ed.setTextWidth(16);
+      const sel = $('#vwPaperWidth');
+      if (sel) sel.value = '16';
+    });
     $('#vwPaper').addEventListener('change', e => { ed.setSetting('paper', e.target.checked ? 'a4' : 'compact'); renderView(); });
     $('#vwBreaks').addEventListener('change', e => ed.setSetting('pageBreaks', e.target.checked));
     $('#vwGrid').addEventListener('change', e => ed.setSetting('grid', e.target.checked));
@@ -3610,6 +3669,7 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
       profile: 'standard', listDigits: 'arabic', pageNumbers: true, pageDigits: 'thai',
       // การแสดงผลบนจอ (ไม่มีผลกับการพิมพ์/ส่งออก)
       paper: 'a4', pageBreaks: true, grid: false,
+      textWidth: 16,
       showMarks: false,
       marks: { space: true, nbsp: true, tab: true, para: true, zw: true, dup: true, wj: true },
       markColors: { space: '#2563eb', nbsp: '#d97706', tab: '#16a34a', para: '#7c3aed', zw: '#dc2626', dup: '#fecaca', wj: '#0d9488' },
@@ -3623,6 +3683,10 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
     } catch { return base; }
   })();
   if (!PROFILES[settings.profile]) settings.profile = 'standard';
+  let rulerCm = Number(settings.textWidth) || 16;
+  if (rulerCm < 10 || rulerCm > 40) rulerCm = 16;
+  document.documentElement.style.setProperty('--text-w', `${rulerCm}cm`);
+  document.documentElement.style.setProperty('--paper-w', `calc(${rulerCm}cm + var(--pl) + var(--pr) + 2px)`);
   document.body.classList.toggle('a4', settings.paper === 'a4');
   document.body.classList.toggle('grid-on', !!settings.grid);
   document.body.classList.toggle('numbers-on', !!(settings.paraNumbers || settings.lineNumbers));
@@ -3644,7 +3708,7 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
     '#a61c00', '#cc0000', '#e69138', '#f1c232', '#6aa84f', '#45818e', '#3c78d8', '#3d85c6', '#674ea7', '#a64d79',
   ];
   const CM = 96 / 2.54;                  // px ต่อ 1 ซม.
-  const RULER_CM = 16, SNAP = 0.25, FINE = 0.05, MIN_TEXT = 1, INDENT_STEP = 1.25;
+  const SNAP = 0.25, FINE = 0.05, MIN_TEXT = 1, INDENT_STEP = 1.25;
   const KEY = { draft: 'eoffice-editor:draft', zoom: 'eoffice-editor:zoom' };
 
   const store = {
@@ -3769,7 +3833,8 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
     if (saved && [...sel.options].some(o => o.value === saved)) sel.value = saved;
     const apply = () => {
       const avail = $('#desk').clientWidth - 34;          // หัก padding ของ desk และขอบ sheet
-      const z = clamp(Math.min(+sel.value / 100, avail / ((settings.paper === 'a4' ? 21 * CM : 16 * CM + 16) + 2 + 20)), 0.4, 3);
+      const paperWInCm = settings.paper === 'a4' ? rulerCm + 5 : rulerCm + 16 / CM;
+      const z = clamp(Math.min(+sel.value / 100, avail / (paperWInCm * CM + 2 + 20)), 0.4, 3);
       document.documentElement.style.setProperty('--z', z.toFixed(3));
     };
     sel.addEventListener('change', () => { store.set(KEY.zoom, sel.value); apply(); });
@@ -3779,7 +3844,8 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
 
   function buildRuler() {
     let html = '';
-    for (let i = 1; i <= RULER_CM * 4; i++) {
+    const maxTicks = Math.round(rulerCm * 4);
+    for (let i = 1; i <= maxTicks; i++) {
       const pos = `${i / 4}cm`;
       html += i % 4 === 0
         ? `<span class="num" style="left:${pos}">${i / 4}</span>`
@@ -3995,7 +4061,7 @@ ${listCss}
           continue;
         }
         const m = metricsOf(line);
-        const next = round2(clamp(m.left + dir * INDENT_STEP, Math.max(0, -m.first), RULER_CM - m.right - MIN_TEXT));
+        const next = round2(clamp(m.left + dir * INDENT_STEP, Math.max(0, -m.first), rulerCm - m.right - MIN_TEXT));
         quill.formatLine(i, 1, 'marginleft', next ? cmStr(next) : false, 'user');
       }
       useRange(r);
@@ -4430,7 +4496,7 @@ ${listCss}
 <meta name="generator" content="eoffice-editor">
 <title>${esc(ensureDocName())}</title>
 <style>
-body{max-width:16cm;margin:2.5cm auto;font-family:${FONT_STACK};font-size:${DEFAULTS.size};color:#000}
+body{max-width:${rulerCm}cm;margin:2.5cm auto;font-family:${FONT_STACK};font-size:${DEFAULTS.size};color:#000}
 img{max-width:100%}
 section+section{margin-top:2cm;padding-top:2cm;border-top:1px dashed #999;break-before:page;page-break-before:always}
 p,li{orphans:3;widows:3}
@@ -5059,7 +5125,7 @@ ${body}
     const rulerEl = $('#ruler'), marks = $('#rulerMarks'), tip = $('#rulerTip'), guide = $('#guide');
     const LABEL = { first: 'ย่อหน้าบรรทัดแรก', hang: 'ย่อหน้าแขวน', box: 'กั้นซ้าย', right: 'กั้นขวา' };
     let rm = { left: 0, first: 0, right: 0 }, drag = null;
-    const markPos = (kind, m) => (kind === 'first' ? m.left + m.first : kind === 'right' ? RULER_CM - m.right : m.left);
+    const markPos = (kind, m) => (kind === 'first' ? m.left + m.first : kind === 'right' ? rulerCm - m.right : m.left);
     function placeMarks(m) {
       for (const el of marks.querySelectorAll('.mk')) {
         const pos = markPos(el.dataset.kind, m);
@@ -5070,11 +5136,11 @@ ${body}
     }
     function dragResult(kind, s, x) {
       const m = { ...s };
-      const maxLeft = RULER_CM - s.right - MIN_TEXT;
+      const maxLeft = rulerCm - s.right - MIN_TEXT;
       if (kind === 'first') m.first = clamp(x, 0, maxLeft) - s.left;
       else if (kind === 'hang') { m.left = clamp(x, 0, maxLeft); m.first = s.left + s.first - m.left; }
       else if (kind === 'box') m.left = clamp(x, Math.max(0, -s.first), maxLeft - Math.max(0, s.first));
-      else m.right = RULER_CM - clamp(x, Math.max(s.left, s.left + s.first) + MIN_TEXT, RULER_CM);
+      else m.right = rulerCm - clamp(x, Math.max(s.left, s.left + s.first) + MIN_TEXT, rulerCm);
       return { left: round2(m.left), first: round2(m.first), right: round2(m.right) };
     }
     const changed = (a, b) => a.left !== b.left || a.first !== b.first || a.right !== b.right;
@@ -5112,7 +5178,7 @@ ${body}
     function xToCm(clientX, fine) {
       const rect = marks.getBoundingClientRect();
       const step = fine ? FINE : SNAP;
-      return Math.round((clientX - rect.left) / rect.width * RULER_CM / step) * step;
+      return Math.round((clientX - rect.left) / rect.width * rulerCm / step) * step;
     }
     marks.addEventListener('pointerdown', e => {
       const mk = e.target.closest('.mk');
@@ -5150,6 +5216,118 @@ ${body}
       if (changed(rm, m)) { commit(kind, m, currentRange()); mk.focus(); schedule(); }
     });
 
+    // ---------- ลากขอบกระดาษเพื่อขยาย/ลดความกว้าง (ลากที่ปลายไม้บรรทัด หรือขอบขวากระดาษ) ----------
+    const rulerEdgeHandle = $('#rulerEdgeHandle'), paperEdgeHandle = $('#paperEdgeHandle');
+    function updatePaperWidthCss(cm) {
+      document.documentElement.style.setProperty('--text-w', `${cm}cm`);
+      document.documentElement.style.setProperty('--paper-w', `calc(${cm}cm + var(--pl) + var(--pr) + 2px)`);
+    }
+    function setTextWidth(cm, commit = true) {
+      cm = round2(clamp(cm, 10, 40));
+      rulerCm = cm;
+      updatePaperWidthCss(rulerCm);
+      buildRuler();
+      for (const el of marks.querySelectorAll('.mk')) el.setAttribute('aria-valuemax', String(rulerCm));
+      placeMarks(rm);
+      vBuiltCm = 0;
+      vscale.innerHTML = '';
+      buildVRuler();
+      if (commit) {
+        settings.textWidth = rulerCm;
+        store.set(SETTINGS_KEY, JSON.stringify(settings));
+        setupZoom();
+        say(`ปรับความกว้างหน้ากระดาษเป็น ${rulerCm} ซม.${rulerCm === 16 ? ' (มาตรฐาน A4)' : ''}`);
+        document.dispatchEvent(new CustomEvent('eoffice:paperwidth', { detail: { width: rulerCm } }));
+      }
+    }
+
+    function showEdgeTip(w) {
+      tip.hidden = false;
+      tip.style.left = `${w}cm`;
+      tip.textContent = w === 16
+        ? `ความกว้างพิมพ์ ${fmt(w)} ซม. (มาตรฐาน A4)`
+        : w === 24.7
+          ? `ความกว้างพิมพ์ ${fmt(w)} ซม. (A4 แนวนอน)`
+          : `ความกว้างพิมพ์ ${fmt(w)} ซม. (กระดาษ ${fmt(settings.paper === 'a4' ? w + 5 : w + 0.4)} ซม.)`;
+      guide.hidden = false;
+      guide.style.left = `calc(var(--vr) + var(--edge-x) + ${w}cm)`;
+    }
+
+    let edgeDrag = null;
+    function startEdgeDrag(e, handle) {
+      if (e.button !== 0) return;
+      e.preventDefault();
+      handle.setPointerCapture(e.pointerId);
+      handle.classList.add('dragging');
+      const startX = e.clientX;
+      const startW = rulerCm;
+      const currentZ = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--z')) || 1;
+      edgeDrag = { id: e.pointerId, handle, startX, startW, currentZ, curW: startW };
+      showEdgeTip(startW);
+    }
+
+    function onEdgeMove(e) {
+      if (!edgeDrag || e.pointerId !== edgeDrag.id) return;
+      const dxPx = (e.clientX - edgeDrag.startX) / edgeDrag.currentZ;
+      const dxCm = dxPx / CM;
+      let nextW = edgeDrag.startW + dxCm;
+
+      // สแน็ปที่ขนาดมาตรฐาน A4 แนวตั้ง (16cm) และ A4 แนวนอน (24.7cm)
+      if (Math.abs(nextW - 16) < 0.25) nextW = 16;
+      else if (Math.abs(nextW - 24.7) < 0.25) nextW = 24.7;
+      else if (e.altKey) nextW = Math.round(nextW * 20) / 20; // 0.05 ซม.
+      else nextW = Math.round(nextW * 4) / 4;                 // 0.25 ซม.
+
+      nextW = clamp(nextW, 10, 40);
+      edgeDrag.curW = nextW;
+      setTextWidth(nextW, false);
+      showEdgeTip(nextW);
+    }
+
+    function onEdgeEnd(e) {
+      if (!edgeDrag || e.pointerId !== edgeDrag.id) return;
+      const d = edgeDrag;
+      edgeDrag = null;
+      d.handle.classList.remove('dragging');
+      tip.hidden = true;
+      guide.hidden = true;
+      setTextWidth(d.curW, true);
+      schedule();
+    }
+
+    function resetPaperWidth() {
+      setTextWidth(16, true);
+      say('คืนค่าความกว้างหน้ากระดาษเป็น 16 ซม. (มาตรฐาน A4 หนังสือราชการ)');
+    }
+
+    [rulerEdgeHandle, paperEdgeHandle].forEach(h => {
+      if (!h) return;
+      h.addEventListener('pointerdown', e => startEdgeDrag(e, h));
+      h.addEventListener('pointermove', onEdgeMove);
+      h.addEventListener('pointerup', onEdgeEnd);
+      h.addEventListener('pointercancel', onEdgeEnd);
+      h.addEventListener('dblclick', resetPaperWidth);
+    });
+
+    if (rulerEdgeHandle) {
+      rulerEdgeHandle.addEventListener('keydown', e => {
+        let dir = 0;
+        if (e.key === 'ArrowRight') dir = 1;
+        else if (e.key === 'ArrowLeft') dir = -1;
+        else if (e.key === 'Home' || e.key === 'Enter') {
+          e.preventDefault();
+          resetPaperWidth();
+          return;
+        }
+        if (dir !== 0) {
+          e.preventDefault();
+          const step = e.shiftKey ? 1 : e.altKey ? 0.05 : 0.25;
+          setTextWidth(rulerCm + dir * step, true);
+          rulerEdgeHandle.focus();
+        }
+      });
+    }
+
     // ---------- ไม้บรรทัดแนวดิ่ง + บอกระยะเมื่อชี้ / ลากวัด ----------
     // ชี้บนไม้บรรทัด: บอกตำแหน่ง (ซม.) พร้อมเส้นนำ | ลากบนพื้นที่ว่างของไม้บรรทัด: วัดระยะระหว่างจุดเริ่มกับจุดปัจจุบัน
     // ชี้บนกระดาษ: แถบสถานะบอกตำแหน่งเมาส์ (ซม.) นับจากมุมซ้ายบนของพื้นที่ข้อความ
@@ -5157,7 +5335,7 @@ ${body}
     const editorBox = $('.editor-box');
     let vBuiltCm = 0;
     function buildVRuler() {
-      const cmTall = Math.ceil(editorBox.getBoundingClientRect().height / (marks.getBoundingClientRect().width / RULER_CM || CM)) + 1;
+      const cmTall = Math.ceil(editorBox.getBoundingClientRect().height / (marks.getBoundingClientRect().width / rulerCm || CM)) + 1;
       if (cmTall <= vBuiltCm) return;
       let html = '';
       for (let i = vBuiltCm * 4 + 1; i <= cmTall * 4; i++) {
@@ -5169,7 +5347,7 @@ ${body}
     }
     new ResizeObserver(buildVRuler).observe(editorBox);
     buildVRuler();
-    const pxPerCm = () => marks.getBoundingClientRect().width / RULER_CM;
+    const pxPerCm = () => marks.getBoundingClientRect().width / rulerCm;
     const snapCm = (v, fine) => { const step = fine ? 0.01 : FINE; return Math.round(v / step) * step; };
     const cmX = (clientX, fine) => snapCm((clientX - marks.getBoundingClientRect().left) / pxPerCm(), fine);
     const cmY = (clientY, fine) => snapCm((clientY - vscale.getBoundingClientRect().top) / pxPerCm(), fine);
@@ -6198,6 +6376,9 @@ ${body}
       },
       docName: () => docName,
       setDocName,
+      textWidth: () => rulerCm,
+      setTextWidth: (w) => setTextWidth(w, true),
+      resetTextWidth: () => resetPaperWidth(),
       saveDraft,
       openPicker,
       recentFiles,

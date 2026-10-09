@@ -6,7 +6,8 @@
   "license": "UNLICENSED",
   "scripts": {
     "build": "node build-single.mjs",
-    "serve": "python -m http.server 8080 --directory dist"
+    "serve": "python -m http.server 8080 --directory dist",
+    "test": "node --test test/**/*.test.mjs"
   },
   "engines": {
     "node": ">=18"
