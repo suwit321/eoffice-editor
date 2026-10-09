@@ -1,6 +1,6 @@
 # Header ความปลอดภัย — Cloudflare Pages และ Netlify อ่านไฟล์นี้อัตโนมัติ (สร้างโดย build-single.mjs ห้ามแก้ตรง ๆ)
 /*
-  Content-Security-Policy: default-src 'none'; script-src 'self' 'sha256-XKldTrvNHsBkKd4zBgWsgq0j2UIlNOgdCva5EhenFnA=' 'sha256-bjNbvI8tl8y+bAasiIIyVXON/+FsTDSS9qAipExqFpE=' 'sha256-pSbJF2z3Snzt9GDNR8LwkNRp0R933MKEGp3EG6GabH8=' 'sha256-8V9FBdajvIhYEea89bVEPrqG6HPGa+fBcjDJ1m7/esM='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.anthropic.com https://api.openai.com https://generativelanguage.googleapis.com http://localhost:* http://127.0.0.1:*; base-uri 'none'; form-action 'none'; object-src 'none'; manifest-src 'none'; frame-ancestors 'none'; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'none'; script-src 'self' 'sha256-XKldTrvNHsBkKd4zBgWsgq0j2UIlNOgdCva5EhenFnA=' 'sha256-bjNbvI8tl8y+bAasiIIyVXON/+FsTDSS9qAipExqFpE=' 'sha256-WlrxTGWfVst8491UvoJoEV7b3jd8pg01dInqVRWewbc=' 'sha256-an0PXDMaTQvBEKcGvTIRUrv40V7xCHiTv5d6S7zQZVY='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.anthropic.com https://api.openai.com https://generativelanguage.googleapis.com http://localhost:* http://127.0.0.1:*; base-uri 'none'; form-action 'none'; object-src 'none'; manifest-src 'none'; frame-ancestors 'none'; upgrade-insecure-requests
   X-Content-Type-Options: nosniff
   Referrer-Policy: no-referrer
   Cross-Origin-Opener-Policy: same-origin

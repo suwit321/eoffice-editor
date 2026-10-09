@@ -943,7 +943,8 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
     openBtn.type = 'button';
     openBtn.className = 'btn';
     openBtn.id = 'btnTools';
-    openBtn.textContent = 'เครื่องมือเสริม';
+    openBtn.innerHTML = '<span class="sym">🛠️</span> <span class="txt">เครื่องมือ</span>';
+    openBtn.title = 'เครื่องมือเสริม (ตรวจคำผิด, สถิติ, ปรับหน้ากระดาษ, ตั้งค่า)';
     openBtn.setAttribute('aria-controls', 'toolsPanel');
     $('.cpy').before(openBtn);
     function setOpen(open) {

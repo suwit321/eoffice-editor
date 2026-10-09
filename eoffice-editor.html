@@ -31,16 +31,18 @@ button,select,input{font:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 
 /* แถบคำสั่งบนสุด */
-.topbar{position:sticky;top:0;z-index:60;display:flex;align-items:center;gap:8px;height:var(--topbar-h);padding:0 10px;background:var(--panel);border-bottom:1px solid var(--line);white-space:nowrap}
+.topbar{position:sticky;top:0;z-index:60;display:flex;align-items:center;gap:8px;height:var(--topbar-h);padding:0 10px;background:var(--panel);border-bottom:1px solid var(--line);white-space:nowrap;overflow-x:auto;scrollbar-width:none}
+.topbar::-webkit-scrollbar{display:none}
 .brand{display:flex;align-items:center;gap:8px;min-width:0;flex:1 1 0}
 .brand h1{margin:0;font-size:14px;font-weight:600;flex:none}
-.docname{flex:0 1 300px;min-width:90px;height:24px;padding:0 8px;border:1px solid transparent;border-radius:5px;background:#f3f5f8;font:inherit;font-size:13px;font-weight:400}
+.docname{flex:0 1 300px;min-width:70px;height:24px;padding:0 8px;border:1px solid transparent;border-radius:5px;background:#f3f5f8;font:inherit;font-size:13px;font-weight:400}
 .docname:hover{border-color:var(--line)}
 .docname:focus{background:#fff;border-color:var(--accent);outline:none}
-.actions{display:flex;align-items:center;justify-content:flex-end;gap:5px;flex:1 1 0;min-width:0}
-.topcenter{display:flex;align-items:center;gap:6px;flex:none}
-.topcenter .tb{height:26px;min-width:0;padding:0 10px 0 7px;gap:5px;border-radius:13px;font-size:13px;font-weight:600;border-width:1px}
-.topcenter .tb svg{width:15px;height:15px}
+.actions{display:flex;align-items:center;justify-content:flex-end;gap:4px;flex:1 1 0;min-width:max-content}
+.topcenter{display:flex;align-items:center;gap:4px;flex:0 0 auto}
+.topcenter .tb{width:28px;height:26px;min-width:28px;padding:0;display:inline-flex;align-items:center;justify-content:center;border-radius:6px;border-width:1px}
+.topcenter .tb span{display:none}
+.topcenter .tb svg{width:16px;height:16px}
 .topcenter .tc-undo{background:#fee2e2;border-color:#fca5a5;color:#dc2626}
 .topcenter .tc-undo:hover:not(:disabled){background:#fecaca;border-color:#dc2626}
 .topcenter .tc-redo{background:#dbeafe;border-color:#93c5fd;color:#2563eb}
@@ -48,8 +50,12 @@ button,select,input{font:inherit;color:inherit}
 .topcenter .tc-save{background:#dcfce7;border-color:#86efac;color:#15803d}
 .topcenter .tc-save:hover{background:#bbf7d0;border-color:#15803d}
 .topcenter .tb:disabled{opacity:.4;background:#f1f5f9;border-color:#e2e8f0;color:#64748b}
-@media (max-width:1050px){.topcenter .tb span{display:none}.topcenter .tb{padding:0 7px}}
-.btn{height:26px;padding:0 10px;font-size:13px;border:1px solid var(--line-strong);border-radius:5px;background:#fff;cursor:pointer;white-space:nowrap}
+.btn{height:26px;padding:0 8px;font-size:13px;border:1px solid var(--line-strong);border-radius:5px;background:#fff;cursor:pointer;white-space:nowrap}
+#btnMore{padding:0 7px;font-weight:700}
+#btnRuler,#btnTbColor{padding:0 6px;min-width:28px}
+#btnTools{padding:0 8px}
+@media (max-width:960px){#btnTools .txt{display:none}#btnTools{padding:0 6px;min-width:28px}}
+@media (max-width:820px){#btnCopy .txt{display:none}#btnCopy{padding:0 8px}}
 .fm{position:relative}
 .cpy{display:flex}
 .cpy #btnCopy{border-top-right-radius:0;border-bottom-right-radius:0}
@@ -450,7 +456,7 @@ body.ls-docked .desk{padding-left:240px}
       </div>
     </div>
     <div class="fm">
-      <button type="button" class="btn fmbtn" id="btnMore" aria-haspopup="true" aria-expanded="false" aria-label="เครื่องมือเพิ่มเติม" title="เพิ่มเติม: ขีดฆ่า, Tab, ตัวห้อย/ตัวยก, ตัด/คัดลอก, รูปภาพ, เปิดไฟล์, ล้างรูปแบบ">เพิ่มเติม ▾</button>
+      <button type="button" class="btn fmbtn" id="btnMore" aria-haspopup="true" aria-expanded="false" aria-label="เครื่องมือเพิ่มเติม" title="เครื่องมือเพิ่มเติม: ขีดฆ่า, Tab, ตัวห้อย/ตัวยก, ตัด/คัดลอก, รูปภาพ, เปิดไฟล์, ล้างรูปแบบ">⋯ ▾</button>
       <div class="more-pop" id="morePop" hidden>
         <button type="button" class="tb" data-cmd="strike" aria-pressed="false" aria-label="ขีดฆ่า" title="ขีดฆ่า"><svg aria-hidden="true"><use href="#i-strike"/></svg></button>
         <button type="button" class="tb" data-cmd="tab" aria-label="แทรกแท็บ" title="แทรก Tab"><svg aria-hidden="true"><use href="#i-tab"/></svg></button>
@@ -478,7 +484,7 @@ body.ls-docked .desk{padding-left:240px}
       <option value="100">100%</option><option value="125">125%</option><option value="150">150%</option><option value="175">175%</option><option value="200">200%</option>
     </select></label>
     <div class="fm cpy">
-      <button type="button" class="btn primary" id="btnCopy">คัดลอกไป e-Office</button><button type="button" class="btn primary" id="btnCopyMore" aria-haspopup="true" aria-expanded="false" aria-label="ตัวเลือกการคัดลอก" title="เลือกคัดลอกทั้งหน้า หรือเฉพาะที่เลือก">▾</button>
+      <button type="button" class="btn primary" id="btnCopy" title="คัดลอกไป e-Office"><span class="sym">📋</span> <span class="txt">คัดลอก</span></button><button type="button" class="btn primary" id="btnCopyMore" aria-haspopup="true" aria-expanded="false" aria-label="ตัวเลือกการคัดลอก" title="เลือกคัดลอกทั้งหน้า หรือเฉพาะที่เลือก">▾</button>
       <div class="fm-pop" id="copyMenu" hidden style="left:auto;right:0">
         <button type="button" class="btn" data-copy="page">คัดลอกทั้งหน้านี้</button>
         <button type="button" class="btn" data-copy="sel">คัดลอกเฉพาะที่เลือก</button>
@@ -2027,8 +2033,8 @@ ${listCss}
     // ปุ่มคัดลอกเปลี่ยนป้ายตามว่ามีข้อความที่เลือกอยู่หรือไม่
     function renderCopyBtn() {
       const r = selRange(), b = $('#btnCopy');
-      b.textContent = r ? 'คัดลอกที่เลือก → e-Office' : 'คัดลอกไป e-Office';
-      b.title = r ? 'คัดลอกเฉพาะข้อความที่เลือก (กดลูกศรข้างเคียงเพื่อเลือกคัดลอกทั้งหน้า)' : 'คัดลอกทั้งหน้านี้ (ถ้าเลือกข้อความไว้ จะคัดลอกเฉพาะที่เลือก)';
+      b.innerHTML = r ? '<span class="sym">📋</span> <span class="txt">คัดลอกที่เลือก</span>' : '<span class="sym">📋</span> <span class="txt">คัดลอก</span>';
+      b.title = r ? 'คัดลอกเฉพาะข้อความที่เลือกไป e-Office (กด ▾ เพื่อคัดลอกทั้งหน้า)' : 'คัดลอกไป e-Office (ถ้าเลือกข้อความไว้ จะคัดลอกเฉพาะที่เลือก)';
     }
     quill.on('selection-change', r => { if (r) renderCopyBtn(); });
     quill.on('text-change', renderCopyBtn);

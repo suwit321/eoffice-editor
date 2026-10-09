@@ -106,9 +106,25 @@ describe('Sticky Toolbar & Menubar (การตรึงและปรับ�
         ws.send(JSON.stringify({ id: curId, method, params }));
       });
 
-      // จำลองการใส่ข้อความตัวอย่างแล้วเลื่อนหน้าจอลง 300px
+      // รอให้ eofficeEditor โหลดและพร้อมทำงาน
+      await send('Runtime.evaluate', {
+        expression: `new Promise((resolve) => {
+          if (window.eofficeEditor) return resolve();
+          document.addEventListener('eoffice:ready', () => resolve(), { once: true });
+          const t0 = Date.now();
+          const iv = setInterval(() => {
+            if (window.eofficeEditor || Date.now() - t0 > 5000) {
+              clearInterval(iv);
+              resolve();
+            }
+          }, 50);
+        })`,
+        awaitPromise: true
+      });
+
+      // จำลองการใส่ข้อความตัวอย่างแล้วเลื่อนหน้าจอลง
       await send('Runtime.evaluate', { expression: `document.querySelector('#btnSample').click()` });
-      await new Promise(r => setTimeout(r, 300));
+      await new Promise(r => setTimeout(r, 400));
       await send('Runtime.evaluate', { expression: 'window.scrollTo(0, 200)' });
 
       const evalJs = `(() => {
@@ -131,7 +147,7 @@ describe('Sticky Toolbar & Menubar (การตรึงและปรับ�
       assert.equal(val.headTop, val.topbarBottom, 'แถบเครื่องมือ (.head) ต้องอยู่ติดกับขอบล่างของแถบบนสุดพอดี (ไม่มีช่องว่าง)');
       assert.equal(val.gap, 0, 'ระยะห่างระหว่างทั้งสองแถบต้องเป็น 0');
 
-      // ตรวจสอบการเปิด-ปิดเมนู เพิ่มเติม ▾ และ 🎨 บน .topbar รวมถึงความสูงแถบเครื่องมือ (.toolbar) ให้เหลือแถวเดียว
+      // ตรวจสอบการเปิด-ปิดเมนู และความสูงแถบเครื่องมือ รวมถึงตรวจว่าปุ่มบน topbar ไม่ซ้อนทับกัน
       const testPopups = await send('Runtime.evaluate', {
         expression: `(() => {
           const btnMore = document.querySelector('.topbar #btnMore');
@@ -149,7 +165,13 @@ describe('Sticky Toolbar & Menubar (การตรึงและปรับ�
           const openTbcHidden = tbcPop.hidden;
           
           document.body.click();
-          
+
+          // ตรวจสอบการทับซ้อนของปุ่มบน topbar
+          const brand = document.querySelector('.brand').getBoundingClientRect();
+          const topcenter = document.querySelector('.topcenter').getBoundingClientRect();
+          const actions = document.querySelector('.actions').getBoundingClientRect();
+          const firstActionItem = document.querySelector('.actions > *').getBoundingClientRect();
+
           return {
             toolbarHeight: toolbar.getBoundingClientRect().height,
             initialMoreHidden,
@@ -157,7 +179,9 @@ describe('Sticky Toolbar & Menubar (การตรึงและปรับ�
             initialTbcHidden,
             openTbcHidden,
             afterCloseMore: morePop.hidden,
-            afterCloseTbc: tbcPop.hidden
+            afterCloseTbc: tbcPop.hidden,
+            overlapCenterActions: firstActionItem.left < topcenter.right,
+            overlapBrandCenter: topcenter.left < brand.right
           };
         })()`,
         returnByValue: true
@@ -170,6 +194,8 @@ describe('Sticky Toolbar & Menubar (การตรึงและปรับ�
       assert.equal(popVal.afterCloseMore, true);
       assert.equal(popVal.afterCloseTbc, true);
       assert.ok(popVal.toolbarHeight <= 35, `ความสูงแถบเครื่องมือ (${popVal.toolbarHeight}px) ต้องไม่เกิน 35px (แถวเดียว)`);
+      assert.equal(popVal.overlapCenterActions, false, 'ปุ่มใน .actions ต้องไม่ซ้อนทับกับ .topcenter');
+      assert.equal(popVal.overlapBrandCenter, false, '.topcenter ต้องไม่ซ้อนทับกับ .brand');
 
       ws.close();
     } finally {
