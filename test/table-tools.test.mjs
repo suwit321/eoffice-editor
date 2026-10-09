@@ -13,11 +13,12 @@ describe('Table Enhancement (เครื่องมือตาราง ว�
   const html = readFileSync(join(root, 'eoffice-editor.html'), 'utf8');
   const distSingle = readFileSync(join(root, 'dist/eoffice-editor-single.html'), 'utf8');
 
-  test('โครงสร้าง HTML มี Overlay สำหรับย้าย/ปรับขนาด และกล่องแสดงการวาดตาราง', () => {
+  test('โครงสร้าง HTML มี Overlay สำหรับย้าย/ปรับขนาด กล่องแสดงการวาดตาราง และเส้นกะระยะลากปรับขนาด', () => {
     assert.ok(html.includes('id="tblOverlay"'), 'ต้องมี #tblOverlay สำหรับจัดการตาราง');
     assert.ok(html.includes('id="tblHandleMove"'), 'ต้องมีปุ่มมือจับย้ายตาราง #tblHandleMove (✥)');
     assert.ok(html.includes('id="tblHandleResize"'), 'ต้องมีมือจับปรับขนาดตาราง #tblHandleResize');
     assert.ok(html.includes('id="tblDrawBox"'), 'ต้องมี #tblDrawBox สำหรับลากเส้นวาดตาราง');
+    assert.ok(html.includes('id="tblLineGuide"'), 'ต้องมี #tblLineGuide สำหรับแสดงเส้นบอกตำแหน่งขณะลากปรับเส้นตาราง');
   });
 
   test('เมนูตาราง (#m-table) มีคำสั่งครบถ้วนตามแบบ Microsoft Word', () => {
@@ -45,7 +46,7 @@ describe('Table Enhancement (เครื่องมือตาราง ว�
     assert.ok(html.includes('data-act="table-distribute-cols"'), 'มีคำสั่งกระจายคอลัมน์ให้เท่ากัน');
   });
 
-  test('CSS มีสไตล์รองรับการจัดรูปแบบตาราง เส้นขอบ และ Overlay ครบถ้วน', () => {
+  test('CSS มีสไตล์รองรับการจัดรูปแบบตาราง เส้นขอบ Overlay และเส้นบอกตำแหน่งลากปรับขนาด', () => {
     assert.ok(html.includes('#editor table[data-border="none"] td'), 'CSS ต้องมีกฎสำหรับ data-border="none"');
     assert.ok(html.includes('#editor table[data-border="outside"]'), 'CSS ต้องมีกฎสำหรับ data-border="outside"');
     assert.ok(html.includes('#editor table[data-border="topbottom"]'), 'CSS ต้องมีกฎสำหรับ data-border="topbottom"');
@@ -53,6 +54,7 @@ describe('Table Enhancement (เครื่องมือตาราง ว�
     assert.ok(html.includes('.tbl-handle-move'), 'CSS ต้องมี .tbl-handle-move');
     assert.ok(html.includes('.tbl-handle-resize'), 'CSS ต้องมี .tbl-handle-resize');
     assert.ok(html.includes('.tbl-draw-box'), 'CSS ต้องมี .tbl-draw-box');
+    assert.ok(html.includes('.tbl-line-guide'), 'CSS ต้องมี .tbl-line-guide');
   });
 
   test('ฟังก์ชัน cleanHtml ส่งออกรูปแบบตาราง เส้นขอบ และสีพื้นหลังอย่างถูกต้อง', () => {
@@ -66,6 +68,8 @@ describe('Table Enhancement (เครื่องมือตาราง ว�
     assert.ok(distSingle.includes('id="btnDrawTable"'));
     assert.ok(distSingle.includes('tbl-handle-move'));
     assert.ok(distSingle.includes('tbl-draw-box'));
+    assert.ok(distSingle.includes('tblLineGuide'));
+    assert.ok(distSingle.includes('resizeTableColumn'));
     assert.ok(distSingle.includes('btnPasteTable'));
   });
 
@@ -270,6 +274,73 @@ describe('Table Enhancement (เครื่องมือตาราง ว�
       assert.equal(pasteRes.value.hasPastedTable, true, 'ต้องมีตารางที่ถูกวางใหม่');
       assert.equal(pasteRes.value.pastedRows, 3, 'ตารางที่วางต้องมี 3 แถว');
       assert.equal(pasteRes.value.pastedCols, 3, 'ตารางที่วางต้องมี 3 คอลัมน์');
+
+      // 9. ทดสอบการลากปรับเส้นตารางอิสระ (resizeTableColumn, resizeTableRow และ border detection)
+      const lineDragRes = await send('Runtime.evaluate', {
+        expression: `(() => {
+          const tbl = document.querySelector('#editor table');
+          const row0 = tbl.querySelectorAll('tr')[0];
+          const c0 = row0.children[0];
+          const c1 = row0.children[1];
+
+          const beforeW0 = c0.offsetWidth;
+          const beforeW1 = c1.offsetWidth;
+          const beforeH0 = row0.offsetHeight;
+
+          // ปรับความกว้างคอลัมน์ภายใน (+40px ให้คอลัมน์ 0, คอลัมน์ 1 ลดลง 40px)
+          window.eofficeEditor.resizeTableColumn(tbl, 0, 40);
+          const afterW0 = c0.offsetWidth;
+          const afterW1 = c1.offsetWidth;
+
+          // ปรับความสูงแถว (+25px ให้แถว 0)
+          window.eofficeEditor.resizeTableRow(tbl, 0, 25);
+          const afterH0 = row0.offsetHeight;
+
+          // ตรวจจับเส้นตารางเมื่อเลื่อนเมาส์ชี้ใกล้ขอบ (border hover detection)
+          const c0Rect = c0.getBoundingClientRect();
+          const evtCol = new PointerEvent('pointermove', {
+            clientX: c0Rect.right - 2,
+            clientY: c0Rect.top + 10,
+            bubbles: true
+          });
+          c0.dispatchEvent(evtCol);
+          const cursorOnColBorder = document.body.style.cursor;
+
+          const evtRow = new PointerEvent('pointermove', {
+            clientX: c0Rect.left + 10,
+            clientY: c0Rect.bottom - 2,
+            bubbles: true
+          });
+          c0.dispatchEvent(evtRow);
+          const cursorOnRowBorder = document.body.style.cursor;
+
+          // เลื่อนเมาส์ออกจากขอบ
+          const evtAway = new PointerEvent('pointermove', {
+            clientX: c0Rect.left + 25,
+            clientY: c0Rect.top + 15,
+            bubbles: true
+          });
+          c0.dispatchEvent(evtAway);
+          const cursorAway = document.body.style.cursor;
+
+          return {
+            diffW0: afterW0 - beforeW0,
+            diffW1: afterW1 - beforeW1,
+            diffH0: afterH0 - beforeH0,
+            cursorOnColBorder,
+            cursorOnRowBorder,
+            cursorAway
+          };
+        })()`,
+        returnByValue: true
+      });
+
+      assert.ok(Math.abs(lineDragRes.value.diffW0 - 40) <= 2, `ความกว้างคอลัมน์ 0 ต้องเพิ่มขึ้น 40px (ได้ diff: ${lineDragRes.value.diffW0})`);
+      assert.ok(Math.abs(lineDragRes.value.diffW1 - (-40)) <= 2, `ความกว้างคอลัมน์ 1 ต้องลดลง 40px (ได้ diff: ${lineDragRes.value.diffW1})`);
+      assert.ok(Math.abs(lineDragRes.value.diffH0 - 25) <= 2, `ความสูงแถว 0 ต้องเพิ่มขึ้น 25px (ได้ diff: ${lineDragRes.value.diffH0})`);
+      assert.equal(lineDragRes.value.cursorOnColBorder, 'col-resize', 'เมื่อชี้ใกล้เส้นคอลัมน์ เคอร์เซอร์ต้องเป็น col-resize');
+      assert.equal(lineDragRes.value.cursorOnRowBorder, 'row-resize', 'เมื่อชี้ใกล้เส้นแถว เคอร์เซอร์ต้องเป็น row-resize');
+      assert.equal(lineDragRes.value.cursorAway, '', 'เมื่อออกจากเส้นตาราง เคอร์เซอร์ต้องกลับเป็นค่าปกติ');
 
       ws.close();
     } finally {

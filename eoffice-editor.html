@@ -193,6 +193,9 @@ button,select,input{font:inherit;color:inherit}
 body.table-drawing-mode #editor .ql-editor{cursor:crosshair!important}
 .tbl-draw-box{position:absolute;border:2px dashed var(--accent);background:rgba(27,95,180,.12);pointer-events:none;z-index:25;border-radius:2px}
 .tbl-draw-box span{position:absolute;right:4px;bottom:4px;padding:1px 6px;background:var(--accent);color:#fff;border-radius:4px;font:600 11px/1.4 Consolas,sans-serif}
+.tbl-line-guide{position:absolute;pointer-events:none;z-index:35}
+.tbl-line-guide.col{border-left:2px dashed var(--accent)}
+.tbl-line-guide.row{border-top:2px dashed var(--accent)}
 
 /* หน้ากระดาษ A4: ขอบกระดาษสีจาง + กรอบขอบพิมพ์เส้นประจาง */
 .editor-box{position:relative}
@@ -587,6 +590,7 @@ body.ls-docked .desk{padding-left:240px}
           <div class="tbl-handle-resize" id="tblHandleResize" title="ลากเพื่อปรับขนาดตาราง" aria-label="ปรับขนาดตาราง">⤡</div>
         </div>
         <div class="tbl-draw-box" id="tblDrawBox" hidden><span id="tblDrawLabel">2 × 2</span></div>
+        <div class="tbl-line-guide" id="tblLineGuide" hidden></div>
       </div>
       <div class="paper-edge-handle" id="paperEdgeHandle" title="ลากเพื่อขยาย/ลดความกว้างหน้ากระดาษ (ดับเบิลคลิกเพื่อคืนค่า 16 ซม.)" aria-label="ขอบกระดาษด้านขวา"></div>
       <div class="guide" id="guide" hidden></div>
@@ -1724,6 +1728,71 @@ ${listCss}
       schedule();
     }
 
+    function resizeTableColumn(tbl = getActiveTable(), colIndex = 0, deltaX = 0) {
+      if (!tbl || colIndex < 0) return;
+      tbl.style.tableLayout = 'fixed';
+      const currentTblW = tbl.offsetWidth || 500;
+      if (!tbl.style.width) tbl.style.width = `${Math.round(currentTblW)}px`;
+
+      const rows = Array.from(tbl.querySelectorAll('tr'));
+      if (!rows.length) return;
+      const firstRowCells = Array.from(rows[0].children);
+      const colCount = firstRowCells.length;
+      if (colIndex >= colCount) return;
+
+      const initialColWidths = firstRowCells.map(td => td.offsetWidth || Math.round(currentTblW / colCount));
+      const MIN_COL_W = 25;
+      const isLastCol = (colIndex === colCount - 1);
+
+      if (isLastCol) {
+        const newLastW = Math.max(MIN_COL_W, Math.round(initialColWidths[colIndex] + deltaX));
+        const newTblW = Math.max(MIN_COL_W * colCount, Math.round(currentTblW + deltaX));
+        tbl.style.width = `${newTblW}px`;
+        for (const tr of rows) {
+          if (tr.children[colIndex]) {
+            tr.children[colIndex].style.width = `${newLastW}px`;
+            tr.children[colIndex].setAttribute('width', `${newLastW}`);
+          }
+        }
+      } else {
+        const minDelta = -(initialColWidths[colIndex] - MIN_COL_W);
+        const maxDelta = initialColWidths[colIndex + 1] - MIN_COL_W;
+        const clampedDelta = Math.max(minDelta, Math.min(maxDelta, deltaX));
+        const w0 = Math.max(MIN_COL_W, Math.round(initialColWidths[colIndex] + clampedDelta));
+        const w1 = Math.max(MIN_COL_W, Math.round(initialColWidths[colIndex + 1] - clampedDelta));
+        for (const tr of rows) {
+          if (tr.children[colIndex]) {
+            tr.children[colIndex].style.width = `${w0}px`;
+            tr.children[colIndex].setAttribute('width', `${w0}`);
+          }
+          if (tr.children[colIndex + 1]) {
+            tr.children[colIndex + 1].style.width = `${w1}px`;
+            tr.children[colIndex + 1].setAttribute('width', `${w1}`);
+          }
+        }
+      }
+      updateTableOverlay(tbl);
+      schedule();
+    }
+
+    function resizeTableRow(tbl = getActiveTable(), rowIndex = 0, deltaY = 0) {
+      if (!tbl || rowIndex < 0) return;
+      const rows = Array.from(tbl.querySelectorAll('tr'));
+      if (!rows[rowIndex]) return;
+      const tr = rows[rowIndex];
+      const curH = tr.offsetHeight || 26;
+      const MIN_ROW_H = 22;
+      const newH = Math.max(MIN_ROW_H, Math.round(curH + deltaY));
+      tr.style.height = `${newH}px`;
+      tr.setAttribute('height', `${newH}`);
+      for (const td of tr.children) {
+        td.style.height = `${newH}px`;
+        td.setAttribute('height', `${newH}`);
+      }
+      updateTableOverlay(tbl);
+      schedule();
+    }
+
     // ---------- ตัวจัดการตารางลอย (Table Overlay ✥ & ⤡) ----------
     function updateTableOverlay(tbl) {
       const overlay = $('#tblOverlay');
@@ -2371,14 +2440,235 @@ ${body}
       const drawBox = $('#tblDrawBox');
       const drawLabel = $('#tblDrawLabel');
       const cellColorInput = $('#tCellColor');
+      const lineGuide = $('#tblLineGuide');
 
       if (cellColorInput) {
         cellColorInput.addEventListener('input', e => setTableCellBg(e.target.value));
       }
 
+      // ตรวจจับเส้นตารางเพื่อปรับขนาดอิสระ (Free table line dragging)
+      let hoveredBorder = null;
+      let isBorderDragging = false;
+
+      function detectTableBorder(e) {
+        if (isDrawTableActive || isBorderDragging) return null;
+        let cell = e.target.closest?.('#editor td, #editor th');
+        if (!cell && typeof document.elementFromPoint === 'function') {
+          cell = document.elementFromPoint(e.clientX, e.clientY)?.closest('#editor td, #editor th');
+        }
+        if (!cell) return null;
+        const tbl = cell.closest('table');
+        if (!tbl) return null;
+
+        const r = cell.getBoundingClientRect();
+        const THRESH = 6;
+        const dRight = Math.abs(e.clientX - r.right);
+        const dLeft = Math.abs(e.clientX - r.left);
+        const dBottom = Math.abs(e.clientY - r.bottom);
+        const dTop = Math.abs(e.clientY - r.top);
+
+        const nearRight = dRight <= THRESH && e.clientY >= r.top - 2 && e.clientY <= r.bottom + 2;
+        const nearLeft = dLeft <= THRESH && e.clientY >= r.top - 2 && e.clientY <= r.bottom + 2 && cell.cellIndex > 0;
+        const nearBottom = dBottom <= THRESH && e.clientX >= r.left - 2 && e.clientX <= r.right + 2;
+        const nearTop = dTop <= THRESH && e.clientX >= r.left - 2 && e.clientX <= r.right + 2 && cell.parentElement.rowIndex > 0;
+
+        let best = null;
+        let minD = Infinity;
+
+        if (nearRight && dRight < minD) {
+          minD = dRight;
+          best = {
+            type: 'col',
+            table: tbl,
+            colIndex: cell.cellIndex,
+            splitX: r.right,
+            cell
+          };
+        }
+        if (nearLeft && dLeft < minD) {
+          minD = dLeft;
+          best = {
+            type: 'col',
+            table: tbl,
+            colIndex: cell.cellIndex - 1,
+            splitX: r.left,
+            cell: cell.previousElementSibling || cell
+          };
+        }
+        if (nearBottom && dBottom < minD) {
+          minD = dBottom;
+          best = {
+            type: 'row',
+            table: tbl,
+            rowIndex: cell.parentElement.rowIndex,
+            splitY: r.bottom,
+            row: cell.parentElement
+          };
+        }
+        if (nearTop && dTop < minD) {
+          minD = dTop;
+          best = {
+            type: 'row',
+            table: tbl,
+            rowIndex: cell.parentElement.rowIndex - 1,
+            splitY: r.top,
+            row: cell.parentElement.previousElementSibling || cell.parentElement
+          };
+        }
+
+        return best;
+      }
+
+      // ตรวจจับการเลื่อนเมาส์ชี้เส้นตาราง ปรับเคอร์เซอร์เป็น col-resize / row-resize
+      $('#editor').addEventListener('pointermove', e => {
+        if (isBorderDragging || isDrawTableActive) return;
+        const detected = detectTableBorder(e);
+        if (detected) {
+          hoveredBorder = detected;
+          document.body.style.cursor = detected.type === 'col' ? 'col-resize' : 'row-resize';
+        } else if (hoveredBorder) {
+          hoveredBorder = null;
+          document.body.style.cursor = '';
+        }
+      });
+
+      $('#editor').addEventListener('pointerleave', () => {
+        if (!isBorderDragging && hoveredBorder) {
+          hoveredBorder = null;
+          document.body.style.cursor = '';
+        }
+      });
+
+      // ลากปรับเส้นตารางอิสระ (Free table gridline resizing)
+      $('#editor').addEventListener('pointerdown', e => {
+        if (!hoveredBorder || e.button !== 0 || isDrawTableActive) return;
+        e.preventDefault();
+        e.stopPropagation();
+
+        const dragBorder = hoveredBorder;
+        isBorderDragging = true;
+        const table = dragBorder.table;
+        activeTableEl = table;
+
+        const box = $('.editor-box');
+        const boxRect = box ? box.getBoundingClientRect() : { left: 0, top: 0, width: 800 };
+        const tblRect = table.getBoundingClientRect();
+        const z = (box && box.offsetWidth ? boxRect.width / box.offsetWidth : 1) || 1;
+
+        table.style.tableLayout = 'fixed';
+        const currentTblW = table.offsetWidth || Math.round(tblRect.width / z) || 500;
+        if (!table.style.width) {
+          table.style.width = `${Math.round(currentTblW)}px`;
+        }
+
+        const rows = Array.from(table.rows);
+        const firstRowCells = Array.from(rows[0]?.children || []);
+        const colCount = firstRowCells.length;
+
+        const initialColWidths = firstRowCells.map(td => td.offsetWidth || Math.round(currentTblW / colCount));
+        for (const tr of rows) {
+          Array.from(tr.children).forEach((td, idx) => {
+            if (initialColWidths[idx]) {
+              td.style.width = `${Math.round(initialColWidths[idx])}px`;
+            }
+          });
+        }
+
+        const initialRowHeights = rows.map(tr => tr.offsetHeight || 26);
+        rows.forEach((tr, idx) => {
+          tr.style.height = `${Math.round(initialRowHeights[idx])}px`;
+          Array.from(tr.children).forEach(td => {
+            td.style.height = `${Math.round(initialRowHeights[idx])}px`;
+          });
+        });
+
+        const startX = e.clientX;
+        const startY = e.clientY;
+        const MIN_COL_W = 25;
+        const MIN_ROW_H = 22;
+
+        let currentDeltaX = 0;
+        let currentDeltaY = 0;
+
+        if (lineGuide) {
+          if (dragBorder.type === 'col') {
+            lineGuide.className = 'tbl-line-guide col';
+            lineGuide.style.left = `${(dragBorder.splitX - boxRect.left) / z}px`;
+            lineGuide.style.top = `${(tblRect.top - boxRect.top) / z}px`;
+            lineGuide.style.height = `${tblRect.height / z}px`;
+            lineGuide.style.width = '2px';
+            lineGuide.hidden = false;
+          } else {
+            lineGuide.className = 'tbl-line-guide row';
+            lineGuide.style.left = `${(tblRect.left - boxRect.left) / z}px`;
+            lineGuide.style.top = `${(dragBorder.splitY - boxRect.top) / z}px`;
+            lineGuide.style.width = `${tblRect.width / z}px`;
+            lineGuide.style.height = '2px';
+            lineGuide.hidden = false;
+          }
+        }
+
+        const startGuideLeft = dragBorder.type === 'col' ? ((dragBorder.splitX - boxRect.left) / z) : 0;
+        const startGuideTop = dragBorder.type === 'row' ? ((dragBorder.splitY - boxRect.top) / z) : 0;
+
+        const onDragMove = ev => {
+          if (!isBorderDragging) return;
+          ev.preventDefault();
+
+          if (dragBorder.type === 'col') {
+            const rawDeltaX = (ev.clientX - startX) / z;
+            const cIdx = dragBorder.colIndex;
+            const isLastCol = (cIdx === colCount - 1);
+
+            if (isLastCol) {
+              const minDelta = -(initialColWidths[cIdx] - MIN_COL_W);
+              const maxDelta = (box ? box.offsetWidth : 800) - currentTblW - 10;
+              currentDeltaX = Math.max(minDelta, Math.min(maxDelta, rawDeltaX));
+            } else {
+              const minDelta = -(initialColWidths[cIdx] - MIN_COL_W);
+              const maxDelta = initialColWidths[cIdx + 1] - MIN_COL_W;
+              currentDeltaX = Math.max(minDelta, Math.min(maxDelta, rawDeltaX));
+            }
+
+            if (lineGuide) {
+              lineGuide.style.left = `${startGuideLeft + currentDeltaX}px`;
+            }
+          } else {
+            const rawDeltaY = (ev.clientY - startY) / z;
+            const rIdx = dragBorder.rowIndex;
+            const minDelta = -(initialRowHeights[rIdx] - MIN_ROW_H);
+            currentDeltaY = Math.max(minDelta, rawDeltaY);
+
+            if (lineGuide) {
+              lineGuide.style.top = `${startGuideTop + currentDeltaY}px`;
+            }
+          }
+        };
+
+        const onDragUp = () => {
+          isBorderDragging = false;
+          hoveredBorder = null;
+          document.body.style.cursor = '';
+          window.removeEventListener('pointermove', onDragMove);
+          window.removeEventListener('pointerup', onDragUp);
+
+          if (lineGuide) lineGuide.hidden = true;
+
+          if (dragBorder.type === 'col') {
+            resizeTableColumn(table, dragBorder.colIndex, currentDeltaX);
+          } else {
+            resizeTableRow(table, dragBorder.rowIndex, currentDeltaY);
+          }
+          say('ปรับขนาดเส้นตารางแล้ว');
+        };
+
+        window.addEventListener('pointermove', onDragMove);
+        window.addEventListener('pointerup', onDragUp);
+      });
+
       // ตรวจจับการเลื่อนเมาส์ชี้ตาราง และการคลิกในตาราง
       $('#editor').addEventListener('mouseover', e => {
-        if (isDrawTableActive) return;
+        if (isDrawTableActive || isBorderDragging) return;
         const tbl = e.target.closest('table');
         if (tbl) updateTableOverlay(tbl);
       });
@@ -4160,6 +4450,8 @@ ${body}
       setTableAlign,
       setTableCellVAlign,
       distributeColumns,
+      resizeTableColumn,
+      resizeTableRow,
       startDrawTableMode,
       stopDrawTableMode,
       cleanHtml: exportHtml,
