@@ -1872,9 +1872,54 @@ body.tools-open .topbar,body.tools-open .desk,body.tools-open .statusbar{margin-
 .tools-head{display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid var(--line)}
 .tools-head h2{margin:0;font-size:15px}
 .tools-x{border:0;background:none;font-size:20px;line-height:1;cursor:pointer;color:var(--muted);padding:2px 6px}
-.tools-tabs{display:flex;flex-wrap:wrap;gap:2px;padding:6px 8px 0;background:#f4f6f9;border-bottom:1px solid var(--line)}
-.tools-tabs button{padding:6px 10px;border:1px solid transparent;border-bottom:0;border-radius:5px 5px 0 0;background:none;color:var(--muted);cursor:pointer;font:inherit}
-.tools-tabs button[aria-selected="true"]{background:#fff;border-color:var(--line);color:var(--ink);font-weight:600;margin-bottom:-1px}
+.tools-nav{display:flex;flex-direction:column;background:#f8fafc;border-bottom:1px solid var(--line)}
+.tools-groups{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:6px 8px;background:#edf2f7;border-bottom:1px solid var(--line)}
+.tgroup-btn{display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:6px 2px;border:1px solid #d1d5db;border-radius:6px;background:#fff;color:#4b5563;font:inherit;font-size:12px;font-weight:500;cursor:pointer;transition:all .12s}
+.tgroup-btn:hover{background:#f1f5f9;color:var(--ink);border-color:#9ca3af}
+.tgroup-btn[aria-selected="true"]{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600;box-shadow:0 1px 3px rgba(30,79,138,.28)}
+.tgroup-btn .grp-icon{font-size:12.5px;line-height:1}
+.tools-subtabs{display:flex;flex-wrap:wrap;gap:3px;padding:6px 8px 0;background:#fff;border-bottom:1px solid var(--line)}
+.tools-tabs button,.tsub-btn{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border:1px solid transparent;border-bottom:2px solid transparent;border-radius:6px 6px 0 0;background:none;color:#4b5563;cursor:pointer;font:inherit;font-size:12px;transition:all .15s;white-space:nowrap}
+.tsub-btn .tab-dot{width:7px;height:7px;border-radius:50%;background:var(--tab-color,#2563eb);opacity:.7;flex:none;transition:transform .12s,opacity .12s}
+.tools-tabs button:hover,.tsub-btn:hover{background:rgba(0,0,0,.03);color:var(--tab-color,var(--ink))}
+.tsub-btn:hover .tab-dot{opacity:1;transform:scale(1.25)}
+.tools-tabs button[aria-selected="true"],.tsub-btn[aria-selected="true"]{background:var(--tab-bg,#fff);border-color:var(--tab-bd,var(--line));border-bottom-color:var(--tab-color,var(--accent));border-bottom-width:2px;color:var(--tab-color,var(--ink));font-weight:600;margin-bottom:-1px}
+.tsub-btn[aria-selected="true"] .tab-dot{opacity:1;box-shadow:0 0 0 2px rgba(255,255,255,.9)}
+
+.tools-nav[data-active-group="text"] .tsub-btn:not([data-group="text"]),
+.tools-nav[data-active-group="format"] .tsub-btn:not([data-group="format"]),
+.tools-nav[data-active-group="audit"] .tsub-btn:not([data-group="audit"]),
+.tools-nav[data-active-group="file"] .tsub-btn:not([data-group="file"]){display:none!important}
+
+/* Distinct color palette for each sub-tab (แท็บย่อยใช้คนละสี) */
+.tsub-btn[data-tab="num"]{--tab-color:#1d4ed8;--tab-bg:#eff6ff;--tab-bd:#bfdbfe}
+.tsub-btn[data-tab="find"]{--tab-color:#0891b2;--tab-bg:#ecfeff;--tab-bd:#a5f3fc}
+.tsub-btn[data-tab="phrase"]{--tab-color:#d97706;--tab-bg:#fffbeb;--tab-bd:#fde68a}
+.tsub-btn[data-tab="nobreak"]{--tab-color:#7c3aed;--tab-bg:#f5f3ff;--tab-bd:#ddd6fe}
+
+.tsub-btn[data-tab="layout"]{--tab-color:#059669;--tab-bg:#ecfdf5;--tab-bd:#a7f3d0}
+.tsub-btn[data-tab="style"]{--tab-color:#4f46e5;--tab-bg:#eef2ff;--tab-bd:#c7d2fe}
+.tsub-btn[data-tab="theme"]{--tab-color:#e11d48;--tab-bg:#fff1f2;--tab-bd:#fecdd3}
+
+.tsub-btn[data-tab="auto"]{--tab-color:#ea580c;--tab-bg:#fff7ed;--tab-bd:#fed7aa}
+.tsub-btn[data-tab="check"]{--tab-color:#dc2626;--tab-bg:#fef2f2;--tab-bd:#fca5a5}
+.tsub-btn[data-tab="ai"]{--tab-color:#9333ea;--tab-bg:#faf5ff;--tab-bd:#e9d5ff}
+
+.tsub-btn[data-tab="file"]{--tab-color:#475569;--tab-bg:#f8fafc;--tab-bd:#cbd5e1}
+.tsub-btn[data-tab="paste"]{--tab-color:#0d9488;--tab-bg:#f0fdfa;--tab-bd:#99f6e4}
+
+/* Collapsible folds styling (ย่อส่วนที่ไม่จำเป็นลงเพื่อประหยัดพื้นที่) */
+.tools-fold{margin:10px 0;border:1px solid var(--line);border-radius:7px;background:#fafbfc;overflow:hidden;transition:border-color .15s}
+.tools-fold:hover{border-color:var(--line-strong)}
+.tools-fold[open]{background:#fff;border-color:var(--line-strong);box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.tools-fold summary{display:flex;align-items:center;gap:6px;padding:7px 10px;font-size:12.5px;font-weight:600;color:#374151;cursor:pointer;user-select:none;background:#f3f4f6;border-radius:6px;transition:background .12s}
+.tools-fold[open] summary{background:#f8fafc;border-bottom:1px solid var(--line);border-radius:6px 6px 0 0}
+.tools-fold summary:hover{background:#e5e7eb}
+.tools-fold .fold-body{padding:10px}
+.tools-fold summary::-webkit-details-marker{display:none}
+.tools-fold summary::after{content:"▾";margin-left:auto;font-size:12px;color:var(--muted);transition:transform .2s ease}
+.tools-fold[open] summary::after{transform:rotate(180deg)}
+.fold-icon{font-size:13px;line-height:1}
 .tools-body{flex:1;overflow:auto;padding:12px}
 .tools-body section[hidden]{display:none}
 .tools h3{margin:14px 0 6px;font-size:13px}
@@ -1998,19 +2043,34 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
     panel.innerHTML = `
 <div class="tools-head"><h2>เครื่องมือเสริม</h2>
   <span class="head-acts"><button type="button" class="tbtn" id="btnCalc" title="เครื่องคิดเลข">🧮 เครื่องคิดเลข</button><button type="button" class="tbtn" id="btnScratch" title="กระดาษทดด้านซ้าย (หายเมื่อปิดหน้า)">📝 กระดาษทด</button><button type="button" class="tools-x" id="toolsClose" aria-label="ปิดแผงเครื่องมือ" title="ปิด">×</button></span></div>
-<div class="tools-tabs" role="tablist">
-  <button type="button" role="tab" data-tab="auto" aria-selected="false">จัดอัตโนมัติ</button>
-  <button type="button" role="tab" data-tab="num" aria-selected="true">ตัวเลข</button>
-  <button type="button" role="tab" data-tab="style" aria-selected="false">สไตล์</button>
-  <button type="button" role="tab" data-tab="phrase" aria-selected="false">คำบ่อย</button>
-  <button type="button" role="tab" data-tab="check" aria-selected="false">ตรวจคำ</button>
-  <button type="button" role="tab" data-tab="ai" aria-selected="false">ผู้ช่วย AI</button>
-  <button type="button" role="tab" data-tab="find" aria-selected="false">ค้นหา</button>
-  <button type="button" role="tab" data-tab="file" aria-selected="false">ไฟล์</button>
-  <button type="button" role="tab" data-tab="layout" aria-selected="false">จัดหน้า</button>
-  <button type="button" role="tab" data-tab="nobreak" aria-selected="false">คำห้ามตัด</button>
-  <button type="button" role="tab" data-tab="paste" aria-selected="false">ทดสอบวาง</button>
-  <button type="button" role="tab" data-tab="theme" aria-selected="false">มุมมอง</button>
+<div class="tools-nav" data-active-group="text">
+  <div class="tools-groups" role="tablist" aria-label="หมวดหมู่เครื่องมือ">
+    <button type="button" class="tgroup-btn" data-group="text" aria-selected="true"><span class="grp-icon">✍️</span> ข้อความ</button>
+    <button type="button" class="tgroup-btn" data-group="format" aria-selected="false"><span class="grp-icon">📄</span> จัดหน้า</button>
+    <button type="button" class="tgroup-btn" data-group="audit" aria-selected="false"><span class="grp-icon">🤖</span> ตรวจ & AI</button>
+    <button type="button" class="tgroup-btn" data-group="file" aria-selected="false"><span class="grp-icon">📁</span> ไฟล์ & เสริม</button>
+  </div>
+  <div class="tools-subtabs tools-tabs" role="tablist" aria-label="แท็บเครื่องมือย่อย">
+    <\!-- กลุ่ม 1: ข้อความและตัวเลข -->
+    <button type="button" role="tab" class="tsub-btn" data-tab="num" data-group="text" aria-selected="true"><span class="tab-dot"></span>ตัวเลข</button>
+    <button type="button" role="tab" class="tsub-btn" data-tab="find" data-group="text" aria-selected="false"><span class="tab-dot"></span>ค้นหา</button>
+    <button type="button" role="tab" class="tsub-btn" data-tab="phrase" data-group="text" aria-selected="false"><span class="tab-dot"></span>คำบ่อย</button>
+    <button type="button" role="tab" class="tsub-btn" data-tab="nobreak" data-group="text" aria-selected="false"><span class="tab-dot"></span>คำห้ามตัด</button>
+
+    <\!-- กลุ่ม 2: รูปแบบและจัดหน้า -->
+    <button type="button" role="tab" class="tsub-btn" data-tab="layout" data-group="format" aria-selected="false"><span class="tab-dot"></span>จัดหน้า</button>
+    <button type="button" role="tab" class="tsub-btn" data-tab="style" data-group="format" aria-selected="false"><span class="tab-dot"></span>สไตล์</button>
+    <button type="button" role="tab" class="tsub-btn" data-tab="theme" data-group="format" aria-selected="false"><span class="tab-dot"></span>มุมมอง</button>
+
+    <\!-- กลุ่ม 3: ตรวจสอบและ AI -->
+    <button type="button" role="tab" class="tsub-btn" data-tab="auto" data-group="audit" aria-selected="false"><span class="tab-dot"></span>จัดอัตโนมัติ</button>
+    <button type="button" role="tab" class="tsub-btn" data-tab="check" data-group="audit" aria-selected="false"><span class="tab-dot"></span>ตรวจคำ</button>
+    <button type="button" role="tab" class="tsub-btn" data-tab="ai" data-group="audit" aria-selected="false"><span class="tab-dot"></span>ผู้ช่วย AI</button>
+
+    <\!-- กลุ่ม 4: ไฟล์และระบบ -->
+    <button type="button" role="tab" class="tsub-btn" data-tab="file" data-group="file" aria-selected="false"><span class="tab-dot"></span>ไฟล์</button>
+    <button type="button" role="tab" class="tsub-btn" data-tab="paste" data-group="file" aria-selected="false"><span class="tab-dot"></span>ทดสอบวาง</button>
+  </div>
 </div>
 <div class="tools-body">
   <section data-panel="style" hidden>
@@ -2023,24 +2083,35 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
     <div class="chips" id="tabChips">
       <button type="button" class="chip" data-tabsize="">ปกติ</button><button type="button" class="chip" data-tabsize="2.5cm">2.5 ซม.</button><button type="button" class="chip" data-tabsize="5cm">5 ซม.</button><button type="button" class="chip" data-tabsize="8cm">8 ซม.</button><button type="button" class="chip" data-tabsize="10cm">10 ซม.</button>
     </div>
-    <p class="hint">กด Tab ในย่อหน้านั้นแล้วข้อความถัดไปจะเริ่มที่ระยะนี้พอดี (นับจากต้นบรรทัด) เช่น ตั้ง 8 ซม. ให้ “วันที่” ในบันทึกข้อความ</p>
+    <p class="hint">กด Tab ในย่อหน้าแล้วข้อความถัดไปจะเริ่มที่ระยะนี้ เช่น 8 ซม. สำหรับวันที่</p>
     <h3>แม่แบบเอกสาร</h3>
     <div class="row"><button type="button" class="tbtn primary" data-act="tplMemo">บันทึกข้อความ</button><button type="button" class="tbtn primary" data-act="tplLetter">หนังสือภายนอก</button></div>
-    <p class="hint">วางโครงตามระเบียบงานสารบรรณ แล้วพิมพ์ทับข้อความในวงเล็บ — ถ้าหน้านี้มีข้อความอยู่แล้ว จะถามว่าจะสร้างในหน้าใหม่หรือไม่</p>
-    <div class="row"><img id="garudaPrev" class="garuda-prev" alt="รูปครุฑที่เลือกไว้" hidden><button type="button" class="tbtn" data-act="garudaPick">เลือกรูปครุฑ…</button><button type="button" class="tbtn" data-act="garudaClear" id="garudaClear">ลบรูป</button></div>
-    <p class="hint">รูปครุฑใช้กับแม่แบบ (บันทึกข้อความ สูง 1.5 ซม. / หนังสือภายนอก สูง 3 ซม.) เก็บไว้ในเบราว์เซอร์นี้ — ถ้ายังไม่เลือก แม่แบบจะใส่ “(ครุฑ)” ไว้แทน</p>
-    <input type="file" id="garudaFile" accept="image/png,image/jpeg,image/gif,image/webp" hidden>
-    <h3>สไตล์ย่อหน้า (preset)</h3>
-    <p class="hint">คลิกในย่อหน้า (หรือเลือกหลายย่อหน้า) แล้วกดชื่อสไตล์ เพื่อใช้รูปแบบนั้นทั้งย่อหน้า — กดย้อนกลับได้</p>
+    <p class="hint">วางโครงตามระเบียบสารบรรณ แล้วพิมพ์ทับข้อความในวงเล็บได้ทันที</p>
+    
+    <details class="tools-fold">
+      <summary><span class="fold-icon">🦅</span> ตราครุฑสำหรับแม่แบบ</summary>
+      <div class="fold-body">
+        <div class="row"><img id="garudaPrev" class="garuda-prev" alt="รูปครุฑที่เลือกไว้" hidden><button type="button" class="tbtn" data-act="garudaPick">เลือกรูปครุฑ…</button><button type="button" class="tbtn" data-act="garudaClear" id="garudaClear">ลบรูป</button></div>
+        <p class="hint">รูปครุฑใช้กับแม่แบบ (บันทึกข้อความ สูง 1.5 ซม. / หนังสือภายนอก สูง 3 ซม.)</p>
+        <input type="file" id="garudaFile" accept="image/png,image/jpeg,image/gif,image/webp" hidden>
+      </div>
+    </details>
+
+    <h3>สไตล์ย่อหน้าสำเร็จรูป (Presets)</h3>
     <ul class="preset-list" id="presetList"></ul>
-    <h3>บันทึกสไตล์ของฉัน</h3>
-    <p class="hint">จัดย่อหน้าให้เรียบร้อย (ไม้บรรทัด ระยะบรรทัด ฟอนต์ ตัวหนา ฯลฯ) แล้วตั้งชื่อ ระบบจะเก็บรูปแบบของย่อหน้าที่เคอร์เซอร์อยู่</p>
-    <div class="row"><input type="text" id="presetName" class="grow" placeholder="ชื่อสไตล์ เช่น ย่อหน้ารายงาน" maxlength="40"><button type="button" class="tbtn primary" data-act="presetSave">บันทึก</button></div>
+
+    <details class="tools-fold">
+      <summary><span class="fold-icon">💾</span> บันทึกสไตล์ย่อหน้าของฉัน</summary>
+      <div class="fold-body">
+        <p class="hint">จัดย่อหน้าให้เรียบร้อย แล้วตั้งชื่อเพื่อบันทึกรูปแบบเก็บไว้ใช้ซ้ำ</p>
+        <div class="row"><input type="text" id="presetName" class="grow" placeholder="ชื่อสไตล์ เช่น ย่อหน้ารายงาน" maxlength="40"><button type="button" class="tbtn primary" data-act="presetSave">บันทึก</button></div>
+      </div>
+    </details>
   </section>
 
   <section data-panel="phrase" hidden>
     <h3>คำ/สำนวนที่ใช้บ่อย</h3>
-    <p class="hint">คลิกเพื่อแทรกที่เคอร์เซอร์</p>
+    <p class="hint">คลิกเพื่อแทรกคำลงที่เคอร์เซอร์ในเอกสาร</p>
     <ul class="phrase-list" id="phraseList"></ul>
     <div class="row"><input type="text" id="phraseIn" class="grow" placeholder="พิมพ์คำหรือสำนวนใหม่" maxlength="300"><button type="button" class="tbtn primary" data-act="phraseAdd">เพิ่ม</button></div>
     <div class="row"><button type="button" class="tbtn" data-act="phraseFromSel">เพิ่มจากข้อความที่เลือก</button><button type="button" class="tbtn" data-act="phraseReset">คืนค่ารายการตัวอย่าง</button></div>
@@ -2049,7 +2120,7 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
   <section data-panel="file" hidden>
     <h3>ชื่อเอกสาร</h3>
     <div class="row"><input type="text" id="fileName" class="grow" maxlength="80" placeholder="ว่าง = ใช้วันเวลาที่บันทึกครั้งแรก"></div>
-    <p class="hint">ชื่อนี้ใช้เป็นชื่อไฟล์ตอนบันทึก ถ้าไม่ตั้ง ระบบจะตั้งเป็น “ร่าง-ปีเดือนวัน-เวลา” ของการบันทึกครั้งแรกให้เอง</p>
+    <p class="hint">ชื่อนี้ใช้เป็นชื่อไฟล์ตอนบันทึก (ค่าเริ่มต้นเป็น ร่าง-วันเวลา)</p>
     <div class="row"><button type="button" class="tbtn primary" data-act="fileDownload">บันทึกเป็นไฟล์ (ดาวน์โหลด)</button><button type="button" class="tbtn" data-act="fileLink" id="fileLinkBtn">บันทึกลงไฟล์อัตโนมัติ</button></div>
     <div class="row"><button type="button" class="tbtn" data-act="fileOpen">เปิดไฟล์…</button></div>
     <h3>ไฟล์ที่เคยบันทึก/เปิด</h3>
@@ -2060,47 +2131,53 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
   <section data-panel="num">
     <h3>แปลงตัวเลข</h3>
     <div class="row"><label class="inline">ขอบเขต <select id="numScope"><option value="selection">ส่วนที่เลือก (ถ้าไม่เลือก = หน้านี้)</option><option value="page">ทั้งหน้านี้</option><option value="all">ทุกหน้า</option></select></label></div>
-    <div class="row"><button type="button" class="tbtn" data-act="toThai">123 → ๑๒๓ (เป็นเลขไทย)</button><button type="button" class="tbtn" data-act="toArabic">๑๒๓ → 123 (เป็นเลขอารบิก)</button></div>
-    <p class="hint">เปลี่ยนเฉพาะตัวอักษรตัวเลข รูปแบบตัวอักษรเดิมยังอยู่ หน้าที่เปิดอยู่กดย้อนกลับได้</p>
+    <div class="row"><button type="button" class="tbtn" data-act="toThai">123 → ๑๒๓ (เลขไทย)</button><button type="button" class="tbtn" data-act="toArabic">๑๒๓ → 123 (เลขอารบิก)</button></div>
     <h3>จำนวนเงินเป็นตัวอักษร</h3>
-    <div class="row"><input type="text" id="bahtIn" class="grow" inputmode="decimal" placeholder="เช่น 12,500.50"><button type="button" class="tbtn" data-act="bahtFromSel" title="ใช้ตัวเลขที่เลือกไว้ในเอกสาร">จากที่เลือก</button></div>
+    <div class="row"><input type="text" id="bahtIn" class="grow" inputmode="decimal" placeholder="พิมพ์ตัวเลข เช่น 12,500.50"><button type="button" class="tbtn" data-act="bahtFromSel" title="ใช้ตัวเลขที่เลือกไว้ในเอกสาร">จากที่เลือก</button></div>
     <div class="out" id="bahtOut">—</div>
-    <div class="row"><button type="button" class="tbtn" data-act="bahtInsert">แทรก (คำอ่าน)</button><button type="button" class="tbtn" data-act="bahtInsertBoth">แทรก 12,500.50 บาท (คำอ่าน)</button></div>
-    <h3>วันที่</h3>
-    <div class="row"><label class="inline"><input type="checkbox" id="dateThaiDigits"> ใช้เลขไทย</label></div>
-    <div class="row"><button type="button" class="tbtn" data-act="dateToday" id="dateBtn">แทรกวันที่วันนี้</button></div>
-    <h3>เว้นวรรคห้ามตัดบรรทัด</h3>
-    <div class="row"><button type="button" class="tbtn" data-act="nbsp">แทรกเว้นวรรคห้ามตัด</button><span class="hint">หรือกด Ctrl+Shift+Space</span></div>
-    <p class="hint">ใช้ระหว่างคำที่ไม่ควรถูกแยกคนละบรรทัด เช่น ตัวเลขกับหน่วย “๑๒ บาท” หรือเลขที่หนังสือ</p>
-    <h3>สัญลักษณ์</h3>
-    <div class="symbols" id="symbols"></div>
+    <div class="row"><button type="button" class="tbtn" data-act="bahtInsert">แทรก (คำอ่าน)</button><button type="button" class="tbtn" data-act="bahtInsertBoth">แทรก ตัวเลข + (คำอ่าน)</button></div>
+    <h3>วันที่ & เว้นวรรค</h3>
+    <div class="row"><button type="button" class="tbtn" data-act="dateToday" id="dateBtn">แทรกวันที่วันนี้</button><label class="inline"><input type="checkbox" id="dateThaiDigits"> เลขไทย</label></div>
+    <div class="row"><button type="button" class="tbtn" data-act="nbsp" title="Ctrl+Shift+Space">แทรกเว้นวรรคห้ามตัด</button><span class="hint">Ctrl+Shift+Space</span></div>
+
+    <details class="tools-fold">
+      <summary><span class="fold-icon">🔣</span> สัญลักษณ์พิเศษ (ฯ, ฿, ๏, ฯลฯ)</summary>
+      <div class="fold-body">
+        <div class="symbols" id="symbols"></div>
+      </div>
+    </details>
   </section>
 
   <section data-panel="check" hidden>
-    <h3>ตรวจคำ การเขียน และรูปแบบหนังสือราชการ (ออฟไลน์)</h3>
-    <p class="hint">ตรวจหน้าที่เปิดอยู่: คำที่มักเขียนผิด การเว้นวรรค ไม้ยมก/ฯลฯ ตัวเลขกับหน่วยที่อาจถูกตัดบรรทัด รูปแบบวันที่ และความสม่ำเสมอของย่อหน้า ระยะบรรทัด ขนาดและแบบอักษร รวมถึงคำขึ้นต้น–ลงท้าย — ไม่ได้ตรวจทุกคำในพจนานุกรม ถ้าต้องการตรวจละเอียดใช้แท็บผู้ช่วย AI</p>
-    <div class="row"><label class="inline"><input type="checkbox" id="allowBigSpace"> ยอมรับเว้นวรรคใหญ่ (2 เคาะ)</label></div>
-    <div class="row"><button type="button" class="tbtn primary" data-act="scan">ตรวจหน้านี้</button><button type="button" class="tbtn" data-act="fixAll" id="fixAllBtn" disabled>แก้ทั้งหมด</button></div>
+    <h3>ตรวจคำและรูปแบบหนังสือราชการ (ออฟไลน์)</h3>
+    <p class="hint">ตรวจคำสะกดผิด เว้นวรรค ไม้ยมก/ฯลฯ รูปแบบวันที่ และย่อหน้าตามระเบียบสารบรรณ</p>
+    <div class="row"><button type="button" class="tbtn primary" data-act="scan">🔍 ตรวจหน้านี้</button><button type="button" class="tbtn" data-act="fixAll" id="fixAllBtn" disabled>แก้ทั้งหมด</button><label class="inline" style="margin-left:auto"><input type="checkbox" id="allowBigSpace"> ยอมรับเว้นวรรค 2 เคาะ</label></div>
     <div id="scanSummary" class="hint"></div>
     <ul class="find-list" id="scanList"></ul>
   </section>
 
   <section data-panel="ai" hidden>
     <h3>ผู้ช่วยภาษาไทยด้วย AI</h3>
-    <div class="row"><label class="inline grow">ผู้ให้บริการ <select id="aiProvider" class="grow"></select></label></div>
-    <div class="row" id="aiModelRow"><label class="inline grow">รุ่น <input type="text" id="aiModel" class="grow" spellcheck="false"></label></div>
-    <div class="row" id="aiUrlRow"><label class="inline grow">Base URL <input type="text" id="aiUrl" class="grow" spellcheck="false" placeholder="http://localhost:11434/v1"></label></div>
-    <div class="warnbox" id="aiWarn"></div>
-    <div class="row"><input type="password" id="aiKey" class="grow" autocomplete="off"></div>
-    <div class="row"><label class="inline"><input type="checkbox" id="aiRemember"> จำคีย์ไว้ในเบราว์เซอร์นี้</label></div>
-    <div class="row"><label class="inline"><input type="checkbox" id="aiConsent"> ยืนยันว่าข้อความนี้ส่งออกนอกเครื่องได้</label></div>
-    <div class="row">
+    <div class="row" style="margin-bottom:8px">
       <button type="button" class="tbtn primary" data-act="ai" data-task="check">ตรวจคำผิด/ไวยากรณ์</button>
       <button type="button" class="tbtn" data-act="ai" data-task="formal">เรียบเรียงภาษาราชการ</button>
       <button type="button" class="tbtn" data-act="ai" data-task="summary">สรุปใจความ</button>
     </div>
     <div id="aiStatus" class="hint"></div>
     <div id="aiResult"></div>
+
+    <details class="tools-fold" id="aiConfigFold">
+      <summary><span class="fold-icon">⚙️</span> ตั้งค่าเชื่อมต่อ AI (API Key / รุ่นโมเดล)</summary>
+      <div class="fold-body">
+        <div class="row"><label class="inline grow">ผู้ให้บริการ <select id="aiProvider" class="grow"></select></label></div>
+        <div class="row" id="aiModelRow"><label class="inline grow">รุ่น <input type="text" id="aiModel" class="grow" spellcheck="false"></label></div>
+        <div class="row" id="aiUrlRow"><label class="inline grow">Base URL <input type="text" id="aiUrl" class="grow" spellcheck="false" placeholder="http://localhost:11434/v1"></label></div>
+        <div class="warnbox" id="aiWarn"></div>
+        <div class="row"><input type="password" id="aiKey" class="grow" autocomplete="off" placeholder="วาง API Key ที่นี่"></div>
+        <div class="row"><label class="inline"><input type="checkbox" id="aiRemember"> จำคีย์ไว้ในเบราว์เซอร์นี้</label></div>
+        <div class="row"><label class="inline"><input type="checkbox" id="aiConsent"> ยืนยันว่าข้อความนี้ส่งออกนอกเครื่องได้</label></div>
+      </div>
+    </details>
   </section>
 
   <section data-panel="find" hidden>
@@ -2114,29 +2191,35 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
 
   <section data-panel="auto" hidden>
     <h3>จัดรูปแบบอัตโนมัติ (ทีเดียวจบ)</h3>
-    <p class="hint">รวมการล้างข้อความ จัดย่อหน้าให้สอดคล้อง ตัดคำ และเลขหน้า — กด “ดูตัวอย่าง” เพื่อดูก่อน-หลังโดยยังไม่เปลี่ยนเอกสาร แล้วค่อยกด “จัดทั้งหมด” ย้อนกลับทั้งเอกสารได้ทุกหน้า</p>
+    <p class="hint">ล้างข้อความ จัดย่อหน้า ตัดคำ และเลขหน้าให้สอดคล้องกันตามระเบียบสารบรรณ</p>
     <div class="row"><label class="inline">ขอบเขต <select id="auScope"><option value="page">หน้านี้</option><option value="all">ทุกหน้า</option></select></label>
       <label class="inline">ตัวเลข <select id="auDigits"><option value="keep">ไม่เปลี่ยน</option><option value="thai">เป็นเลขไทย</option><option value="arabic">เป็นเลขอารบิก</option></select></label></div>
+    <div class="row"><button type="button" class="tbtn" data-act="auPreview">ดูตัวอย่าง</button><button type="button" class="tbtn primary" data-act="auApply">จัดทั้งหมด</button><button type="button" class="tbtn" data-act="auUndo" id="auUndoBtn" disabled>ย้อนกลับ</button></div>
     <div class="au-opts">
-      <label><input type="checkbox" data-au="clean"> <b>ล้างข้อความ</b> เว้นวรรคซ้อน/ท้ายย่อหน้า อักขระล่องหน เเ→แ สระอำ วรรณยุกต์ซ้ำ ไม้ยมก ฯลฯ</label>
-      <label class="sub"><input type="checkbox" data-au="bigspace"> คงเว้นวรรคใหญ่ (2 เคาะ) ไว้ — ยุบเฉพาะที่เกิน 2 เคาะ</label>
+      <label><input type="checkbox" data-au="clean"> <b>ล้างข้อความ</b> เว้นวรรคซ้อน/ท้ายย่อหน้า สระอำ วรรณยุกต์ซ้ำ</label>
+      <label class="sub"><input type="checkbox" data-au="bigspace"> คงเว้นวรรคใหญ่ (2 เคาะ) ไว้</label>
       <label><input type="checkbox" data-au="blank"> <b>ลบบรรทัดว่างซ้อนกัน</b> เหลือบรรทัดเดียว</label>
-      <label><input type="checkbox" data-au="misspell"> <b>แก้คำสะกดที่ผิดบ่อย</b> จากรายการในแท็บตรวจคำ</label>
-      <label><input type="checkbox" data-au="dates"> <b>วันที่แบบราชการ</b> เดือนเต็ม ปี พ.ศ. (แปลงปี ค.ศ.→พ.ศ. ด้วย)</label>
-      <label><input type="checkbox" data-au="layout"> <b>จัดย่อหน้าให้สอดคล้อง</b> ย่อหน้าบรรทัดแรก ระยะบรรทัด จัดแนว ส่วนลงชื่อ</label>
-      <label><input type="checkbox" data-au="bind"> <b>ตัดคำ</b> ผูกตัวเลขกับหน่วย และคำในพจนานุกรมคำห้ามตัด</label>
-      <label><input type="checkbox" data-au="spread"> <b>กระจายตัวอักษร</b> ปรับช่องไฟดึงคำโดด/ลดการยืด (ไม่เกิน ±0.03 em)</label>
-      <label><input type="checkbox" data-au="pagenum"> <b>เลขหน้า</b> “- ๒ -” กลางด้านบนตอนพิมพ์</label>
+      <label><input type="checkbox" data-au="misspell"> <b>แก้คำสะกดที่ผิดบ่อย</b> อัตโนมัติ</label>
+      <label><input type="checkbox" data-au="dates"> <b>วันที่แบบราชการ</b> เดือนเต็ม ปี พ.ศ.</label>
+      <label><input type="checkbox" data-au="layout"> <b>จัดย่อหน้าให้สอดคล้อง</b> ย่อหน้าบรรทัดแรก ระยะบรรทัด จัดแนว</label>
+      <label><input type="checkbox" data-au="bind"> <b>ตัดคำ</b> ผูกตัวเลขกับหน่วย และคำห้ามตัด</label>
+      <label><input type="checkbox" data-au="spread"> <b>กระจายตัวอักษร</b> ปรับช่องไฟลดการยืด</label>
+      <label><input type="checkbox" data-au="pagenum"> <b>เลขหน้า</b> “- ๒ -” กลางด้านบน</label>
     </div>
-    <h3>ให้ AI ช่วย (เลือกได้) <span class="au-tag">ส่งข้อความออกนอกเครื่อง</span></h3>
-    <div class="au-opts">
-      <label><input type="checkbox" data-au="aiLayout"> <b>AI วางแผนจัดหน้า</b> ตัดคำไทย กระจายตัวอักษร ระยะบรรทัด — แทนขั้น “จัดย่อหน้า/กระจายตัวอักษร” แบบในเครื่อง</label>
-      <label><input type="checkbox" data-au="aiCheck"> <b>AI ตรวจคำผิด/ไวยากรณ์/การใช้คำ</b> แล้วแก้ให้</label>
-      <label><input type="checkbox" data-au="aiRewrite"> <b>AI เรียบเรียงภาษาราชการ</b> แก้ถ้อยคำทั้งย่อหน้า (ตัวเลขต้องตรงต้นฉบับ ย่อหน้าที่มีตัวหนา/เอียงผสมจะข้าม) — ควรดูตัวอย่างก่อน</label>
-      <label><input type="checkbox" data-au="aiAudit"> <b>AI ตรวจโครงสร้างและความสอดคล้อง</b> วันที่/จำนวนเงิน/ชื่อตำแหน่ง/คำขึ้นต้น–ลงท้าย (รายงานอย่างเดียว ไม่แก้)</label>
-    </div>
-    <div id="auAiInfo" class="hint"></div>
-    <div class="row"><button type="button" class="tbtn" data-act="auPreview">ดูตัวอย่าง</button><button type="button" class="tbtn primary" data-act="auApply">จัดทั้งหมด</button><button type="button" class="tbtn" data-act="auUndo" id="auUndoBtn" disabled>ย้อนกลับทั้งหมด</button></div>
+
+    <details class="tools-fold">
+      <summary><span class="fold-icon">🤖</span> ตัวเลือกเสริม: ให้ AI ช่วยจัดและเกลา</summary>
+      <div class="fold-body">
+        <div class="au-opts">
+          <label><input type="checkbox" data-au="aiLayout"> <b>AI วางแผนจัดหน้า</b> ตัดคำไทย กระจายตัวอักษร ระยะบรรทัด</label>
+          <label><input type="checkbox" data-au="aiCheck"> <b>AI ตรวจคำผิด/ไวยากรณ์</b> แล้วแก้ให้</label>
+          <label><input type="checkbox" data-au="aiRewrite"> <b>AI เรียบเรียงภาษาราชการ</b> แก้ถ้อยคำทั้งย่อหน้า</label>
+          <label><input type="checkbox" data-au="aiAudit"> <b>AI ตรวจโครงสร้างและความสอดคล้อง</b> วันที่/ตำแหน่ง (รายงาน)</label>
+        </div>
+        <div id="auAiInfo" class="hint"></div>
+      </div>
+    </details>
+
     <div id="auStatus" class="hint"></div>
     <ul class="find-list" id="auLog"></ul>
     <div id="auCompare" hidden>
@@ -2147,46 +2230,49 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
 
   <section data-panel="paste" hidden>
     <h3>ทดสอบการวางใน e-Office</h3>
-    <p class="hint">ตรวจว่ารูปแบบแต่ละอย่างรอดหรือหายเมื่อวางใน e-Office จริง แล้วปรับการส่งออกและเตือนให้ตามผล</p>
-    <ol class="steps">
-      <li>กด <b>คัดลอกชุดทดสอบ</b></li>
-      <li>วางใน e-Office แล้วบันทึก/เปิดดูตามปกติ</li>
-      <li>เลือกเนื้อหาที่ได้ใน e-Office ทั้งหมด แล้วคัดลอก (Ctrl+A, Ctrl+C)</li>
-      <li>กลับมากด <b>อ่านจากคลิปบอร์ด</b> หรือวางในกล่องด้านล่าง (Ctrl+V)</li>
-    </ol>
+    <p class="hint">ทดสอบความเข้ากันได้ของรูปแบบเมื่อคัดลอกไปวางในระบบ e-Office จริง</p>
     <div class="row"><button type="button" class="tbtn primary" data-act="pasteCopy">1) คัดลอกชุดทดสอบ</button><button type="button" class="tbtn" data-act="pasteRead">4) อ่านจากคลิปบอร์ด</button></div>
     <div id="pasteBox" class="paste-box" contenteditable="true" role="textbox" aria-label="วางผลที่คัดลอกกลับมาจาก e-Office" data-placeholder="หรือคลิกที่นี่แล้วกด Ctrl+V…"></div>
     <div id="pasteStatus" class="hint"></div>
     <div id="pasteSummary"></div>
     <ul class="find-list" id="pasteList"></ul>
-    <h3>ตัวอย่างหลังส่งออก</h3>
-    <p class="hint">ดู HTML ที่จะคัดลอกไป e-Office ในกรอบแยก (ไม่มี CSS ของแอป) — เปิด “จำลอง” เพื่อลบสิ่งที่ผลทดสอบบอกว่า e-Office ล้างทิ้ง</p>
-    <div class="row"><button type="button" class="tbtn" data-act="pastePreview">ดูตัวอย่างหน้านี้</button><label class="inline"><input type="checkbox" id="pasteSim"> จำลองตามผลทดสอบ</label><button type="button" class="tbtn" data-act="pasteClear">ลบผลทดสอบ</button></div>
-    <iframe id="pasteFrame" class="paste-frame" sandbox="" title="ตัวอย่าง HTML ที่จะคัดลอกไป e-Office" hidden></iframe>
+
+    <details class="tools-fold">
+      <summary><span class="fold-icon">👁️</span> ดูตัวอย่าง HTML ที่จะคัดลอกไป e-Office</summary>
+      <div class="fold-body">
+        <div class="row"><button type="button" class="tbtn" data-act="pastePreview">ดูตัวอย่างหน้านี้</button><label class="inline"><input type="checkbox" id="pasteSim"> จำลองตามผลทดสอบ</label><button type="button" class="tbtn" data-act="pasteClear">ลบผลทดสอบ</button></div>
+        <iframe id="pasteFrame" class="paste-frame" sandbox="" title="ตัวอย่าง HTML ที่จะคัดลอกไป e-Office" hidden></iframe>
+      </div>
+    </details>
   </section>
 
   <section data-panel="nobreak" hidden>
     <h3>คำห้ามตัด (ไม่ให้ตัดกลางคำตอนขึ้นบรรทัดใหม่)</h3>
-    <p class="hint">เบราว์เซอร์ตัดคำไทยด้วยพจนานุกรม จึงมักตัดคำประสม ชื่อหน่วยงาน และชื่อคนกลางคำ เช่น “ผู้อำนวย⏎การ” — ระบบใช้ Intl.Segmenter หาจุดที่อาจถูกตัดภายในคำเหล่านี้
-      แล้วใส่ตัวผูกคำ (Word Joiner U+2060 มองไม่เห็น ไม่เปลี่ยนตัวอักษร) เฉพาะจุดนั้น — ดูตำแหน่งตัวผูกได้ด้วยปุ่ม ¶ (เครื่องหมาย ⁀ สีเขียว)</p>
-    <div class="row"><input type="text" id="nbIn" class="grow" placeholder="เพิ่มคำ เช่น ชื่อหน่วยงาน ชื่อคน (คั่นหลายคำด้วยจุลภาค)" maxlength="400"><select id="nbGroup" class="sel" aria-label="หมวดของคำที่เพิ่ม" style="width:96px"></select><button type="button" class="tbtn primary" data-act="nbAdd">เพิ่ม</button></div>
-    <div class="row"><button type="button" class="tbtn" data-act="nbFromSel">เพิ่มจากข้อความที่เลือก</button><button type="button" class="tbtn" data-act="nbReset">คืนค่ารายการตั้งต้น</button></div>
-    <div class="row"><input type="search" id="nbFind" class="grow" placeholder="ค้นหาในรายการ" aria-label="ค้นหาในรายการคำห้ามตัด"><select id="nbFilter" class="sel" aria-label="กรองตามหมวด" style="width:96px"></select><select id="nbSort" class="sel" aria-label="เรียงลำดับ" style="width:104px"><option value="g">เรียงตามหมวด</option><option value="a">เรียง ก–ฮ</option><option value="len">ยาว → สั้น</option><option value="new">ใหม่สุดก่อน</option></select></div>
-    <div class="row"><button type="button" class="tbtn" data-act="nbOnAll">เปิดที่แสดงทั้งหมด</button><button type="button" class="tbtn" data-act="nbOffAll">ปิดที่แสดงทั้งหมด</button><button type="button" class="tbtn" data-act="nbDelShown">ลบที่แสดง</button></div>
-    <div class="row"><button type="button" class="tbtn primary" data-act="nbExport">💾 บันทึกเป็นไฟล์</button><button type="button" class="tbtn" data-act="nbImport">📂 โหลดจากไฟล์</button><button type="button" class="tbtn" data-act="nbCopy">คัดลอกรายการ</button><input type="file" id="nbFile" accept=".json,.txt,.csv,application/json,text/plain" hidden></div>
-    <div id="nbCount" class="hint"></div>
+    <p class="hint">ผูกคำประสม ชื่อหน่วยงาน และชื่อคน ไม่ให้ถูกตัดแยกบรรทัด</p>
+    <div class="row"><input type="text" id="nbIn" class="grow" placeholder="เพิ่มคำห้ามตัด เช่น ชื่อตำแหน่ง ชื่อคน" maxlength="400"><select id="nbGroup" class="sel" aria-label="หมวดของคำที่เพิ่ม" style="width:90px"></select><button type="button" class="tbtn primary" data-act="nbAdd">เพิ่ม</button></div>
     <div class="row"><label class="inline">ขอบเขต <select id="nbScope"><option value="page">หน้านี้</option><option value="all">ทุกหน้า</option></select></label>
-      <button type="button" class="tbtn primary" data-act="nbApply">ผูกคำในเอกสาร</button><button type="button" class="tbtn" data-act="nbRemove">ถอดตัวผูกทั้งหมด</button></div>
+      <button type="button" class="tbtn primary" data-act="nbApply">ผูกคำในเอกสาร</button><button type="button" class="tbtn" data-act="nbRemove">ถอดตัวผูก</button></div>
+    
+    <div class="row"><input type="search" id="nbFind" class="grow" placeholder="ค้นหาคำในรายการ" aria-label="ค้นหาในรายการคำห้ามตัด"><select id="nbFilter" class="sel" aria-label="กรองตามหมวด" style="width:90px"></select><select id="nbSort" class="sel" aria-label="เรียงลำดับ" style="width:95px"><option value="g">ตามหมวด</option><option value="a">ก–ฮ</option><option value="len">ยาว→สั้น</option><option value="new">ใหม่สุด</option></select></div>
+    <div id="nbCount" class="hint"></div>
     <div id="nbStatus" class="hint"></div>
     <ul class="phrase-list" id="nbList"></ul>
+
+    <details class="tools-fold">
+      <summary><span class="fold-icon">📁</span> นำเข้า / ส่งออก / จัดการรายการ</summary>
+      <div class="fold-body">
+        <div class="row"><button type="button" class="tbtn" data-act="nbFromSel">เพิ่มจากข้อความที่เลือก</button><button type="button" class="tbtn" data-act="nbReset">คืนค่ารายการตั้งต้น</button></div>
+        <div class="row"><button type="button" class="tbtn" data-act="nbOnAll">เปิดที่แสดงทั้งหมด</button><button type="button" class="tbtn" data-act="nbOffAll">ปิดที่แสดงทั้งหมด</button><button type="button" class="tbtn" data-act="nbDelShown">ลบที่แสดง</button></div>
+        <div class="row"><button type="button" class="tbtn primary" data-act="nbExport">💾 บันทึกเป็นไฟล์</button><button type="button" class="tbtn" data-act="nbImport">📂 โหลดจากไฟล์</button><button type="button" class="tbtn" data-act="nbCopy">คัดลอกรายการ</button><input type="file" id="nbFile" accept=".json,.txt,.csv,application/json,text/plain" hidden></div>
+      </div>
+    </details>
   </section>
 
   <section data-panel="layout" hidden>
     <h3>ปรับให้สอดคล้องกันตามหนังสือราชการ</h3>
-    <p class="hint">วิเคราะห์ทุกย่อหน้า แล้วเสนอการปรับทีละย่อหน้า (ย่อหน้าบรรทัดแรก ระยะบรรทัด การจัดแนว ระยะเว้น และวลีที่ควรห้ามตัดบรรทัด) ให้เลือกใช้หรือข้าม — ย่อหน้าในหน้าที่เปิดอยู่จะวัดช่องห่างจากการจัดเสมอหน้าหลังด้วย</p>
+    <p class="hint">วิเคราะห์ทุกย่อหน้า แล้วเสนอการปรับทีละย่อหน้าให้สอดคล้องตามระเบียบสารบรรณ</p>
     <div class="row"><label class="inline">ขอบเขต <select id="lyScope"><option value="page">หน้านี้</option><option value="all">ทุกหน้า</option></select></label></div>
     <div class="row"><button type="button" class="tbtn primary" data-act="lyLocal">วิเคราะห์ (ในเครื่อง)</button><button type="button" class="tbtn" data-act="lyAi" id="lyAiBtn">ให้ AI วางแผนและวิเคราะห์</button></div>
-    <p class="hint">AI ใช้ผู้ให้บริการ คีย์ และการยืนยันจากแท็บผู้ช่วย AI และส่งข้อความต้นย่อหน้า (ไม่เกิน 160 ตัวอักษร) พร้อมค่าการจัดหน้า</p>
     <div id="lyStatus" class="hint"></div>
     <div id="lyPlan"></div>
     <div class="row"><button type="button" class="tbtn" data-act="lyApplyAll" id="lyApplyAll" disabled>ใช้ทุกข้อที่เหลือ</button></div>
@@ -2194,11 +2280,9 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
   </section>
 
   <section data-panel="theme" hidden>
-    <h3>หน้ากระดาษ</h3>
-    <div class="row"><label class="inline"><input type="checkbox" id="vwPaper"> แสดงเป็นกระดาษ A4 แนวตั้ง (ขอบกระดาษ + กรอบขอบพิมพ์สีจาง)</label></div>
+    <h3>หน้ากระดาษ & ระยะขอบ</h3>
+    <div class="row"><label class="inline"><input type="checkbox" id="vwPaper"> แสดงเป็นกระดาษ A4 แนวตั้ง</label></div>
     <div class="row"><label class="inline"><input type="checkbox" id="vwFullWidth"> ↔ ขยายเต็มหน้าจอ (ซ่อนขอบกระดาษสีเทาซ้าย-ขวา)</label></div>
-    <div class="row"><label class="inline"><input type="checkbox" id="vwBreaks"> เส้นแบ่งหน้าโดยประมาณ</label></div>
-    <div class="row"><label class="inline"><input type="checkbox" id="vwGrid"> กระดาษกราฟ ตาราง 1 ซม.</label></div>
     <div class="row">
       <label class="inline grow">ระยะขอบกระดาษ <select id="vwMarginPreset" class="grow">
         <option value="standard">มาตรฐาน A4 (ซ้าย 3 ซม. ขวา 2 ซม.)</option>
@@ -2218,23 +2302,28 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
       </select></label>
       <button type="button" class="tbtn" id="btnResetWidth" title="คืนค่า 16 ซม. (มาตรฐาน A4)">คืนค่า 16 ซม.</button>
     </div>
-    <p class="hint">สามารถชี้ที่ขอบซ้ายหรือขวาของกระดาษ/ไม้บรรทัด แล้วคลิกลากเพื่อขยายหรือลดความกว้างได้อิสระทั้ง 2 ฝั่ง (ดับเบิลคลิกเพื่อคืนค่า 16 ซม.)</p>
-    <h3>เส้นบรรทัด (สลับสีตามย่อหน้า)</h3>
-    <div class="row"><label class="inline"><input type="checkbox" id="vwLines"> แสดงเส้นประใต้ทุกบรรทัด</label></div>
-    <div class="row" id="vwLineColors"></div>
-    <p class="hint">แต่ละย่อหน้าใช้สีวนตามลำดับ พร้อมแถบสีด้านซ้าย ทำให้เห็นว่าบรรทัดไหนอยู่ย่อหน้าเดียวกัน</p>
-    <h3>เลขที่ย่อหน้า / เลขที่บรรทัด</h3>
-    <div class="row"><label class="inline"><input type="checkbox" id="vwParaNum"> เลขที่ย่อหน้า (ตรงกับ “ย่อหน้า N” ในแท็บจัดหน้า)</label></div>
-    <div class="row"><label class="inline"><input type="checkbox" id="vwLineNum"> เลขที่บรรทัด (นับทุกบรรทัดในหน้านี้)</label></div>
-    <h3>เครื่องหมายซ่อน (¶)</h3>
-    <div class="row"><label class="inline"><input type="checkbox" id="vwMarks"> แสดงเครื่องหมาย (Ctrl+Shift+8)</label></div>
-    <div id="vwMarkList"></div>
-    <p class="hint">วาดทับบนหน้าจอเท่านั้น ไม่ถูกพิมพ์ ไม่ถูกคัดลอก และไม่ทำให้บรรทัดเลื่อน</p>
-    <h3>สีพื้นกระดาษ</h3>
-    <p class="hint">เปลี่ยนเฉพาะการแสดงผลบนจอ ไม่มีผลกับไฟล์ที่บันทึก การพิมพ์ หรือข้อความที่คัดลอกไป e-Office</p>
-    <div id="themeList"></div>
-    <h3>ความอุ่นของสี (ลดแสงสีฟ้า)</h3>
-    <div class="row"><input type="range" id="warmth" min="0" max="60" step="5" class="grow" aria-label="ความอุ่นของสี"><span id="warmthVal"></span></div>
+    <p class="hint">ชี้ที่ขอบซ้ายหรือขวาของกระดาษ/ไม้บรรทัด แล้วคลิกลากขยายได้อิสระ (ดับเบิลคลิกเพื่อคืนค่า 16 ซม.)</p>
+
+    <details class="tools-fold">
+      <summary><span class="fold-icon">📏</span> เส้นช่วยจัดและเครื่องหมายซ่อน (¶, เส้นบรรทัด, ตาราง)</summary>
+      <div class="fold-body">
+        <div class="row"><label class="inline"><input type="checkbox" id="vwBreaks"> เส้นแบ่งหน้าโดยประมาณ</label></div>
+        <div class="row"><label class="inline"><input type="checkbox" id="vwGrid"> กระดาษกราฟ ตาราง 1 ซม.</label></div>
+        <div class="row"><label class="inline"><input type="checkbox" id="vwLines"> แสดงเส้นประใต้ทุกบรรทัด</label></div>
+        <div class="row" id="vwLineColors"></div>
+        <div class="row"><label class="inline"><input type="checkbox" id="vwParaNum"> เลขที่ย่อหน้า</label> <label class="inline"><input type="checkbox" id="vwLineNum"> เลขที่บรรทัด</label></div>
+        <div class="row"><label class="inline"><input type="checkbox" id="vwMarks"> แสดงเครื่องหมายซ่อน (¶) (Ctrl+Shift+8)</label></div>
+        <div id="vwMarkList"></div>
+      </div>
+    </details>
+
+    <details class="tools-fold">
+      <summary><span class="fold-icon">🎨</span> โทนสีกระดาษและถนอมสายตา</summary>
+      <div class="fold-body">
+        <div id="themeList"></div>
+        <div class="row" style="margin-top:8px"><span style="font-size:12px">แสงอุ่น:</span> <input type="range" id="warmth" min="0" max="60" step="5" class="grow" aria-label="ความอุ่นของสี"><span id="warmthVal"></span></div>
+      </div>
+    </details>
   </section>
 </div>`;
     document.body.append(panel);
@@ -2259,14 +2348,39 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
     $('#toolsClose').addEventListener('click', () => setOpen(false));
 
     const onTab = {};
+    const GROUP_OF = {
+      num: 'text', find: 'text', phrase: 'text', nobreak: 'text',
+      layout: 'format', style: 'format', theme: 'format',
+      auto: 'audit', check: 'audit', ai: 'audit',
+      file: 'file', paste: 'file'
+    };
+    const lastTabOfGroup = { text: 'num', format: 'layout', audit: 'auto', file: 'file' };
+
     function showTab(name) {
       if (!$(`section[data-panel="${name}"]`, panel)) name = 'num';
-      for (const b of $$('.tools-tabs button', panel)) b.setAttribute('aria-selected', String(b.dataset.tab === name));
+      const grp = GROUP_OF[name] || 'text';
+      lastTabOfGroup[grp] = name;
+      const nav = $('.tools-nav', panel);
+      if (nav) nav.dataset.activeGroup = grp;
+      for (const gb of $$('.tgroup-btn', panel)) gb.setAttribute('aria-selected', String(gb.dataset.group === grp));
+      for (const b of $$('.tools-tabs button[data-tab], .tsub-btn', panel)) b.setAttribute('aria-selected', String(b.dataset.tab === name));
       for (const s of $$('section[data-panel]', panel)) s.hidden = s.dataset.panel !== name;
       store.set(KEY.tab, name);
       onTab[name]?.();
     }
-    $('.tools-tabs', panel).addEventListener('click', e => { const b = e.target.closest('button[data-tab]'); if (b) showTab(b.dataset.tab); });
+
+    $('.tools-nav', panel)?.addEventListener('click', e => {
+      const gb = e.target.closest('.tgroup-btn');
+      if (gb) {
+        const grp = gb.dataset.group;
+        const targetTab = lastTabOfGroup[grp] || panel.querySelector(`.tsub-btn[data-group="${grp}"]`)?.dataset.tab;
+        if (targetTab) showTab(targetTab);
+        return;
+      }
+      const b = e.target.closest('button[data-tab]');
+      if (b) showTab(b.dataset.tab);
+    });
+    $('.tools-tabs', panel)?.addEventListener('click', e => { const b = e.target.closest('button[data-tab]'); if (b) showTab(b.dataset.tab); });
 
     // ปุ่มในแผงไม่ดึงโฟกัสจากกล่องพิมพ์ ส่วนที่เลือกไว้จึงยังอยู่
     panel.addEventListener('mousedown', e => { if (e.target.closest('.tbtn, .find-list button, .symbols button, .tt-theme')) e.preventDefault(); });
@@ -2349,6 +2463,8 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
     aiKey.addEventListener('input', () => { keys[provider] = aiKey.value.trim(); if (aiRemember.checked) store.set(keyStoreKey(provider), keys[provider]); });
     aiRemember.addEventListener('change', () => { if (aiRemember.checked && keys[provider]) store.set(keyStoreKey(provider), keys[provider]); else store.del(keyStoreKey(provider)); });
     renderAiProvider();
+    const aiFold = $('#aiConfigFold', panel);
+    if (aiFold) aiFold.open = !keys[provider] && !PROVIDERS[provider].keyOptional;
     let aiItems = [], aiBusy = false, aiRange = null;
     async function runAi(taskKey) {
       if (aiBusy) return;
