@@ -4,6 +4,7 @@ import { readFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { spawn } from 'node:child_process';
+import { tmpdir } from 'node:os';
 import http from 'node:http';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -59,9 +60,11 @@ describe('Sticky Toolbar & Menubar (การตรึงและปรับ�
     }
 
     const port = 9240 + Math.floor(Math.random() * 50);
+    const userData = join(tmpdir(), 'edge-sticky-' + Date.now() + '-' + Math.random().toString(36).slice(2));
     const edge = spawn(edgePath, [
       '--headless=new',
       '--window-size=1280,900',
+      `--user-data-dir=${userData}`,
       `--remote-debugging-port=${port}`,
       `file:///${join(root, 'eoffice-editor.html').replace(/\\/g, '/')}`
     ]);

@@ -148,17 +148,38 @@ button,select,input{font:inherit;color:inherit}
 .ruler-marks{cursor:crosshair}
 .ruler-tip{position:absolute;z-index:12;bottom:calc(100% + 3px);transform:translateX(-50%);background:#1f2328;color:#fff;font-size:12px;line-height:1;padding:4px 6px;border-radius:4px;white-space:nowrap;pointer-events:none}
 .ruler-band{position:absolute;top:4px;bottom:4px;background:rgba(27,95,180,.25);border-left:1px solid var(--accent);border-right:1px solid var(--accent);pointer-events:none}
-/* มือจับลากขยายขอบกระดาษ */
+/* มือจับลากขยายขอบกระดาษ (ซ้าย และ ขวา) */
 .ruler-edge-handle{position:absolute;left:calc(var(--edge-x) + var(--text-w));top:0;bottom:0;width:12px;margin-left:-6px;cursor:ew-resize;z-index:8;touch-action:none;display:flex;align-items:center;justify-content:center}
 .ruler-edge-handle::before{content:"";width:2px;height:100%;background:rgba(0,0,0,.28);border-radius:1px;transition:background .15s,width .15s}
 .ruler-edge-handle:hover::before,.ruler-edge-handle.dragging::before{background:var(--accent);width:3px}
 .ruler-edge-handle:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 
+.ruler-edge-handle-left{position:absolute;left:var(--edge-x);top:0;bottom:0;width:12px;margin-left:-6px;cursor:ew-resize;z-index:8;touch-action:none;display:flex;align-items:center;justify-content:center}
+.ruler-edge-handle-left::before{content:"";width:2px;height:100%;background:rgba(0,0,0,.28);border-radius:1px;transition:background .15s,width .15s}
+.ruler-edge-handle-left:hover::before,.ruler-edge-handle-left.dragging::before{background:var(--accent);width:3px}
+.ruler-edge-handle-left:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+
 .paper-edge-handle{position:absolute;left:calc(var(--vr) + var(--paper-w));top:0;bottom:0;width:14px;margin-left:-7px;cursor:ew-resize;z-index:8;touch-action:none}
 .paper-edge-handle::before{content:"";position:absolute;left:6px;top:0;bottom:0;width:2px;background:transparent;transition:background .15s}
 .paper-edge-handle:hover::before,.paper-edge-handle.dragging::before{background:var(--accent);box-shadow:0 0 6px rgba(27,95,180,.4)}
-.paper-edge-handle::after{content:"↔";position:absolute;left:50%;top:12px;transform:translateX(-50%);width:20px;height:20px;line-height:18px;text-align:center;font-size:11px;background:#fff;border:1px solid var(--line-strong);border-radius:50%;color:var(--muted);box-shadow:0 1px 4px rgba(0,0,0,.15);opacity:0;transition:opacity .2s,color .15s,border-color .15s;pointer-events:none}
+.paper-edge-handle::after{content:"⤏";position:absolute;left:50%;top:12px;transform:translateX(-50%);width:20px;height:20px;line-height:18px;text-align:center;font-size:11px;background:#fff;border:1px solid var(--line-strong);border-radius:50%;color:var(--muted);box-shadow:0 1px 4px rgba(0,0,0,.15);opacity:0;transition:opacity .2s,color .15s,border-color .15s;pointer-events:none}
 .paper-edge-handle:hover::after,.paper-edge-handle.dragging::after{opacity:1;color:var(--accent);border-color:var(--accent)}
+
+.paper-edge-handle-left{position:absolute;left:var(--vr);top:0;bottom:0;width:14px;margin-left:-7px;cursor:ew-resize;z-index:8;touch-action:none}
+.paper-edge-handle-left::before{content:"";position:absolute;left:6px;top:0;bottom:0;width:2px;background:transparent;transition:background .15s}
+.paper-edge-handle-left:hover::before,.paper-edge-handle-left.dragging::before{background:var(--accent);box-shadow:0 0 6px rgba(27,95,180,.4)}
+.paper-edge-handle-left::after{content:"⤎";position:absolute;left:50%;top:12px;transform:translateX(-50%);width:20px;height:20px;line-height:18px;text-align:center;font-size:11px;background:#fff;border:1px solid var(--line-strong);border-radius:50%;color:var(--muted);box-shadow:0 1px 4px rgba(0,0,0,.15);opacity:0;transition:opacity .2s,color .15s,border-color .15s;pointer-events:none}
+.paper-edge-handle-left:hover::after,.paper-edge-handle-left.dragging::after{opacity:1;color:var(--accent);border-color:var(--accent)}
+
+/* โหมดขยายเต็มหน้าจอ (ซ่อนขอบกระดาษสีเทาซ้ายขวา) */
+body.full-width{background:#fff!important}
+body.full-width .desk{padding:0 0 24px!important;background:#fff!important}
+body.full-width .sheet{width:100%!important;max-width:100%!important;margin:0!important;border-left:0!important;border-right:0!important;border-radius:0!important;box-shadow:none!important}
+body.full-width .rulerwrap,body.full-width .editorwrap{width:100%!important}
+body.full-width .rulerwrap::after,body.full-width .editorwrap::after{display:none!important}
+body.full-width .editor-box{border-left:0!important;border-right:0!important;border-radius:0!important}
+body.full-width .paper-edge-handle,body.full-width .paper-edge-handle-left{display:none!important}
+#btnFullWidth[aria-pressed="true"]{background:var(--press);border-color:var(--accent);color:var(--accent);font-weight:600}
 
 /* ไม้บรรทัดแนวดิ่ง (0 ซม. = บรรทัดแรกของข้อความ) */
 .vruler{position:relative;flex:none;width:var(--vr);background:var(--ruler);border-right:1px solid #c2c2c2;overflow:hidden;user-select:none;touch-action:none;cursor:crosshair}
@@ -177,7 +198,57 @@ button,select,input{font:inherit;color:inherit}
 #editor .ql-editor{padding:var(--pt) var(--pr) var(--pb) var(--pl);min-height:var(--min-h);height:auto;overflow:visible;tab-size:8;-moz-tab-size:8}
 #editor .ql-editor p{margin:0;text-justify:inter-character}
 #editor .ql-editor.ql-blank::before{left:var(--pl);right:var(--pr);font-style:normal;color:#9aa3ad}
-#editor .ql-editor img{max-width:100%}
+#editor .ql-editor img{max-width:100%;cursor:pointer;transition:outline .15s}
+#editor .ql-editor img.img-selected{outline:2px solid var(--accent);outline-offset:2px}
+#editor img[data-align="center"],#printArea img[data-align="center"]{display:block!important;margin-left:auto!important;margin-right:auto!important;float:none!important}
+#editor img[data-align="right"],#printArea img[data-align="right"]{display:block!important;margin-left:auto!important;margin-right:0!important;float:none!important}
+#editor img[data-align="left"],#printArea img[data-align="left"]{display:block!important;margin-left:0!important;margin-right:auto!important;float:none!important}
+#editor img[data-wrap="left"],#printArea img[data-wrap="left"]{float:left!important;margin:4px 16px 8px 0!important;display:inline-block!important}
+#editor img[data-wrap="right"],#printArea img[data-wrap="right"]{float:right!important;margin:4px 0 8px 16px!important;display:inline-block!important}
+#editor img[data-wrap="inline"],#printArea img[data-wrap="inline"]{float:none!important;display:inline-block!important;margin:4px 0!important}
+
+/* จัดการรูปภาพสไตล์ Word (ย่อ/ขยาย ครอบตัด จัดตำแหน่ง ล้อมรอบข้อความ) */
+.img-overlay{position:absolute;pointer-events:none;z-index:20;border:1px dashed var(--accent)}
+.img-handle{position:absolute;width:10px;height:10px;background:#fff;border:2px solid var(--accent);border-radius:2px;box-sizing:border-box;pointer-events:auto;z-index:22;transform:translate(-50%,-50%)}
+.img-handle.nw{left:0;top:0;cursor:nwse-resize}
+.img-handle.n{left:50%;top:0;cursor:ns-resize}
+.img-handle.ne{left:100%;top:0;cursor:nesw-resize}
+.img-handle.e{left:100%;top:50%;cursor:ew-resize}
+.img-handle.se{left:100%;top:100%;cursor:nwse-resize}
+.img-handle.s{left:50%;top:100%;cursor:ns-resize}
+.img-handle.sw{left:0;top:100%;cursor:nesw-resize}
+.img-handle.w{left:0;top:50%;cursor:ew-resize}
+.img-handle:hover{background:var(--accent)}
+.img-size-badge{position:absolute;bottom:-26px;left:50%;transform:translateX(-50%);background:rgba(15,23,42,.85);color:#fff;padding:2px 8px;border-radius:4px;font:600 11px/1.4 Consolas,sans-serif;pointer-events:none;white-space:nowrap;z-index:25}
+.img-toolbar{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#fff;border:1px solid var(--line-strong);border-radius:6px;box-shadow:0 4px 16px rgba(0,0,0,.15);display:flex;align-items:center;gap:3px;padding:3px 6px;pointer-events:auto;z-index:30;white-space:nowrap}
+.img-tb-group{display:flex;align-items:center;gap:2px}
+.img-tb-btn{border:1px solid transparent;background:transparent;padding:3px 6px;border-radius:4px;font-size:11.5px;cursor:pointer;display:inline-flex;align-items:center;gap:2px;color:var(--ink);user-select:none;line-height:1.2}
+.img-tb-btn:hover{background:var(--hover);border-color:var(--line)}
+.img-tb-btn.active{background:rgba(27,95,180,.12);color:var(--accent);font-weight:600;border-color:var(--accent)}
+.img-tb-btn.danger:hover{background:#fee2e2;color:#dc2626;border-color:#fca5a5}
+.img-tb-sep{width:1px;height:16px;background:var(--line);margin:0 2px}
+.img-tb-sel{border:1px solid var(--line);border-radius:4px;padding:2px 4px;font-size:11px;background:#fff;cursor:pointer}
+
+/* ครอบตัดรูปภาพ (Crop Mode) */
+.img-crop-overlay{position:absolute;inset:0;z-index:35;pointer-events:auto;overflow:hidden}
+.img-crop-box{position:absolute;border:2px dashed #38bdf8;box-shadow:0 0 0 9999px rgba(0,0,0,.5);cursor:move;box-sizing:border-box}
+.crop-grid-h{position:absolute;inset:0;top:33.333%;height:33.333%;border-top:1px dashed rgba(255,255,255,.5);border-bottom:1px dashed rgba(255,255,255,.5);pointer-events:none}
+.crop-grid-v{position:absolute;inset:0;left:33.333%;width:33.333%;border-left:1px dashed rgba(255,255,255,.5);border-right:1px dashed rgba(255,255,255,.5);pointer-events:none}
+.crop-h{position:absolute;width:12px;height:12px;background:#fff;border:2px solid #0284c7;box-sizing:border-box;pointer-events:auto;transform:translate(-50%,-50%);z-index:42}
+.crop-h.nw{left:0;top:0;cursor:nwse-resize}
+.crop-h.n{left:50%;top:0;cursor:ns-resize}
+.crop-h.ne{left:100%;top:0;cursor:nesw-resize}
+.crop-h.e{left:100%;top:50%;cursor:ew-resize}
+.crop-h.se{left:100%;top:100%;cursor:nwse-resize}
+.crop-h.s{left:50%;top:100%;cursor:ns-resize}
+.crop-h.sw{left:0;top:100%;cursor:nesw-resize}
+.crop-h.w{left:0;top:50%;cursor:ew-resize}
+.crop-actions{position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);display:flex;gap:6px;background:rgba(15,23,42,.92);padding:4px 8px;border-radius:6px;z-index:45;box-shadow:0 4px 12px rgba(0,0,0,.25)}
+.crop-btn{border:0;border-radius:4px;padding:3px 9px;font-size:11.5px;font-weight:600;cursor:pointer}
+.crop-btn.apply{background:#10b981;color:#fff}
+.crop-btn.apply:hover{background:#059669}
+.crop-btn.cancel{background:#64748b;color:#fff}
+.crop-btn.cancel:hover{background:#475569}
 .guide{position:absolute;top:0;bottom:0;border-left:1px dashed var(--accent);pointer-events:none}
 
 /* จัดการตารางสไตล์ Word */
@@ -492,6 +563,7 @@ body.ls-docked .desk{padding-left:240px}
         <div class="tbc-row"><button type="button" class="chip" id="tbcReset">กลับค่าเดิม</button></div>
       </div>
     </div>
+    <button type="button" class="btn" id="btnFullWidth" aria-pressed="false" title="ขยายเต็มหน้าจอ (ซ่อนขอบสีเทาซ้าย-ขวา) — สลับให้หน้ากระดาษกว้างเต็มจอ ไร้แถบสีเทาด้านข้าง">↔ เต็มจอ</button>
     <label class="zoom"><select id="zoomSel" aria-label="ซูม" title="ซูม">
       <option value="100">100%</option><option value="125">125%</option><option value="150">150%</option><option value="175">175%</option><option value="200">200%</option>
     </select></label>
@@ -579,6 +651,7 @@ body.ls-docked .desk{padding-left:240px}
       <div class="rulerwrap">
         <div class="ruler-corner" title="ไม้บรรทัด หน่วยเซนติเมตร"></div>
         <div class="ruler off" id="ruler">
+          <div class="ruler-edge-handle-left" id="rulerEdgeHandleLeft" title="ลากเพื่อขยาย/ลดความกว้างขอบซ้าย (ดับเบิลคลิกเพื่อคืนค่า 16 ซม.)" role="separator" aria-label="ขอบกระดาษด้านซ้าย" tabindex="0"></div>
           <div class="ruler-scale" id="rulerScale"></div>
           <div class="ruler-marks" id="rulerMarks">
             <button type="button" class="mk mk-first" data-kind="first" role="slider" aria-valuemin="0" aria-valuemax="16" aria-label="ย่อหน้าบรรทัดแรก"><svg viewBox="0 0 13 9" aria-hidden="true"><path d="M.5.5h12l-6 8z"/></svg></button>
@@ -593,6 +666,7 @@ body.ls-docked .desk{padding-left:240px}
     </div>
     <div class="editorwrap">
       <div class="vruler" id="vruler" aria-label="ไม้บรรทัดแนวดิ่ง (ซม.)"><div class="vruler-scale" id="vrulerScale"></div></div>
+      <div class="paper-edge-handle-left" id="paperEdgeHandleLeft" title="ลากเพื่อขยาย/ลดความกว้างขอบซ้าย (ดับเบิลคลิกเพื่อคืนค่า 16 ซม.)" aria-label="ขอบกระดาษด้านซ้าย"></div>
       <div class="editor-box">
         <div id="editor"></div>
         <div class="tbl-overlay" id="tblOverlay" hidden>
@@ -601,6 +675,66 @@ body.ls-docked .desk{padding-left:240px}
         </div>
         <div class="tbl-draw-box" id="tblDrawBox" hidden><span id="tblDrawLabel">2 × 2</span></div>
         <div class="tbl-line-guide" id="tblLineGuide" hidden></div>
+        <!-- ตัวจัดการรูปภาพแบบ Word (Overlay, มือจับ 8 ทิศ, แถบคำสั่งลอย, ครอบตัด) -->
+        <div class="img-overlay" id="imgOverlay" hidden>
+          <div class="img-size-badge" id="imgSizeBadge">0 × 0 px</div>
+          <div class="img-handle nw" data-dir="nw" title="ปรับขนาด"></div>
+          <div class="img-handle n" data-dir="n" title="ปรับความสูง"></div>
+          <div class="img-handle ne" data-dir="ne" title="ปรับขนาด"></div>
+          <div class="img-handle e" data-dir="e" title="ปรับความกว้าง"></div>
+          <div class="img-handle se" data-dir="se" title="ปรับขนาด"></div>
+          <div class="img-handle s" data-dir="s" title="ปรับความสูง"></div>
+          <div class="img-handle sw" data-dir="sw" title="ปรับขนาด"></div>
+          <div class="img-handle w" data-dir="w" title="ปรับความกว้าง"></div>
+          <div class="img-toolbar" id="imgToolbar">
+            <div class="img-tb-group" title="จัดตำแหน่งภาพ">
+              <button type="button" class="img-tb-btn" data-act="align" data-val="left" title="ชิดซ้าย">⯇ ซ้าย</button>
+              <button type="button" class="img-tb-btn" data-act="align" data-val="center" title="กึ่งกลาง">⯀ กลาง</button>
+              <button type="button" class="img-tb-btn" data-act="align" data-val="right" title="ชิดขวา">⯈ ขวา</button>
+            </div>
+            <div class="img-tb-sep"></div>
+            <div class="img-tb-group" title="การล้อมรอบข้อความ (Wrap / Float)">
+              <button type="button" class="img-tb-btn" data-act="wrap" data-val="inline" title="ในแนวบรรทัด">☰ ในบรรทัด</button>
+              <button type="button" class="img-tb-btn" data-act="wrap" data-val="left" title="ตัดข้อความล้อมขวา">◧ ล้อมขวา</button>
+              <button type="button" class="img-tb-btn" data-act="wrap" data-val="right" title="ตัดข้อความล้อมซ้าย">◨ ล้อมซ้าย</button>
+            </div>
+            <div class="img-tb-sep"></div>
+            <div class="img-tb-group">
+              <button type="button" class="img-tb-btn" data-act="crop" title="ครอบตัดภาพ">✂ ครอบตัด</button>
+              <button type="button" class="img-tb-btn" data-act="rotate" title="หมุนภาพตามเข็มนาฬิกา 90°">↷ 90°</button>
+            </div>
+            <div class="img-tb-sep"></div>
+            <div class="img-tb-group">
+              <select class="img-tb-sel" id="imgSizePreset" title="เลือกขนาดรูปภาพ">
+                <option value="" disabled selected>ขนาดภาพ…</option>
+                <option value="25">25%</option>
+                <option value="50">50%</option>
+                <option value="75">75%</option>
+                <option value="100">เต็มความกว้าง</option>
+                <option value="original">ขนาดต้นฉบับ</option>
+              </select>
+              <button type="button" class="img-tb-btn danger" data-act="delete" title="ลบรูปภาพ (Delete / Backspace)">🗑️</button>
+            </div>
+          </div>
+        </div>
+        <div class="img-crop-overlay" id="imgCropOverlay" hidden>
+          <div class="img-crop-box" id="imgCropBox">
+            <div class="crop-grid-h"></div>
+            <div class="crop-grid-v"></div>
+            <div class="crop-h nw" data-dir="nw"></div>
+            <div class="crop-h n" data-dir="n"></div>
+            <div class="crop-h ne" data-dir="ne"></div>
+            <div class="crop-h e" data-dir="e"></div>
+            <div class="crop-h se" data-dir="se"></div>
+            <div class="crop-h s" data-dir="s"></div>
+            <div class="crop-h sw" data-dir="sw"></div>
+            <div class="crop-h w" data-dir="w"></div>
+            <div class="crop-actions">
+              <button type="button" class="crop-btn apply" id="btnCropApply">✓ ครอบตัด</button>
+              <button type="button" class="crop-btn cancel" id="btnCropCancel">✕ ยกเลิก</button>
+            </div>
+          </div>
+        </div>
       </div>
       <div class="paper-edge-handle" id="paperEdgeHandle" title="ลากเพื่อขยาย/ลดความกว้างหน้ากระดาษ (ดับเบิลคลิกเพื่อคืนค่า 16 ซม.)" aria-label="ขอบกระดาษด้านขวา"></div>
       <div class="guide" id="guide" hidden></div>
@@ -1831,10 +1965,25 @@ body.tools-open .topbar,body.tools-open .desk,body.tools-open .statusbar{margin-
 .scratch .hint.pad{margin:6px 12px;color:var(--muted);font-size:12px}
 .scratch .tbtn{height:28px;padding:0 8px;border:1px solid var(--line-strong);border-radius:6px;background:#fff;cursor:pointer;font:inherit;font-size:12px}
 .scratch-body{flex:1;overflow:auto;padding:0 12px 12px}
-.note{margin-bottom:10px;border:1px solid #ecdca7;border-radius:6px;background:#fff}
+.note{margin-bottom:10px;border:1px solid #ecdca7;border-radius:6px;background:#fff;transition:border-color .15s,box-shadow .15s}
+.note.drag-over{border:2px dashed var(--accent)!important;background:#eff6ff!important}
 .note-head{display:flex;align-items:center;justify-content:space-between;padding:4px 6px 4px 8px;border-bottom:1px solid #f2e7c3;font-size:12px;color:#7a6320}
-.note-head button{margin-left:4px;height:22px;padding:0 6px;border:1px solid #e6d59f;border-radius:4px;background:#fff;cursor:pointer;font:inherit;font-size:11.5px}
-.note textarea{display:block;width:100%;min-height:150px;padding:8px;border:0;border-radius:0 0 6px 6px;resize:vertical;background:repeating-linear-gradient(#fff 0 23px,#f1ead2 23px 24px);font:15px/24px "TH SarabunPSK","TH Sarabun New",Tahoma,sans-serif;outline:none}
+.note-acts{display:flex;align-items:center;gap:3px}
+.note-head button{margin-left:2px;height:22px;padding:0 6px;border:1px solid #e6d59f;border-radius:4px;background:#fff;cursor:pointer;font:inherit;font-size:11.5px;transition:background .12s,border-color .12s}
+.note-head button:hover{background:#fdf6d8;border-color:#c8b26a;color:#5a4714}
+.note-head button.btn-note-del:hover{background:#fee2e2;border-color:#fca5a5;color:#b91c1c}
+.note textarea{display:block;width:100%;min-height:120px;padding:8px;border:0;border-radius:0 0 6px 6px;resize:vertical;background:repeating-linear-gradient(#fff 0 23px,#f1ead2 23px 24px);font:15px/24px "TH SarabunPSK","TH Sarabun New",Tahoma,sans-serif;outline:none}
+.note-images{display:flex;flex-wrap:wrap;gap:6px;padding:6px 8px 8px;border-top:1px dashed #ecdca7;background:#fffdf5;border-radius:0 0 6px 6px}
+.note-img-wrap{position:relative;width:72px;height:72px;border:1px solid #d9c892;border-radius:5px;overflow:hidden;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.08);transition:transform .12s,box-shadow .12s}
+.note-img-wrap:hover{transform:scale(1.03);box-shadow:0 2px 6px rgba(0,0,0,.15);border-color:var(--accent)}
+.note-img-wrap img{width:100%;height:100%;object-fit:cover;cursor:pointer}
+.note-img-actions{position:absolute;inset:0;background:rgba(15,23,42,.65);display:flex;align-items:center;justify-content:center;gap:4px;opacity:0;transition:opacity .15s}
+.note-img-wrap:hover .note-img-actions{opacity:1}
+.note-img-actions button{height:20px;padding:0 5px;border:0;border-radius:3px;font-size:11px;cursor:pointer;font-weight:600}
+.btn-img-ins{background:var(--accent);color:#fff}
+.btn-img-ins:hover{background:var(--accent-hover)}
+.btn-img-del{background:#dc2626;color:#fff}
+.btn-img-del:hover{background:#b91c1c}
 body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{margin-left:300px}
 @media (max-width:1100px){body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{margin-left:0}}
 @media print{.tools,.calc,.scratch{display:none!important}}
@@ -2047,19 +2196,29 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
   <section data-panel="theme" hidden>
     <h3>หน้ากระดาษ</h3>
     <div class="row"><label class="inline"><input type="checkbox" id="vwPaper"> แสดงเป็นกระดาษ A4 แนวตั้ง (ขอบกระดาษ + กรอบขอบพิมพ์สีจาง)</label></div>
+    <div class="row"><label class="inline"><input type="checkbox" id="vwFullWidth"> ↔ ขยายเต็มหน้าจอ (ซ่อนขอบกระดาษสีเทาซ้าย-ขวา)</label></div>
     <div class="row"><label class="inline"><input type="checkbox" id="vwBreaks"> เส้นแบ่งหน้าโดยประมาณ</label></div>
     <div class="row"><label class="inline"><input type="checkbox" id="vwGrid"> กระดาษกราฟ ตาราง 1 ซม.</label></div>
+    <div class="row">
+      <label class="inline grow">ระยะขอบกระดาษ <select id="vwMarginPreset" class="grow">
+        <option value="standard">มาตรฐาน A4 (ซ้าย 3 ซม. ขวา 2 ซม.)</option>
+        <option value="moderate">ปานกลาง (ซ้าย 2 ซม. ขวา 1.5 ซม.)</option>
+        <option value="narrow">ขอบแคบ (ซ้าย 1.25 ซม. ขวา 1.25 ซม.)</option>
+        <option value="compact">ชิดขอบ (ซ้าย 0.5 ซม. ขวา 0.5 ซม.)</option>
+      </select></label>
+    </div>
     <div class="row">
       <label class="inline grow">ความกว้างพิมพ์ <select id="vwPaperWidth" class="grow">
         <option value="16">16 ซม. (A4 แนวตั้ง — มาตรฐานราชการ)</option>
         <option value="18">18 ซม. (กว้างปานกลาง)</option>
         <option value="20">20 ซม. (กว้างพิเศษ)</option>
         <option value="24.7">24.7 ซม. (A4 แนวนอน)</option>
+        <option value="full">เต็มความกว้างหน้าจอ (ซ่อนขอบเทา)</option>
         <option value="custom" id="vwCustomOpt">กำหนดเอง (ลากขอบกระดาษ)</option>
       </select></label>
       <button type="button" class="tbtn" id="btnResetWidth" title="คืนค่า 16 ซม. (มาตรฐาน A4)">คืนค่า 16 ซม.</button>
     </div>
-    <p class="hint">สามารถชี้ที่ขอบขวาของกระดาษหรือปลายไม้บรรทัด แล้วคลิกลากเพื่อขยาย/ลดความกว้างได้อิสระ (ดับเบิลคลิกเพื่อคืนค่า 16 ซม.)</p>
+    <p class="hint">สามารถชี้ที่ขอบซ้ายหรือขวาของกระดาษ/ไม้บรรทัด แล้วคลิกลากเพื่อขยายหรือลดความกว้างได้อิสระทั้ง 2 ฝั่ง (ดับเบิลคลิกเพื่อคืนค่า 16 ซม.)</p>
     <h3>เส้นบรรทัด (สลับสีตามย่อหน้า)</h3>
     <div class="row"><label class="inline"><input type="checkbox" id="vwLines"> แสดงเส้นประใต้ทุกบรรทัด</label></div>
     <div class="row" id="vwLineColors"></div>
@@ -2797,7 +2956,8 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
     scratch.setAttribute('aria-label', 'กระดาษทด');
     scratch.innerHTML = `
 <div class="tools-head"><h2>📝 กระดาษทด</h2><span class="head-acts"><button type="button" class="tbtn" id="scratchAdd">＋ เพิ่มแผ่น</button><button type="button" class="tools-x" id="scratchClose" aria-label="ปิดกระดาษทด" title="ปิด">×</button></span></div>
-<p class="hint pad">จดชั่วคราว — รีเฟรชหน้าแล้วยังอยู่ แต่จะหายเมื่อปิดแท็บนี้</p>
+<p class="hint pad">จดชั่วคราว — แทรกข้อความ/รูปภาพได้ กด Ctrl+V หรือลากภาพมาวาง</p>
+<input type="file" id="scratchFileInput" accept="image/png,image/jpeg,image/gif,image/webp" style="display:none" multiple>
 <div class="scratch-body" id="scratchBody"></div>`;
     document.body.append(scratch);
     const SCRATCH_KEY = 'eoffice-editor:scratch';
@@ -2805,31 +2965,286 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
       get() { try { return JSON.parse(sessionStorage.getItem(SCRATCH_KEY) || 'null'); } catch { return null; } },
       set(v) { try { sessionStorage.setItem(SCRATCH_KEY, JSON.stringify(v)); } catch { /* ไม่มี storage */ } },
     };
+
+    const normalizeNote = n => {
+      if (typeof n === 'string') return { text: n, images: [] };
+      if (n && typeof n === 'object') {
+        return {
+          text: typeof n.text === 'string' ? n.text : '',
+          images: Array.isArray(n.images) ? n.images.filter(x => typeof x === 'string' && x.startsWith('data:image/')) : []
+        };
+      }
+      return { text: '', images: [] };
+    };
+
     const savedScratch = session.get();
-    const notes = Array.isArray(savedScratch?.notes) ? savedScratch.notes.map(String) : [];
-    const saveNotes = () => session.set({ open: !scratch.hidden, notes });
+    const notes = Array.isArray(savedScratch?.notes)
+      ? savedScratch.notes.map(normalizeNote)
+      : [];
+    const saveNotes = () => {
+      try {
+        session.set({ open: !scratch.hidden, notes });
+      } catch {
+        say('พื้นที่บันทึกชั่วคราวเต็ม แนะนำให้ลบรูปภาพบางส่วน');
+      }
+    };
+
+    function readAndOptimizeImage(file) {
+      return new Promise((resolve, reject) => {
+        if (!file || !/^image\//i.test(file.type)) return reject(new Error('ไม่ใช่ไฟล์ภาพ'));
+        const reader = new FileReader();
+        reader.onload = () => {
+          const img = new Image();
+          img.onload = () => {
+            let { width, height } = img;
+            const maxDim = 1200;
+            if (width > maxDim || height > maxDim) {
+              if (width > height) {
+                height = Math.round((height * maxDim) / width);
+                width = maxDim;
+              } else {
+                width = Math.round((width * maxDim) / height);
+                height = maxDim;
+              }
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            const isPng = file.type === 'image/png';
+            resolve(canvas.toDataURL(isPng ? 'image/png' : 'image/jpeg', 0.85));
+          };
+          img.onerror = () => reject(new Error('โหลดภาพไม่สำเร็จ'));
+          img.src = reader.result;
+        };
+        reader.onerror = () => reject(new Error('อ่านไฟล์ไม่สำเร็จ'));
+        reader.readAsDataURL(file);
+      });
+    }
+
     function renderNotes(focusIndex) {
-      $('#scratchBody').innerHTML = notes.map((n, i) => `<div class="note">
-        <div class="note-head"><span>แผ่นที่ ${i + 1}</span><span><button type="button" data-note-ins="${i}" title="แทรกข้อความแผ่นนี้ลงในเอกสารที่เคอร์เซอร์">แทรกในเอกสาร</button><button type="button" data-note-del="${i}" title="ลบแผ่นนี้" aria-label="ลบแผ่นที่ ${i + 1}">×</button></span></div>
-        <textarea data-note="${i}" aria-label="กระดาษทดแผ่นที่ ${i + 1}" placeholder="จดอะไรก็ได้…">${esc(n)}</textarea></div>`).join('');
+      $('#scratchBody').innerHTML = notes.map((n, i) => `
+        <div class="note" data-note-index="${i}">
+          <div class="note-head">
+            <span>แผ่นที่ ${i + 1}</span>
+            <span class="note-acts">
+              <button type="button" data-note-img="${i}" title="แทรกรูปภาพจากไฟล์ลงในแผ่นนี้">🖼️ รูป</button>
+              <button type="button" data-note-ins="${i}" title="แทรกข้อความและรูปภาพทั้งหมดลงในเอกสารที่เคอร์เซอร์">แทรกในเอกสาร</button>
+              <button type="button" class="btn-note-del" data-note-del="${i}" title="ลบแผ่นนี้" aria-label="ลบแผ่นที่ ${i + 1}">×</button>
+            </span>
+          </div>
+          <textarea data-note="${i}" aria-label="กระดาษทดแผ่นที่ ${i + 1}" placeholder="จดข้อความ หรือกด Ctrl+V / ลากรูปภาพมาวางที่นี่…">${esc(n.text)}</textarea>
+          ${n.images && n.images.length ? `
+          <div class="note-images" data-note-imgs="${i}">
+            ${n.images.map((img, imgIdx) => `
+              <div class="note-img-wrap" title="คลิกรูปหรือปุ่มแทรกเพื่อใส่ลงในเอกสาร">
+                <img src="${img}" alt="รูปที่ ${imgIdx + 1}" data-ins-img="${i}:${imgIdx}" />
+                <div class="note-img-actions">
+                  <button type="button" class="btn-img-ins" data-ins-img="${i}:${imgIdx}" title="แทรกรูปนี้ลงในเอกสาร">แทรก</button>
+                  <button type="button" class="btn-img-del" data-del-img="${i}:${imgIdx}" title="ลบรูปนี้">×</button>
+                </div>
+              </div>
+            `).join('')}
+          </div>` : ''}
+        </div>
+      `).join('');
       if (focusIndex != null) $(`[data-note="${focusIndex}"]`)?.focus();
     }
-    function addNote() { notes.push(''); renderNotes(notes.length - 1); saveNotes(); }
-    $('#scratchBody').addEventListener('input', e => { const t = e.target.closest('[data-note]'); if (t) { notes[+t.dataset.note] = t.value; saveNotes(); } });
-    $('#scratchBody').addEventListener('mousedown', e => { if (e.target.closest('[data-note-ins]')) e.preventDefault(); });
-    $('#scratchBody').addEventListener('click', e => {
+
+    function addNote() {
+      notes.push({ text: '', images: [] });
+      renderNotes(notes.length - 1);
+      saveNotes();
+    }
+
+    function insertNoteAtCursor(note) {
+      const t = (note.text || '').trim();
+      const imgs = Array.isArray(note.images) ? note.images : [];
+      if (!t && !imgs.length) {
+        say('แผ่นนี้ยังว่าง');
+        return;
+      }
+      const r = ed.useRange(ed.range());
+      let curIndex = r.index;
+      if (r.length > 0) {
+        quill.deleteText(curIndex, r.length, 'user');
+      }
+      if (t) {
+        quill.insertText(curIndex, t, quill.getFormat(curIndex, 0), 'user');
+        curIndex += t.length;
+      }
+      if (imgs.length) {
+        if (t) {
+          quill.insertText(curIndex, '\n', 'user');
+          curIndex += 1;
+        }
+        for (let i = 0; i < imgs.length; i++) {
+          quill.insertEmbed(curIndex, 'image', imgs[i], 'user');
+          curIndex += 1;
+          quill.insertText(curIndex, '\n', 'user');
+          curIndex += 1;
+        }
+      }
+      quill.setSelection(curIndex, 0, 'user');
+      say(`แทรกกระดาษทดลงในเอกสารแล้ว${imgs.length ? ` (รวมรูป ${imgs.length} รูป)` : ''}`);
+    }
+
+    function insertSingleImageAtCursor(imgUrl) {
+      const r = ed.useRange(ed.range());
+      let curIndex = r.index;
+      if (r.length > 0) {
+        quill.deleteText(curIndex, r.length, 'user');
+      }
+      quill.insertEmbed(curIndex, 'image', imgUrl, 'user');
+      curIndex += 1;
+      quill.insertText(curIndex, '\n', 'user');
+      curIndex += 1;
+      quill.setSelection(curIndex, 0, 'user');
+      say('แทรกรูปภาพจากกระดาษทดลงในเอกสารแล้ว');
+    }
+
+    let currentNoteImgIdx = 0;
+    const imgInput = $('#scratchFileInput');
+    if (imgInput) {
+      imgInput.addEventListener('change', async e => {
+        const files = [...(e.target.files || [])].filter(f => f.type.startsWith('image/'));
+        e.target.value = '';
+        if (!files.length) return;
+        for (const f of files) {
+          try {
+            const dataUrl = await readAndOptimizeImage(f);
+            if (notes[currentNoteImgIdx]) {
+              notes[currentNoteImgIdx].images.push(dataUrl);
+            }
+          } catch {
+            say('ไม่สามารถอ่านไฟล์ภาพได้');
+          }
+        }
+        renderNotes(currentNoteImgIdx);
+        saveNotes();
+        say(`เพิ่มรูปภาพในกระดาษทดแผ่นที่ ${currentNoteImgIdx + 1} แล้ว`);
+      });
+    }
+
+    // รองรับการวางรูปภาพ (Ctrl+V) ลงในกระดาษทดโดยตรง
+    scratch.addEventListener('paste', async e => {
+      const noteEl = e.target.closest('.note');
+      if (!noteEl) return;
+      const noteIdx = +noteEl.dataset.noteIndex;
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      const imageFiles = [];
+      for (const it of items) {
+        if (it.type.startsWith('image/')) {
+          const file = it.getAsFile();
+          if (file) imageFiles.push(file);
+        }
+      }
+      if (!imageFiles.length) return;
+      e.preventDefault();
+      for (const file of imageFiles) {
+        try {
+          const dataUrl = await readAndOptimizeImage(file);
+          if (notes[noteIdx]) notes[noteIdx].images.push(dataUrl);
+        } catch {}
+      }
+      renderNotes(noteIdx);
+      saveNotes();
+      say(`วางรูปภาพในกระดาษทดแผ่นที่ ${noteIdx + 1} แล้ว`);
+    });
+
+    // รองรับการลากไฟล์ภาพมาวาง (Drag & Drop) ลงในกระดาษทด
+    scratch.addEventListener('dragover', e => {
+      const noteEl = e.target.closest('.note');
+      if (noteEl && e.dataTransfer?.types?.includes('Files')) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'copy';
+        noteEl.classList.add('drag-over');
+      }
+    });
+    scratch.addEventListener('dragleave', e => {
+      const noteEl = e.target.closest('.note');
+      if (noteEl && !noteEl.contains(e.relatedTarget)) {
+        noteEl.classList.remove('drag-over');
+      }
+    });
+    scratch.addEventListener('drop', async e => {
+      const noteEl = e.target.closest('.note');
+      if (!noteEl) return;
+      noteEl.classList.remove('drag-over');
+      const files = [...(e.dataTransfer?.files || [])].filter(f => f.type.startsWith('image/'));
+      if (!files.length) return;
+      e.preventDefault();
+      const noteIdx = +noteEl.dataset.noteIndex;
+      for (const file of files) {
+        try {
+          const dataUrl = await readAndOptimizeImage(file);
+          if (notes[noteIdx]) notes[noteIdx].images.push(dataUrl);
+        } catch {}
+      }
+      renderNotes(noteIdx);
+      saveNotes();
+      say(`เพิ่มรูปภาพในกระดาษทดแผ่นที่ ${noteIdx + 1} แล้ว`);
+    });
+
+    scratch.addEventListener('input', e => {
+      const t = e.target.closest('[data-note]');
+      if (t) {
+        const idx = +t.dataset.note;
+        if (notes[idx]) {
+          notes[idx].text = t.value;
+          saveNotes();
+        }
+      }
+    });
+    scratch.addEventListener('mousedown', e => {
+      if (e.target.closest('[data-note-ins], [data-ins-img]')) e.preventDefault();
+    });
+    scratch.addEventListener('click', e => {
+      const btnImg = e.target.closest('[data-note-img]');
+      if (btnImg) {
+        currentNoteImgIdx = +btnImg.dataset.noteImg;
+        if (imgInput) imgInput.click();
+        return;
+      }
+      const insImg = e.target.closest('[data-ins-img]');
+      if (insImg) {
+        const [nIdx, imgIdx] = insImg.dataset.insImg.split(':').map(Number);
+        const url = notes[nIdx]?.images?.[imgIdx];
+        if (url) insertSingleImageAtCursor(url);
+        return;
+      }
+      const delImg = e.target.closest('[data-del-img]');
+      if (delImg) {
+        const [nIdx, imgIdx] = delImg.dataset.delImg.split(':').map(Number);
+        if (notes[nIdx]?.images) {
+          notes[nIdx].images.splice(imgIdx, 1);
+          renderNotes(nIdx);
+          saveNotes();
+          say('ลบรูปภาพจากกระดาษทดแล้ว');
+        }
+        return;
+      }
       const ins = e.target.closest('[data-note-ins]');
-      if (ins) { const t = notes[+ins.dataset.noteIns].trim(); if (t) insertAtCursor(t); else say('แผ่นนี้ยังว่าง'); return; }
+      if (ins) {
+        const n = notes[+ins.dataset.noteIns];
+        if (n) insertNoteAtCursor(n);
+        return;
+      }
       const del = e.target.closest('[data-note-del]');
       if (del) {
         const i = +del.dataset.noteDel;
-        if (notes[i].trim() && !confirm(`ลบกระดาษทดแผ่นที่ ${i + 1}?`)) return;
+        const n = notes[i];
+        const hasContent = (n?.text || '').trim() || (n?.images && n.images.length);
+        if (hasContent && !confirm(`ลบกระดาษทดแผ่นที่ ${i + 1}?`)) return;
         notes.splice(i, 1);
-        if (!notes.length) notes.push('');
+        if (!notes.length) notes.push({ text: '', images: [] });
         renderNotes();
         saveNotes();
       }
     });
+
     $('#scratchAdd').addEventListener('click', addNote);
     function setScratch(open) {
       scratch.hidden = !open;
@@ -2842,6 +3257,23 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
     $('#scratchClose').addEventListener('click', () => setScratch(false));
     renderNotes();
     if (savedScratch?.open) setScratch(true);
+
+    ed.scratch = {
+      open: () => setScratch(true),
+      close: () => setScratch(false),
+      toggle: () => setScratch(scratch.hidden),
+      notes: () => notes,
+      addNote: (text = '', images = []) => {
+        if (notes.length === 1 && !notes[0].text && (!notes[0].images || !notes[0].images.length)) {
+          notes[0] = { text, images };
+        } else {
+          notes.push({ text, images });
+        }
+        renderNotes(notes.length - 1);
+        saveNotes();
+      },
+      clear: () => { notes.length = 0; notes.push({ text: '', images: [] }); renderNotes(); saveNotes(); }
+    };
 
     // ================= มุมมอง: หน้ากระดาษ / เส้นบรรทัด / เครื่องหมายซ่อน =================
     const MARK_TYPES = [
@@ -2858,10 +3290,15 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
       $('#vwMarks').checked = s.showMarks;
       $('#vwParaNum').checked = s.paraNumbers;
       $('#vwLineNum').checked = s.lineNumbers;
+      if ($('#vwFullWidth')) $('#vwFullWidth').checked = ed.isFullWidth?.() || false;
+      if ($('#vwMarginPreset')) $('#vwMarginPreset').value = ed.getMarginPreset?.() || 'standard';
       const wVal = ed.textWidth?.() || 16;
       const wSel = $('#vwPaperWidth'), wOpt = $('#vwCustomOpt');
+      const isFull = ed.isFullWidth?.() || false;
       if (wSel) {
-        if (['16', '18', '20', '24.7'].includes(String(wVal))) {
+        if (isFull) {
+          wSel.value = 'full';
+        } else if (['16', '18', '20', '24.7'].includes(String(wVal))) {
           wSel.value = String(wVal);
           if (wOpt) wOpt.textContent = 'กำหนดเอง (ลากขอบกระดาษ)';
         } else {
@@ -2873,12 +3310,32 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
       $('#vwMarkList').innerHTML = MARK_TYPES.map(([k, label, sym]) => `<div class="row"><label class="inline grow"><input type="checkbox" data-mark="${k}"${s.marks[k] ? ' checked' : ''}> <b class="mk-sym" style="color:${s.markColors[k]}">${sym}</b> ${label}</label><input type="color" data-markcolor="${k}" value="${s.markColors[k]}" aria-label="สี${label}"></div>`).join('');
     }
     onTab.theme = renderView;
+    document.addEventListener('eoffice:fullwidth', e => {
+      const chk = $('#vwFullWidth');
+      if (chk) chk.checked = e.detail.fullWidth;
+      const sel = $('#vwPaperWidth');
+      if (sel) {
+        if (e.detail.fullWidth) sel.value = 'full';
+        else {
+          const w = ed.textWidth?.() || 16;
+          sel.value = ['16', '18', '20', '24.7'].includes(String(w)) ? String(w) : 'custom';
+        }
+      }
+    });
+    $('#vwFullWidth')?.addEventListener('change', e => {
+      ed.setFullWidth?.(e.target.checked);
+    });
+    $('#vwMarginPreset')?.addEventListener('change', e => {
+      ed.setMarginPreset?.(e.target.value);
+    });
     document.addEventListener('eoffice:paperwidth', e => {
       const sel = $('#vwPaperWidth');
       if (!sel) return;
       const w = e.detail.width;
       const opt = $('#vwCustomOpt');
-      if (['16', '18', '20', '24.7'].includes(String(w))) {
+      if (ed.isFullWidth?.()) {
+        sel.value = 'full';
+      } else if (['16', '18', '20', '24.7'].includes(String(w))) {
         sel.value = String(w);
         if (opt) opt.textContent = 'กำหนดเอง (ลากขอบกระดาษ)';
       } else {
@@ -2887,11 +3344,15 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
       }
     });
     $('#vwPaperWidth')?.addEventListener('change', e => {
-      if (e.target.value !== 'custom' && ed.setTextWidth) {
+      if (e.target.value === 'full') {
+        ed.setFullWidth?.(true);
+      } else if (e.target.value !== 'custom' && ed.setTextWidth) {
+        if (ed.isFullWidth?.()) ed.setFullWidth?.(false);
         ed.setTextWidth(+e.target.value);
       }
     });
     $('#btnResetWidth')?.addEventListener('click', () => {
+      if (ed.isFullWidth?.()) ed.setFullWidth?.(false);
       if (ed.resetTextWidth) ed.resetTextWidth();
       else if (ed.setTextWidth) ed.setTextWidth(16);
       const sel = $('#vwPaperWidth');
@@ -3809,7 +4270,19 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
   })();
   if (!PROFILES[settings.profile]) settings.profile = 'standard';
   let rulerCm = Number(settings.textWidth) || 16;
-  if (rulerCm < 10 || rulerCm > 40) rulerCm = 16;
+  if (rulerCm < 10 || rulerCm > 45) rulerCm = 16;
+  if (settings.marginPreset) {
+    let pl = '3cm', pr = '2cm';
+    if (settings.marginPreset === 'moderate') { pl = '2cm'; pr = '1.5cm'; }
+    else if (settings.marginPreset === 'narrow') { pl = '1.25cm'; pr = '1.25cm'; }
+    else if (settings.marginPreset === 'compact') { pl = '0.5cm'; pr = '0.5cm'; }
+    document.documentElement.style.setProperty('--pl', pl);
+    document.documentElement.style.setProperty('--pr', pr);
+    if (document.body) {
+      document.body.style.setProperty('--pl', pl);
+      document.body.style.setProperty('--pr', pr);
+    }
+  }
   document.documentElement.style.setProperty('--text-w', `${rulerCm}cm`);
   document.documentElement.style.setProperty('--paper-w', `calc(${rulerCm}cm + var(--pl) + var(--pr) + 2px)`);
   if (document.body) {
@@ -3819,6 +4292,10 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
   document.body.classList.toggle('a4', settings.paper === 'a4');
   document.body.classList.toggle('grid-on', !!settings.grid);
   document.body.classList.toggle('numbers-on', !!(settings.paraNumbers || settings.lineNumbers));
+  if (settings.fullWidth) {
+    document.body.classList.add('full-width');
+    $('#btnFullWidth')?.setAttribute('aria-pressed', 'true');
+  }
   const DEFAULTS = { font: 'TH SarabunPSK', size: '16pt', align: 'justify', indent: PROFILES[settings.profile].indent, lineHeight: PROFILES[settings.profile].lineHeight };
   const FONT_STACK = `"${DEFAULTS.font}","TH Sarabun PSK","TH Sarabun New",Sarabun,Tahoma,sans-serif`;
   const FONTS = [
@@ -4885,7 +5362,7 @@ ${listCss}
 
     // ---------- ส่งออก ----------
     const KEEP_TAGS = new Set(['P', 'SPAN', 'STRONG', 'EM', 'U', 'S', 'SUB', 'SUP', 'BR', 'OL', 'UL', 'LI', 'A', 'TABLE', 'TBODY', 'TR', 'TD', 'IMG']);
-    const KEEP_ATTRS = new Set(['style', 'href', 'src', 'alt', 'colspan', 'rowspan', 'width', 'height']);
+    const KEEP_ATTRS = new Set(['style', 'href', 'src', 'alt', 'colspan', 'rowspan', 'width', 'height', 'data-border', 'data-align', 'data-wrap']);
     const DROP_TAGS = new Set(['SCRIPT', 'STYLE', 'IFRAME', 'OBJECT', 'EMBED', 'TEMPLATE', 'NOSCRIPT']);
     const TO_P = new Set(['H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'BLOCKQUOTE', 'PRE', 'DIV']);
     const EXPORT_FONT = `"${DEFAULTS.font}", "TH Sarabun PSK", sans-serif`;
@@ -4928,6 +5405,52 @@ ${listCss}
               if (srcTd.style.verticalAlign) outTd.style.verticalAlign = srcTd.style.verticalAlign;
             });
           }
+        });
+      }
+      // getSemanticHTML ทิ้ง attributes/styles ของ img (data-align, data-wrap, width, height, style) — คัดลอกกลับตามลำดับ
+      const srcImgs = (q?.root || quill.root).querySelectorAll('img'), outImgs = root.querySelectorAll('img');
+      if (srcImgs.length === outImgs.length) {
+        srcImgs.forEach((srcImg, i) => {
+          const outImg = outImgs[i];
+          if (srcImg.dataset.align) {
+            outImg.dataset.align = srcImg.dataset.align;
+            if (srcImg.dataset.align === 'center') {
+              outImg.style.display = 'block';
+              outImg.style.marginLeft = 'auto';
+              outImg.style.marginRight = 'auto';
+              outImg.style.float = 'none';
+            } else if (srcImg.dataset.align === 'right') {
+              outImg.style.display = 'block';
+              outImg.style.marginLeft = 'auto';
+              outImg.style.marginRight = '0';
+              outImg.style.float = 'none';
+            } else if (srcImg.dataset.align === 'left') {
+              outImg.style.display = 'block';
+              outImg.style.marginLeft = '0';
+              outImg.style.marginRight = 'auto';
+              outImg.style.float = 'none';
+            }
+          }
+          if (srcImg.dataset.wrap) {
+            outImg.dataset.wrap = srcImg.dataset.wrap;
+            if (srcImg.dataset.wrap === 'left') {
+              outImg.style.float = 'left';
+              outImg.style.margin = '4px 16px 8px 0';
+              outImg.style.display = 'inline-block';
+            } else if (srcImg.dataset.wrap === 'right') {
+              outImg.style.float = 'right';
+              outImg.style.margin = '4px 0 8px 16px';
+              outImg.style.display = 'inline-block';
+            } else if (srcImg.dataset.wrap === 'inline') {
+              outImg.style.float = 'none';
+              outImg.style.display = 'inline-block';
+              outImg.style.margin = '4px 0';
+            }
+          }
+          if (srcImg.style.width) outImg.style.width = srcImg.style.width;
+          if (srcImg.style.height) outImg.style.height = srcImg.style.height;
+          if (srcImg.getAttribute('width')) outImg.setAttribute('width', srcImg.getAttribute('width'));
+          if (srcImg.getAttribute('height')) outImg.setAttribute('height', srcImg.getAttribute('height'));
         });
       }
       for (const el of [...root.querySelectorAll('*')].reverse()) {
@@ -5807,6 +6330,560 @@ ${body}
         }
       });
     })();
+
+    // ---------- จัดการรูปภาพอิสระ (ย่อ/ขยาย ครอบตัด หมุน จัดตำแหน่ง ล้อมรอบข้อความ ลบ) ----------
+    let activeImageEl = null;
+    let isCropActive = false;
+    let cropBoxRect = { x: 0, y: 0, w: 0, h: 0 };
+    const imgOverlay = $('#imgOverlay');
+    const imgToolbar = $('#imgToolbar');
+    const imgSizeBadge = $('#imgSizeBadge');
+    const imgCropOverlay = $('#imgCropOverlay');
+    const imgCropBox = $('#imgCropBox');
+
+    function updateImageOverlay(img) {
+      if (!img || !img.isConnected) {
+        hideImageOverlay();
+        return;
+      }
+      if (activeImageEl && activeImageEl !== img) {
+        activeImageEl.classList.remove('img-selected');
+      }
+      activeImageEl = img;
+      img.classList.add('img-selected');
+
+      const editorBox = $('.editor-box');
+      if (!editorBox || !imgOverlay) return;
+
+      const boxRect = editorBox.getBoundingClientRect();
+      const imgRect = img.getBoundingClientRect();
+
+      const left = imgRect.left - boxRect.left;
+      const top = imgRect.top - boxRect.top;
+      const width = imgRect.width;
+      const height = imgRect.height;
+
+      imgOverlay.style.left = `${left}px`;
+      imgOverlay.style.top = `${top}px`;
+      imgOverlay.style.width = `${width}px`;
+      imgOverlay.style.height = `${height}px`;
+      imgOverlay.hidden = false;
+
+      // ป้ายบอกขนาด px และ cm
+      const k = CM * ((parseFloat($('#zoomSel')?.value) || 100) / 100);
+      const cmW = (width / k).toFixed(1);
+      const cmH = (height / k).toFixed(1);
+      if (imgSizeBadge) {
+        imgSizeBadge.textContent = `${Math.round(width)} × ${Math.round(height)} px (${cmW} × ${cmH} ซม.)`;
+      }
+
+      // สถานะปุ่มใน Toolbar
+      const align = img.dataset.align || '';
+      const wrap = img.dataset.wrap || 'inline';
+      if (imgToolbar) {
+        imgToolbar.querySelectorAll('[data-act="align"]').forEach(btn => {
+          btn.classList.toggle('active', btn.dataset.val === align);
+        });
+        imgToolbar.querySelectorAll('[data-act="wrap"]').forEach(btn => {
+          btn.classList.toggle('active', btn.dataset.val === wrap || (!img.dataset.wrap && btn.dataset.val === 'inline'));
+        });
+
+        // จัดตำแหน่ง Toolbar: ถ้าชิดบนเกินไป ให้ย้ายมาอยู่ข้างล่างแทน
+        if (top < 45) {
+          imgToolbar.style.bottom = 'auto';
+          imgToolbar.style.top = 'calc(100% + 8px)';
+        } else {
+          imgToolbar.style.top = 'auto';
+          imgToolbar.style.bottom = 'calc(100% + 8px)';
+        }
+      }
+    }
+
+    function hideImageOverlay() {
+      if (activeImageEl) {
+        activeImageEl.classList.remove('img-selected');
+        activeImageEl = null;
+      }
+      if (imgOverlay) imgOverlay.hidden = true;
+      if (isCropActive) stopCropMode(false);
+    }
+
+    function setImageAlign(align) {
+      if (!activeImageEl) return;
+      if (activeImageEl.dataset.align === align) {
+        delete activeImageEl.dataset.align;
+      } else {
+        activeImageEl.dataset.align = align;
+        delete activeImageEl.dataset.wrap;
+      }
+      updateImageOverlay(activeImageEl);
+      scheduleSave();
+      say(`จัดตำแหน่งภาพ: ${align === 'center' ? 'กึ่งกลาง' : align === 'right' ? 'ชิดขวา' : 'ชิดซ้าย'}`);
+    }
+
+    function setImageWrap(wrap) {
+      if (!activeImageEl) return;
+      if (wrap === 'inline') {
+        delete activeImageEl.dataset.wrap;
+      } else {
+        activeImageEl.dataset.wrap = wrap;
+        delete activeImageEl.dataset.align;
+      }
+      updateImageOverlay(activeImageEl);
+      scheduleSave();
+      say(`จัดล้อมรอบข้อความ: ${wrap === 'inline' ? 'ในแนวบรรทัด' : wrap === 'left' ? 'ล้อมรอบขวา (ตัดข้อความ)' : 'ล้อมรอบซ้าย'}`);
+    }
+
+    function setImageSizePreset(val) {
+      if (!activeImageEl) return;
+      const editorBox = $('.editor-box');
+      const maxW = (editorBox ? editorBox.clientWidth : 700) - 80;
+      if (val === 'original') {
+        const nw = activeImageEl.naturalWidth || 300;
+        const nh = activeImageEl.naturalHeight || 200;
+        activeImageEl.style.width = `${nw}px`;
+        activeImageEl.style.height = `${nh}px`;
+        activeImageEl.setAttribute('width', nw);
+        activeImageEl.setAttribute('height', nh);
+      } else {
+        const pct = parseInt(val, 10);
+        if (!isNaN(pct)) {
+          const targetW = Math.round((maxW * pct) / 100);
+          activeImageEl.style.width = `${targetW}px`;
+          activeImageEl.style.height = 'auto';
+          activeImageEl.setAttribute('width', targetW);
+          activeImageEl.removeAttribute('height');
+        }
+      }
+      updateImageOverlay(activeImageEl);
+      scheduleSave();
+      say(`ปรับขนาดภาพเป็น ${val === 'original' ? 'ขนาดต้นฉบับ' : val + '%'}`);
+    }
+
+    function rotateActiveImage() {
+      if (!activeImageEl) return;
+      const img = activeImageEl;
+      const nw = img.naturalWidth || img.width || 100;
+      const nh = img.naturalHeight || img.height || 100;
+      const canvas = document.createElement('canvas');
+      canvas.width = nh;
+      canvas.height = nw;
+      const ctx = canvas.getContext('2d');
+      ctx.translate(canvas.width / 2, canvas.height / 2);
+      ctx.rotate((90 * Math.PI) / 180);
+      ctx.drawImage(img, -nw / 2, -nh / 2);
+      const newSrc = canvas.toDataURL('image/png');
+      img.src = newSrc;
+
+      if (img.style.width && img.style.height && img.style.height !== 'auto') {
+        const oldW = img.style.width;
+        img.style.width = img.style.height;
+        img.style.height = oldW;
+      }
+      img.onload = () => {
+        updateImageOverlay(img);
+        scheduleSave();
+      };
+      say('หมุนรูปภาพ 90° ตามเข็มนาฬิกาแล้ว');
+    }
+
+    function deleteActiveImage() {
+      if (!activeImageEl) return;
+      const img = activeImageEl;
+      hideImageOverlay();
+      const blot = Quill.find(img);
+      if (blot) {
+        blot.deleteAt(0, 1);
+      } else {
+        img.remove();
+      }
+      scheduleSave();
+      say('ลบรูปภาพแล้ว');
+    }
+
+    // โหมดครอบตัด (Crop Mode)
+    function startCropMode() {
+      if (!activeImageEl || !imgCropOverlay || !imgCropBox) return;
+      isCropActive = true;
+      if (imgOverlay) imgOverlay.hidden = true;
+
+      const editorBox = $('.editor-box');
+      const boxRect = editorBox.getBoundingClientRect();
+      const imgRect = activeImageEl.getBoundingClientRect();
+
+      const relLeft = imgRect.left - boxRect.left;
+      const relTop = imgRect.top - boxRect.top;
+      const w = imgRect.width;
+      const h = imgRect.height;
+
+      const padX = Math.round(w * 0.1);
+      const padY = Math.round(h * 0.1);
+      cropBoxRect = {
+        x: relLeft + padX,
+        y: relTop + padY,
+        w: Math.max(20, w - padX * 2),
+        h: Math.max(20, h - padY * 2)
+      };
+
+      updateCropBoxUI();
+      imgCropOverlay.hidden = false;
+      say('โหมดครอบตัดภาพ: ลากกรอบหรือมุมเพื่อเลือกส่วนที่ต้องการ แล้วกด "✓ ครอบตัด"');
+    }
+
+    function updateCropBoxUI() {
+      if (!imgCropBox) return;
+      imgCropBox.style.left = `${cropBoxRect.x}px`;
+      imgCropBox.style.top = `${cropBoxRect.y}px`;
+      imgCropBox.style.width = `${cropBoxRect.w}px`;
+      imgCropBox.style.height = `${cropBoxRect.h}px`;
+    }
+
+    function stopCropMode(apply = false) {
+      if (!isCropActive) return;
+      if (apply && activeImageEl) {
+        applyCrop();
+        return;
+      }
+      isCropActive = false;
+      if (imgCropOverlay) imgCropOverlay.hidden = true;
+      if (activeImageEl) updateImageOverlay(activeImageEl);
+    }
+
+    function applyCrop() {
+      if (!activeImageEl) return;
+      const img = activeImageEl;
+      const editorBox = $('.editor-box');
+      const boxRect = editorBox.getBoundingClientRect();
+      const imgRect = img.getBoundingClientRect();
+
+      const imgRelLeft = imgRect.left - boxRect.left;
+      const imgRelTop = imgRect.top - boxRect.top;
+
+      const cropXInImg = cropBoxRect.x - imgRelLeft;
+      const cropYInImg = cropBoxRect.y - imgRelTop;
+      const cropWInImg = cropBoxRect.w;
+      const cropHInImg = cropBoxRect.h;
+
+      const scaleX = (img.naturalWidth || img.clientWidth) / (img.clientWidth || 1);
+      const scaleY = (img.naturalHeight || img.clientHeight) / (img.clientHeight || 1);
+
+      const sx = Math.max(0, cropXInImg * scaleX);
+      const sy = Math.max(0, cropYInImg * scaleY);
+      const sw = Math.min((img.naturalWidth || img.clientWidth) - sx, cropWInImg * scaleX);
+      const sh = Math.min((img.naturalHeight || img.clientHeight) - sy, cropHInImg * scaleY);
+
+      isCropActive = false;
+      if (imgCropOverlay) imgCropOverlay.hidden = true;
+
+      if (sw <= 0 || sh <= 0) {
+        updateImageOverlay(img);
+        return;
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(sw);
+      canvas.height = Math.round(sh);
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+
+      img.src = canvas.toDataURL('image/png');
+      img.style.width = `${Math.round(cropWInImg)}px`;
+      img.style.height = 'auto';
+      activeImageEl.setAttribute('width', Math.round(cropWInImg));
+      activeImageEl.removeAttribute('height');
+
+      img.onload = () => {
+        updateImageOverlay(img);
+        scheduleSave();
+      };
+      say('ครอบตัดรูปภาพเรียบร้อย');
+    }
+
+    // จัดการ Event สำหรับรูปภาพ
+    (() => {
+      // คลิกหรือเลือกรูปภาพใน editor
+      $('#editor').addEventListener('click', e => {
+        if (isCropActive) return;
+        const img = e.target.closest('img');
+        if (img) {
+          hideTableOverlay();
+          updateImageOverlay(img);
+        } else if (!e.target.closest('#imgOverlay')) {
+          hideImageOverlay();
+        }
+      });
+
+      // ปรับขนาดรูปภาพด้วยการลาก 8 Handle
+      if (imgOverlay) {
+        let isResizingImg = false;
+        let resizeDir = '';
+        let startX = 0, startY = 0;
+        let startW = 0, startH = 0;
+        let aspect = 1;
+
+        imgOverlay.addEventListener('pointerdown', e => {
+          const handle = e.target.closest('.img-handle');
+          if (!handle || !activeImageEl) return;
+          e.preventDefault();
+          e.stopPropagation();
+
+          isResizingImg = true;
+          resizeDir = handle.dataset.dir;
+          startX = e.clientX;
+          startY = e.clientY;
+
+          const rect = activeImageEl.getBoundingClientRect();
+          startW = rect.width;
+          startH = rect.height;
+          aspect = startW / (startH || 1);
+
+          document.body.style.cursor = window.getComputedStyle(handle).cursor;
+
+          const onPointerMove = ev => {
+            if (!isResizingImg || !activeImageEl) return;
+            const dx = ev.clientX - startX;
+            const dy = ev.clientY - startY;
+
+            const editorBox = $('.editor-box');
+            const maxW = (editorBox ? editorBox.clientWidth : 700) - 40;
+            const minW = 30, minH = 30;
+
+            let newW = startW;
+            let newH = startH;
+
+            switch (resizeDir) {
+              case 'se': {
+                newW = Math.max(minW, Math.min(maxW, startW + dx));
+                newH = Math.max(minH, Math.round(newW / aspect));
+                break;
+              }
+              case 'sw': {
+                newW = Math.max(minW, Math.min(maxW, startW - dx));
+                newH = Math.max(minH, Math.round(newW / aspect));
+                break;
+              }
+              case 'ne': {
+                newW = Math.max(minW, Math.min(maxW, startW + dx));
+                newH = Math.max(minH, Math.round(newW / aspect));
+                break;
+              }
+              case 'nw': {
+                newW = Math.max(minW, Math.min(maxW, startW - dx));
+                newH = Math.max(minH, Math.round(newW / aspect));
+                break;
+              }
+              case 'e': {
+                newW = Math.max(minW, Math.min(maxW, startW + dx));
+                newH = startH;
+                break;
+              }
+              case 'w': {
+                newW = Math.max(minW, Math.min(maxW, startW - dx));
+                newH = startH;
+                break;
+              }
+              case 's': {
+                newH = Math.max(minH, startH + dy);
+                newW = startW;
+                break;
+              }
+              case 'n': {
+                newH = Math.max(minH, startH - dy);
+                newW = startW;
+                break;
+              }
+            }
+
+            activeImageEl.style.width = `${Math.round(newW)}px`;
+            if (['e', 'w'].includes(resizeDir)) {
+              activeImageEl.style.height = 'auto';
+            } else {
+              activeImageEl.style.height = `${Math.round(newH)}px`;
+            }
+            activeImageEl.setAttribute('width', Math.round(newW));
+            activeImageEl.setAttribute('height', Math.round(newH));
+
+            updateImageOverlay(activeImageEl);
+          };
+
+          const onPointerUp = () => {
+            if (!isResizingImg) return;
+            isResizingImg = false;
+            document.body.style.cursor = '';
+            window.removeEventListener('pointermove', onPointerMove);
+            window.removeEventListener('pointerup', onPointerUp);
+            scheduleSave();
+            say('ปรับขนาดรูปภาพแล้ว');
+          };
+
+          window.addEventListener('pointermove', onPointerMove);
+          window.addEventListener('pointerup', onPointerUp);
+        });
+
+        // คำสั่งในแถบเครื่องมือลอย
+        if (imgToolbar) {
+          imgToolbar.addEventListener('pointerdown', e => {
+            e.stopPropagation();
+            if (e.target.tagName !== 'SELECT') {
+              e.preventDefault();
+            }
+          });
+
+          imgToolbar.addEventListener('click', e => {
+            const btn = e.target.closest('.img-tb-btn');
+            if (!btn) return;
+            e.preventDefault();
+            e.stopPropagation();
+            const act = btn.dataset.act;
+            const val = btn.dataset.val;
+
+            if (act === 'align') {
+              setImageAlign(val);
+            } else if (act === 'wrap') {
+              setImageWrap(val);
+            } else if (act === 'crop') {
+              startCropMode();
+            } else if (act === 'rotate') {
+              rotateActiveImage();
+            } else if (act === 'delete') {
+              deleteActiveImage();
+            }
+          });
+
+          const preset = $('#imgSizePreset');
+          if (preset) {
+            preset.addEventListener('change', e => {
+              if (e.target.value) {
+                setImageSizePreset(e.target.value);
+                e.target.value = '';
+              }
+            });
+          }
+        }
+      }
+
+      // การลาก/ปรับขนาดกรอบครอบตัด (Crop Box Drag & Resize)
+      if (imgCropBox) {
+        let isCroppingDrag = false;
+        let cropDragMode = '';
+        let cropStartX = 0, cropStartY = 0;
+        let cropStartBox = { x: 0, y: 0, w: 0, h: 0 };
+
+        imgCropBox.addEventListener('pointerdown', e => {
+          if (e.target.closest('.crop-btn')) return;
+          e.preventDefault();
+          e.stopPropagation();
+
+          const handle = e.target.closest('.crop-h');
+          cropDragMode = handle ? handle.dataset.dir : 'move';
+          isCroppingDrag = true;
+          cropStartX = e.clientX;
+          cropStartY = e.clientY;
+          cropStartBox = { ...cropBoxRect };
+
+          const editorBox = $('.editor-box');
+          const boxRect = editorBox.getBoundingClientRect();
+          const imgRect = activeImageEl.getBoundingClientRect();
+          const minX = imgRect.left - boxRect.left;
+          const minY = imgRect.top - boxRect.top;
+          const maxX = minX + imgRect.width;
+          const maxY = minY + imgRect.height;
+
+          const onCropPointerMove = ev => {
+            if (!isCroppingDrag) return;
+            const dx = ev.clientX - cropStartX;
+            const dy = ev.clientY - cropStartY;
+
+            if (cropDragMode === 'move') {
+              let nx = cropStartBox.x + dx;
+              let ny = cropStartBox.y + dy;
+              nx = Math.max(minX, Math.min(maxX - cropStartBox.w, nx));
+              ny = Math.max(minY, Math.min(maxY - cropStartBox.h, ny));
+              cropBoxRect.x = nx;
+              cropBoxRect.y = ny;
+            } else {
+              let { x, y, w, h } = cropStartBox;
+              if (cropDragMode.includes('e')) {
+                w = Math.max(20, Math.min(maxX - x, cropStartBox.w + dx));
+              }
+              if (cropDragMode.includes('s')) {
+                h = Math.max(20, Math.min(maxY - y, cropStartBox.h + dy));
+              }
+              if (cropDragMode.includes('w')) {
+                const nx = Math.max(minX, Math.min(cropStartBox.x + cropStartBox.w - 20, cropStartBox.x + dx));
+                w = cropStartBox.x + cropStartBox.w - nx;
+                x = nx;
+              }
+              if (cropDragMode.includes('n')) {
+                const ny = Math.max(minY, Math.min(cropStartBox.y + cropStartBox.h - 20, cropStartBox.y + dy));
+                h = cropStartBox.y + cropStartBox.h - ny;
+                y = ny;
+              }
+              cropBoxRect = { x, y, w, h };
+            }
+            updateCropBoxUI();
+          };
+
+          const onCropPointerUp = () => {
+            isCroppingDrag = false;
+            window.removeEventListener('pointermove', onCropPointerMove);
+            window.removeEventListener('pointerup', onCropPointerUp);
+          };
+
+          window.addEventListener('pointermove', onCropPointerMove);
+          window.addEventListener('pointerup', onCropPointerUp);
+        });
+
+        const btnApply = $('#btnCropApply');
+        const btnCancel = $('#btnCropCancel');
+        if (btnApply) {
+          btnApply.addEventListener('click', e => {
+            e.preventDefault(); e.stopPropagation();
+            stopCropMode(true);
+          });
+        }
+        if (btnCancel) {
+          btnCancel.addEventListener('click', e => {
+            e.preventDefault(); e.stopPropagation();
+            stopCropMode(false);
+          });
+        }
+      }
+
+      // ปุ่มลัดคีย์บอร์ด Delete / Backspace สำหรับลบภาพ และ Escape สำหรับยกเลิก
+      document.addEventListener('keydown', e => {
+        if (isCropActive && e.key === 'Escape') {
+          stopCropMode(false);
+          say('ยกเลิกการครอบตัด');
+          return;
+        }
+        if (activeImageEl && !isCropActive) {
+          if (e.key === 'Delete' || e.key === 'Backspace') {
+            const tag = document.activeElement?.tagName;
+            if (['INPUT', 'TEXTAREA', 'SELECT'].includes(tag)) return;
+            e.preventDefault();
+            deleteActiveImage();
+          } else if (e.key === 'Escape') {
+            hideImageOverlay();
+          }
+        }
+      });
+
+      // อัปเดตตำแหน่ง Overlay เมื่อเลื่อนหน้าจอหรือเปลี่ยนขนาด
+      addEventListener('scroll', () => { if (activeImageEl && !isCropActive) updateImageOverlay(activeImageEl); }, { passive: true });
+      addEventListener('resize', () => { if (activeImageEl && !isCropActive) updateImageOverlay(activeImageEl); });
+
+      // ดักฟังการแก้ไขใน Quill เพื่ออัปเดตตำแหน่งภาพตามข้อความ
+      quill.on('editor-change', () => {
+        if (activeImageEl && !isCropActive) {
+          if (!activeImageEl.isConnected) {
+            hideImageOverlay();
+          } else {
+            updateImageOverlay(activeImageEl);
+          }
+        }
+      });
+    })();
     // ปุ่มในแถบเครื่องมือ/เมนูไม่ดึงโฟกัสออกจากกล่องพิมพ์ ทำให้ส่วนที่เลือกไว้ไม่หาย
     document.addEventListener('mousedown', e => {
       if (openMenu && !openMenu.m.contains(e.target) && !openMenu.btn.contains(e.target)) closeMenu();
@@ -6293,8 +7370,11 @@ ${body}
       if (changed(rm, m)) { commit(kind, m, currentRange()); mk.focus(); schedule(); }
     });
 
-    // ---------- ลากขอบกระดาษเพื่อขยาย/ลดความกว้าง (ลากที่ปลายไม้บรรทัด หรือขอบขวากระดาษ) ----------
+    // ---------- ลากขอบกระดาษเพื่อขยาย/ลดความกว้าง (ซ้าย และ ขวา) และโหมดเต็มจอ ----------
     const rulerEdgeHandle = $('#rulerEdgeHandle'), paperEdgeHandle = $('#paperEdgeHandle');
+    const rulerEdgeHandleLeft = $('#rulerEdgeHandleLeft'), paperEdgeHandleLeft = $('#paperEdgeHandleLeft');
+    const btnFullWidth = $('#btnFullWidth');
+
     function updatePaperWidthCss(cm) {
       document.documentElement.style.setProperty('--text-w', `${cm}cm`);
       document.documentElement.style.setProperty('--paper-w', `calc(${cm}cm + var(--pl) + var(--pr) + 2px)`);
@@ -6303,8 +7383,9 @@ ${body}
         document.body.style.setProperty('--paper-w', `calc(${cm}cm + var(--pl) + var(--pr) + 2px)`);
       }
     }
+
     function setTextWidth(cm, commit = true) {
-      cm = round2(clamp(cm, 10, 40));
+      cm = round2(clamp(cm, 10, 45));
       rulerCm = cm;
       updatePaperWidthCss(rulerCm);
       buildRuler();
@@ -6322,20 +7403,86 @@ ${body}
       }
     }
 
-    function showEdgeTip(w) {
+    function setMarginPreset(preset) {
+      let pl = '3cm', pr = '2cm';
+      if (preset === 'moderate') { pl = '2cm'; pr = '1.5cm'; }
+      else if (preset === 'narrow') { pl = '1.25cm'; pr = '1.25cm'; }
+      else if (preset === 'compact') { pl = '0.5cm'; pr = '0.5cm'; }
+      document.documentElement.style.setProperty('--pl', pl);
+      document.documentElement.style.setProperty('--pr', pr);
+      if (document.body) {
+        document.body.style.setProperty('--pl', pl);
+        document.body.style.setProperty('--pr', pr);
+      }
+      settings.marginPreset = preset;
+      store.set(SETTINGS_KEY, JSON.stringify(settings));
+      updatePaperWidthCss(rulerCm);
+      buildRuler();
+      placeMarks(rm);
+      say(`ปรับระยะขอบกระดาษ: ${preset === 'standard' ? 'มาตรฐาน A4' : preset === 'moderate' ? 'ปานกลาง' : preset === 'narrow' ? 'ขอบแคบ' : 'ชิดขอบ'}`);
+      document.dispatchEvent(new CustomEvent('eoffice:marginchange', { detail: { preset, pl, pr } }));
+    }
+
+    function fitFullWidth() {
+      if (!document.body.classList.contains('full-width')) return;
+      const editorBox = $('.editor-box');
+      if (!editorBox) return;
+      const z = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--z')) || 1;
+      const boxW = editorBox.clientWidth;
+      const pl = parseFloat(getComputedStyle(document.body).getPropertyValue('--pl')) || 0;
+      const pr = parseFloat(getComputedStyle(document.body).getPropertyValue('--pr')) || 0;
+      const availPx = Math.max(200, boxW - pl - pr);
+      const availCm = round2(availPx / (CM * z));
+      setTextWidth(availCm, false);
+    }
+
+    function toggleFullWidth(enabled) {
+      const isFull = enabled !== undefined ? !!enabled : !document.body.classList.contains('full-width');
+      document.body.classList.toggle('full-width', isFull);
+      if (btnFullWidth) {
+        btnFullWidth.setAttribute('aria-pressed', String(isFull));
+      }
+      settings.fullWidth = isFull;
+      store.set(SETTINGS_KEY, JSON.stringify(settings));
+
+      if (isFull) {
+        fitFullWidth();
+        say('เปิดโหมดขยายเต็มหน้าจอ (ซ่อนขอบสีเทาซ้าย-ขวา)');
+      } else {
+        setTextWidth(settings.textWidth || 16, true);
+        say('ปิดโหมดเต็มหน้าจอ — คืนค่ากระดาษปกติ');
+      }
+      document.dispatchEvent(new CustomEvent('eoffice:fullwidth', { detail: { fullWidth: isFull } }));
+      schedule();
+    }
+
+    if (btnFullWidth) {
+      btnFullWidth.addEventListener('click', () => toggleFullWidth());
+    }
+
+    function showEdgeTip(w, side = 'right') {
       tip.hidden = false;
-      tip.style.left = `${w}cm`;
-      tip.textContent = w === 16
-        ? `ความกว้างพิมพ์ ${fmt(w)} ซม. (มาตรฐาน A4)`
-        : w === 24.7
-          ? `ความกว้างพิมพ์ ${fmt(w)} ซม. (A4 แนวนอน)`
-          : `ความกว้างพิมพ์ ${fmt(w)} ซม. (กระดาษ ${fmt(settings.paper === 'a4' ? w + 5 : w + 0.4)} ซม.)`;
-      guide.hidden = false;
-      guide.style.left = `calc(var(--vr) + var(--edge-x) + ${w}cm)`;
+      if (side === 'left') {
+        tip.style.left = '0cm';
+        tip.textContent = w === 16
+          ? `ขยายขอบซ้าย: ความกว้าง ${fmt(w)} ซม. (มาตรฐาน A4)`
+          : `ขยายขอบซ้าย: ความกว้าง ${fmt(w)} ซม.`;
+        guide.hidden = false;
+        guide.style.left = `calc(var(--vr) + var(--edge-x))`;
+      } else {
+        tip.style.left = `${w}cm`;
+        tip.textContent = w === 16
+          ? `ขยายขอบขวา: ความกว้าง ${fmt(w)} ซม. (มาตรฐาน A4)`
+          : w === 24.7
+            ? `ขยายขอบขวา: ความกว้าง ${fmt(w)} ซม. (A4 แนวนอน)`
+            : `ขยายขอบขวา: ความกว้าง ${fmt(w)} ซม. (กระดาษ ${fmt(settings.paper === 'a4' ? w + 5 : w + 0.4)} ซม.)`;
+        guide.hidden = false;
+        guide.style.left = `calc(var(--vr) + var(--edge-x) + ${w}cm)`;
+      }
     }
 
     let edgeDrag = null;
-    function startEdgeDrag(e, handle) {
+    function startEdgeDrag(e, handle, side = 'right') {
       if (e.button !== 0) return;
       e.preventDefault();
       try { handle.setPointerCapture(e.pointerId); } catch {}
@@ -6343,8 +7490,8 @@ ${body}
       const startX = e.clientX;
       const startW = rulerCm;
       const currentZ = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--z')) || 1;
-      edgeDrag = { id: e.pointerId, handle, startX, startW, currentZ, curW: startW };
-      showEdgeTip(startW);
+      edgeDrag = { id: e.pointerId, handle, side, startX, startW, currentZ, curW: startW };
+      showEdgeTip(startW, side);
       window.addEventListener('pointermove', onEdgeMove);
       window.addEventListener('pointerup', onEdgeEnd);
       window.addEventListener('pointercancel', onEdgeEnd);
@@ -6354,7 +7501,7 @@ ${body}
       if (!edgeDrag || e.pointerId !== edgeDrag.id) return;
       const dxPx = (e.clientX - edgeDrag.startX) / edgeDrag.currentZ;
       const dxCm = dxPx / CM;
-      let nextW = edgeDrag.startW + dxCm;
+      let nextW = edgeDrag.side === 'left' ? (edgeDrag.startW - dxCm) : (edgeDrag.startW + dxCm);
 
       // สแน็ปที่ขนาดมาตรฐาน A4 แนวตั้ง (16cm) และ A4 แนวนอน (24.7cm)
       if (Math.abs(nextW - 16) < 0.25) nextW = 16;
@@ -6362,10 +7509,10 @@ ${body}
       else if (e.altKey) nextW = Math.round(nextW * 20) / 20; // 0.05 ซม.
       else nextW = Math.round(nextW * 4) / 4;                 // 0.25 ซม.
 
-      nextW = clamp(nextW, 10, 40);
+      nextW = clamp(nextW, 10, 45);
       edgeDrag.curW = nextW;
       setTextWidth(nextW, false);
-      showEdgeTip(nextW);
+      showEdgeTip(nextW, edgeDrag.side);
     }
 
     function onEdgeEnd(e) {
@@ -6390,7 +7537,13 @@ ${body}
 
     [rulerEdgeHandle, paperEdgeHandle].forEach(h => {
       if (!h) return;
-      h.addEventListener('pointerdown', e => startEdgeDrag(e, h));
+      h.addEventListener('pointerdown', e => startEdgeDrag(e, h, 'right'));
+      h.addEventListener('dblclick', resetPaperWidth);
+    });
+
+    [rulerEdgeHandleLeft, paperEdgeHandleLeft].forEach(h => {
+      if (!h) return;
+      h.addEventListener('pointerdown', e => startEdgeDrag(e, h, 'left'));
       h.addEventListener('dblclick', resetPaperWidth);
     });
 
@@ -6409,6 +7562,25 @@ ${body}
           const step = e.shiftKey ? 1 : e.altKey ? 0.05 : 0.25;
           setTextWidth(rulerCm + dir * step, true);
           rulerEdgeHandle.focus();
+        }
+      });
+    }
+
+    if (rulerEdgeHandleLeft) {
+      rulerEdgeHandleLeft.addEventListener('keydown', e => {
+        let dir = 0;
+        if (e.key === 'ArrowLeft') dir = 1;
+        else if (e.key === 'ArrowRight') dir = -1;
+        else if (e.key === 'Home' || e.key === 'Enter') {
+          e.preventDefault();
+          resetPaperWidth();
+          return;
+        }
+        if (dir !== 0) {
+          e.preventDefault();
+          const step = e.shiftKey ? 1 : e.altKey ? 0.05 : 0.25;
+          setTextWidth(rulerCm + dir * step, true);
+          rulerEdgeHandleLeft.focus();
         }
       });
     }
@@ -7464,6 +8636,10 @@ ${body}
       textWidth: () => rulerCm,
       setTextWidth: (w) => setTextWidth(w, true),
       resetTextWidth: () => resetPaperWidth(),
+      setFullWidth: (bool) => toggleFullWidth(bool),
+      isFullWidth: () => !!document.body.classList.contains('full-width'),
+      setMarginPreset,
+      getMarginPreset: () => settings.marginPreset || 'standard',
       saveDraft,
       openPicker,
       recentFiles,
@@ -7497,6 +8673,31 @@ ${body}
       startDrawTableMode,
       stopDrawTableMode,
       cleanHtml: exportHtml,
+      // ฟังก์ชันจัดการรูปภาพอิสระ (แบบ Word)
+      getActiveImage: () => activeImageEl,
+      selectImage: (img) => updateImageOverlay(img),
+      hideImageOverlay,
+      setImageAlign,
+      setImageWrap,
+      setImageSizePreset,
+      rotateActiveImage,
+      deleteActiveImage,
+      startCropMode,
+      stopCropMode,
+      applyCrop,
+      imageTools: {
+        getActiveImage: () => activeImageEl,
+        selectImage: (img) => updateImageOverlay(img),
+        hideOverlay: () => hideImageOverlay(),
+        setImageAlign,
+        setImageWrap,
+        setImageSizePreset,
+        rotateActiveImage,
+        deleteActiveImage,
+        startCropMode,
+        stopCropMode,
+        applyCrop,
+      },
     };
     document.dispatchEvent(new CustomEvent('eoffice:ready'));
   }

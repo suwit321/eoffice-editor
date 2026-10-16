@@ -4,6 +4,7 @@ import { readFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { spawn } from 'node:child_process';
+import { tmpdir } from 'node:os';
 import http from 'node:http';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -80,10 +81,12 @@ describe('Table Enhancement (เครื่องมือตาราง ว�
       return;
     }
 
-    const port = 9250 + Math.floor(Math.random() * 40);
+    const port = 9350 + Math.floor(Math.random() * 40);
+    const userData = join(tmpdir(), 'edge-tbl-' + Date.now() + '-' + Math.random().toString(36).slice(2));
     const edge = spawn(edgePath, [
       '--headless=new',
       '--allow-file-access-from-files',
+      `--user-data-dir=${userData}`,
       `--remote-debugging-port=${port}`,
       `file:///${join(root, 'dist/eoffice-editor-single.html').replace(/\\/g, '/')}`
     ]);

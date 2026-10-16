@@ -689,10 +689,25 @@ body.tools-open .topbar,body.tools-open .desk,body.tools-open .statusbar{margin-
 .scratch .hint.pad{margin:6px 12px;color:var(--muted);font-size:12px}
 .scratch .tbtn{height:28px;padding:0 8px;border:1px solid var(--line-strong);border-radius:6px;background:#fff;cursor:pointer;font:inherit;font-size:12px}
 .scratch-body{flex:1;overflow:auto;padding:0 12px 12px}
-.note{margin-bottom:10px;border:1px solid #ecdca7;border-radius:6px;background:#fff}
+.note{margin-bottom:10px;border:1px solid #ecdca7;border-radius:6px;background:#fff;transition:border-color .15s,box-shadow .15s}
+.note.drag-over{border:2px dashed var(--accent)!important;background:#eff6ff!important}
 .note-head{display:flex;align-items:center;justify-content:space-between;padding:4px 6px 4px 8px;border-bottom:1px solid #f2e7c3;font-size:12px;color:#7a6320}
-.note-head button{margin-left:4px;height:22px;padding:0 6px;border:1px solid #e6d59f;border-radius:4px;background:#fff;cursor:pointer;font:inherit;font-size:11.5px}
-.note textarea{display:block;width:100%;min-height:150px;padding:8px;border:0;border-radius:0 0 6px 6px;resize:vertical;background:repeating-linear-gradient(#fff 0 23px,#f1ead2 23px 24px);font:15px/24px "TH SarabunPSK","TH Sarabun New",Tahoma,sans-serif;outline:none}
+.note-acts{display:flex;align-items:center;gap:3px}
+.note-head button{margin-left:2px;height:22px;padding:0 6px;border:1px solid #e6d59f;border-radius:4px;background:#fff;cursor:pointer;font:inherit;font-size:11.5px;transition:background .12s,border-color .12s}
+.note-head button:hover{background:#fdf6d8;border-color:#c8b26a;color:#5a4714}
+.note-head button.btn-note-del:hover{background:#fee2e2;border-color:#fca5a5;color:#b91c1c}
+.note textarea{display:block;width:100%;min-height:120px;padding:8px;border:0;border-radius:0 0 6px 6px;resize:vertical;background:repeating-linear-gradient(#fff 0 23px,#f1ead2 23px 24px);font:15px/24px "TH SarabunPSK","TH Sarabun New",Tahoma,sans-serif;outline:none}
+.note-images{display:flex;flex-wrap:wrap;gap:6px;padding:6px 8px 8px;border-top:1px dashed #ecdca7;background:#fffdf5;border-radius:0 0 6px 6px}
+.note-img-wrap{position:relative;width:72px;height:72px;border:1px solid #d9c892;border-radius:5px;overflow:hidden;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.08);transition:transform .12s,box-shadow .12s}
+.note-img-wrap:hover{transform:scale(1.03);box-shadow:0 2px 6px rgba(0,0,0,.15);border-color:var(--accent)}
+.note-img-wrap img{width:100%;height:100%;object-fit:cover;cursor:pointer}
+.note-img-actions{position:absolute;inset:0;background:rgba(15,23,42,.65);display:flex;align-items:center;justify-content:center;gap:4px;opacity:0;transition:opacity .15s}
+.note-img-wrap:hover .note-img-actions{opacity:1}
+.note-img-actions button{height:20px;padding:0 5px;border:0;border-radius:3px;font-size:11px;cursor:pointer;font-weight:600}
+.btn-img-ins{background:var(--accent);color:#fff}
+.btn-img-ins:hover{background:var(--accent-hover)}
+.btn-img-del{background:#dc2626;color:#fff}
+.btn-img-del:hover{background:#b91c1c}
 body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{margin-left:300px}
 @media (max-width:1100px){body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{margin-left:0}}
 @media print{.tools,.calc,.scratch{display:none!important}}
@@ -905,19 +920,29 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
   <section data-panel="theme" hidden>
     <h3>หน้ากระดาษ</h3>
     <div class="row"><label class="inline"><input type="checkbox" id="vwPaper"> แสดงเป็นกระดาษ A4 แนวตั้ง (ขอบกระดาษ + กรอบขอบพิมพ์สีจาง)</label></div>
+    <div class="row"><label class="inline"><input type="checkbox" id="vwFullWidth"> ↔ ขยายเต็มหน้าจอ (ซ่อนขอบกระดาษสีเทาซ้าย-ขวา)</label></div>
     <div class="row"><label class="inline"><input type="checkbox" id="vwBreaks"> เส้นแบ่งหน้าโดยประมาณ</label></div>
     <div class="row"><label class="inline"><input type="checkbox" id="vwGrid"> กระดาษกราฟ ตาราง 1 ซม.</label></div>
+    <div class="row">
+      <label class="inline grow">ระยะขอบกระดาษ <select id="vwMarginPreset" class="grow">
+        <option value="standard">มาตรฐาน A4 (ซ้าย 3 ซม. ขวา 2 ซม.)</option>
+        <option value="moderate">ปานกลาง (ซ้าย 2 ซม. ขวา 1.5 ซม.)</option>
+        <option value="narrow">ขอบแคบ (ซ้าย 1.25 ซม. ขวา 1.25 ซม.)</option>
+        <option value="compact">ชิดขอบ (ซ้าย 0.5 ซม. ขวา 0.5 ซม.)</option>
+      </select></label>
+    </div>
     <div class="row">
       <label class="inline grow">ความกว้างพิมพ์ <select id="vwPaperWidth" class="grow">
         <option value="16">16 ซม. (A4 แนวตั้ง — มาตรฐานราชการ)</option>
         <option value="18">18 ซม. (กว้างปานกลาง)</option>
         <option value="20">20 ซม. (กว้างพิเศษ)</option>
         <option value="24.7">24.7 ซม. (A4 แนวนอน)</option>
+        <option value="full">เต็มความกว้างหน้าจอ (ซ่อนขอบเทา)</option>
         <option value="custom" id="vwCustomOpt">กำหนดเอง (ลากขอบกระดาษ)</option>
       </select></label>
       <button type="button" class="tbtn" id="btnResetWidth" title="คืนค่า 16 ซม. (มาตรฐาน A4)">คืนค่า 16 ซม.</button>
     </div>
-    <p class="hint">สามารถชี้ที่ขอบขวาของกระดาษหรือปลายไม้บรรทัด แล้วคลิกลากเพื่อขยาย/ลดความกว้างได้อิสระ (ดับเบิลคลิกเพื่อคืนค่า 16 ซม.)</p>
+    <p class="hint">สามารถชี้ที่ขอบซ้ายหรือขวาของกระดาษ/ไม้บรรทัด แล้วคลิกลากเพื่อขยายหรือลดความกว้างได้อิสระทั้ง 2 ฝั่ง (ดับเบิลคลิกเพื่อคืนค่า 16 ซม.)</p>
     <h3>เส้นบรรทัด (สลับสีตามย่อหน้า)</h3>
     <div class="row"><label class="inline"><input type="checkbox" id="vwLines"> แสดงเส้นประใต้ทุกบรรทัด</label></div>
     <div class="row" id="vwLineColors"></div>
@@ -1655,7 +1680,8 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
     scratch.setAttribute('aria-label', 'กระดาษทด');
     scratch.innerHTML = `
 <div class="tools-head"><h2>📝 กระดาษทด</h2><span class="head-acts"><button type="button" class="tbtn" id="scratchAdd">＋ เพิ่มแผ่น</button><button type="button" class="tools-x" id="scratchClose" aria-label="ปิดกระดาษทด" title="ปิด">×</button></span></div>
-<p class="hint pad">จดชั่วคราว — รีเฟรชหน้าแล้วยังอยู่ แต่จะหายเมื่อปิดแท็บนี้</p>
+<p class="hint pad">จดชั่วคราว — แทรกข้อความ/รูปภาพได้ กด Ctrl+V หรือลากภาพมาวาง</p>
+<input type="file" id="scratchFileInput" accept="image/png,image/jpeg,image/gif,image/webp" style="display:none" multiple>
 <div class="scratch-body" id="scratchBody"></div>`;
     document.body.append(scratch);
     const SCRATCH_KEY = 'eoffice-editor:scratch';
@@ -1663,31 +1689,286 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
       get() { try { return JSON.parse(sessionStorage.getItem(SCRATCH_KEY) || 'null'); } catch { return null; } },
       set(v) { try { sessionStorage.setItem(SCRATCH_KEY, JSON.stringify(v)); } catch { /* ไม่มี storage */ } },
     };
+
+    const normalizeNote = n => {
+      if (typeof n === 'string') return { text: n, images: [] };
+      if (n && typeof n === 'object') {
+        return {
+          text: typeof n.text === 'string' ? n.text : '',
+          images: Array.isArray(n.images) ? n.images.filter(x => typeof x === 'string' && x.startsWith('data:image/')) : []
+        };
+      }
+      return { text: '', images: [] };
+    };
+
     const savedScratch = session.get();
-    const notes = Array.isArray(savedScratch?.notes) ? savedScratch.notes.map(String) : [];
-    const saveNotes = () => session.set({ open: !scratch.hidden, notes });
+    const notes = Array.isArray(savedScratch?.notes)
+      ? savedScratch.notes.map(normalizeNote)
+      : [];
+    const saveNotes = () => {
+      try {
+        session.set({ open: !scratch.hidden, notes });
+      } catch {
+        say('พื้นที่บันทึกชั่วคราวเต็ม แนะนำให้ลบรูปภาพบางส่วน');
+      }
+    };
+
+    function readAndOptimizeImage(file) {
+      return new Promise((resolve, reject) => {
+        if (!file || !/^image\//i.test(file.type)) return reject(new Error('ไม่ใช่ไฟล์ภาพ'));
+        const reader = new FileReader();
+        reader.onload = () => {
+          const img = new Image();
+          img.onload = () => {
+            let { width, height } = img;
+            const maxDim = 1200;
+            if (width > maxDim || height > maxDim) {
+              if (width > height) {
+                height = Math.round((height * maxDim) / width);
+                width = maxDim;
+              } else {
+                width = Math.round((width * maxDim) / height);
+                height = maxDim;
+              }
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            const isPng = file.type === 'image/png';
+            resolve(canvas.toDataURL(isPng ? 'image/png' : 'image/jpeg', 0.85));
+          };
+          img.onerror = () => reject(new Error('โหลดภาพไม่สำเร็จ'));
+          img.src = reader.result;
+        };
+        reader.onerror = () => reject(new Error('อ่านไฟล์ไม่สำเร็จ'));
+        reader.readAsDataURL(file);
+      });
+    }
+
     function renderNotes(focusIndex) {
-      $('#scratchBody').innerHTML = notes.map((n, i) => `<div class="note">
-        <div class="note-head"><span>แผ่นที่ ${i + 1}</span><span><button type="button" data-note-ins="${i}" title="แทรกข้อความแผ่นนี้ลงในเอกสารที่เคอร์เซอร์">แทรกในเอกสาร</button><button type="button" data-note-del="${i}" title="ลบแผ่นนี้" aria-label="ลบแผ่นที่ ${i + 1}">×</button></span></div>
-        <textarea data-note="${i}" aria-label="กระดาษทดแผ่นที่ ${i + 1}" placeholder="จดอะไรก็ได้…">${esc(n)}</textarea></div>`).join('');
+      $('#scratchBody').innerHTML = notes.map((n, i) => `
+        <div class="note" data-note-index="${i}">
+          <div class="note-head">
+            <span>แผ่นที่ ${i + 1}</span>
+            <span class="note-acts">
+              <button type="button" data-note-img="${i}" title="แทรกรูปภาพจากไฟล์ลงในแผ่นนี้">🖼️ รูป</button>
+              <button type="button" data-note-ins="${i}" title="แทรกข้อความและรูปภาพทั้งหมดลงในเอกสารที่เคอร์เซอร์">แทรกในเอกสาร</button>
+              <button type="button" class="btn-note-del" data-note-del="${i}" title="ลบแผ่นนี้" aria-label="ลบแผ่นที่ ${i + 1}">×</button>
+            </span>
+          </div>
+          <textarea data-note="${i}" aria-label="กระดาษทดแผ่นที่ ${i + 1}" placeholder="จดข้อความ หรือกด Ctrl+V / ลากรูปภาพมาวางที่นี่…">${esc(n.text)}</textarea>
+          ${n.images && n.images.length ? `
+          <div class="note-images" data-note-imgs="${i}">
+            ${n.images.map((img, imgIdx) => `
+              <div class="note-img-wrap" title="คลิกรูปหรือปุ่มแทรกเพื่อใส่ลงในเอกสาร">
+                <img src="${img}" alt="รูปที่ ${imgIdx + 1}" data-ins-img="${i}:${imgIdx}" />
+                <div class="note-img-actions">
+                  <button type="button" class="btn-img-ins" data-ins-img="${i}:${imgIdx}" title="แทรกรูปนี้ลงในเอกสาร">แทรก</button>
+                  <button type="button" class="btn-img-del" data-del-img="${i}:${imgIdx}" title="ลบรูปนี้">×</button>
+                </div>
+              </div>
+            `).join('')}
+          </div>` : ''}
+        </div>
+      `).join('');
       if (focusIndex != null) $(`[data-note="${focusIndex}"]`)?.focus();
     }
-    function addNote() { notes.push(''); renderNotes(notes.length - 1); saveNotes(); }
-    $('#scratchBody').addEventListener('input', e => { const t = e.target.closest('[data-note]'); if (t) { notes[+t.dataset.note] = t.value; saveNotes(); } });
-    $('#scratchBody').addEventListener('mousedown', e => { if (e.target.closest('[data-note-ins]')) e.preventDefault(); });
-    $('#scratchBody').addEventListener('click', e => {
+
+    function addNote() {
+      notes.push({ text: '', images: [] });
+      renderNotes(notes.length - 1);
+      saveNotes();
+    }
+
+    function insertNoteAtCursor(note) {
+      const t = (note.text || '').trim();
+      const imgs = Array.isArray(note.images) ? note.images : [];
+      if (!t && !imgs.length) {
+        say('แผ่นนี้ยังว่าง');
+        return;
+      }
+      const r = ed.useRange(ed.range());
+      let curIndex = r.index;
+      if (r.length > 0) {
+        quill.deleteText(curIndex, r.length, 'user');
+      }
+      if (t) {
+        quill.insertText(curIndex, t, quill.getFormat(curIndex, 0), 'user');
+        curIndex += t.length;
+      }
+      if (imgs.length) {
+        if (t) {
+          quill.insertText(curIndex, '\n', 'user');
+          curIndex += 1;
+        }
+        for (let i = 0; i < imgs.length; i++) {
+          quill.insertEmbed(curIndex, 'image', imgs[i], 'user');
+          curIndex += 1;
+          quill.insertText(curIndex, '\n', 'user');
+          curIndex += 1;
+        }
+      }
+      quill.setSelection(curIndex, 0, 'user');
+      say(`แทรกกระดาษทดลงในเอกสารแล้ว${imgs.length ? ` (รวมรูป ${imgs.length} รูป)` : ''}`);
+    }
+
+    function insertSingleImageAtCursor(imgUrl) {
+      const r = ed.useRange(ed.range());
+      let curIndex = r.index;
+      if (r.length > 0) {
+        quill.deleteText(curIndex, r.length, 'user');
+      }
+      quill.insertEmbed(curIndex, 'image', imgUrl, 'user');
+      curIndex += 1;
+      quill.insertText(curIndex, '\n', 'user');
+      curIndex += 1;
+      quill.setSelection(curIndex, 0, 'user');
+      say('แทรกรูปภาพจากกระดาษทดลงในเอกสารแล้ว');
+    }
+
+    let currentNoteImgIdx = 0;
+    const imgInput = $('#scratchFileInput');
+    if (imgInput) {
+      imgInput.addEventListener('change', async e => {
+        const files = [...(e.target.files || [])].filter(f => f.type.startsWith('image/'));
+        e.target.value = '';
+        if (!files.length) return;
+        for (const f of files) {
+          try {
+            const dataUrl = await readAndOptimizeImage(f);
+            if (notes[currentNoteImgIdx]) {
+              notes[currentNoteImgIdx].images.push(dataUrl);
+            }
+          } catch {
+            say('ไม่สามารถอ่านไฟล์ภาพได้');
+          }
+        }
+        renderNotes(currentNoteImgIdx);
+        saveNotes();
+        say(`เพิ่มรูปภาพในกระดาษทดแผ่นที่ ${currentNoteImgIdx + 1} แล้ว`);
+      });
+    }
+
+    // รองรับการวางรูปภาพ (Ctrl+V) ลงในกระดาษทดโดยตรง
+    scratch.addEventListener('paste', async e => {
+      const noteEl = e.target.closest('.note');
+      if (!noteEl) return;
+      const noteIdx = +noteEl.dataset.noteIndex;
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      const imageFiles = [];
+      for (const it of items) {
+        if (it.type.startsWith('image/')) {
+          const file = it.getAsFile();
+          if (file) imageFiles.push(file);
+        }
+      }
+      if (!imageFiles.length) return;
+      e.preventDefault();
+      for (const file of imageFiles) {
+        try {
+          const dataUrl = await readAndOptimizeImage(file);
+          if (notes[noteIdx]) notes[noteIdx].images.push(dataUrl);
+        } catch {}
+      }
+      renderNotes(noteIdx);
+      saveNotes();
+      say(`วางรูปภาพในกระดาษทดแผ่นที่ ${noteIdx + 1} แล้ว`);
+    });
+
+    // รองรับการลากไฟล์ภาพมาวาง (Drag & Drop) ลงในกระดาษทด
+    scratch.addEventListener('dragover', e => {
+      const noteEl = e.target.closest('.note');
+      if (noteEl && e.dataTransfer?.types?.includes('Files')) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'copy';
+        noteEl.classList.add('drag-over');
+      }
+    });
+    scratch.addEventListener('dragleave', e => {
+      const noteEl = e.target.closest('.note');
+      if (noteEl && !noteEl.contains(e.relatedTarget)) {
+        noteEl.classList.remove('drag-over');
+      }
+    });
+    scratch.addEventListener('drop', async e => {
+      const noteEl = e.target.closest('.note');
+      if (!noteEl) return;
+      noteEl.classList.remove('drag-over');
+      const files = [...(e.dataTransfer?.files || [])].filter(f => f.type.startsWith('image/'));
+      if (!files.length) return;
+      e.preventDefault();
+      const noteIdx = +noteEl.dataset.noteIndex;
+      for (const file of files) {
+        try {
+          const dataUrl = await readAndOptimizeImage(file);
+          if (notes[noteIdx]) notes[noteIdx].images.push(dataUrl);
+        } catch {}
+      }
+      renderNotes(noteIdx);
+      saveNotes();
+      say(`เพิ่มรูปภาพในกระดาษทดแผ่นที่ ${noteIdx + 1} แล้ว`);
+    });
+
+    scratch.addEventListener('input', e => {
+      const t = e.target.closest('[data-note]');
+      if (t) {
+        const idx = +t.dataset.note;
+        if (notes[idx]) {
+          notes[idx].text = t.value;
+          saveNotes();
+        }
+      }
+    });
+    scratch.addEventListener('mousedown', e => {
+      if (e.target.closest('[data-note-ins], [data-ins-img]')) e.preventDefault();
+    });
+    scratch.addEventListener('click', e => {
+      const btnImg = e.target.closest('[data-note-img]');
+      if (btnImg) {
+        currentNoteImgIdx = +btnImg.dataset.noteImg;
+        if (imgInput) imgInput.click();
+        return;
+      }
+      const insImg = e.target.closest('[data-ins-img]');
+      if (insImg) {
+        const [nIdx, imgIdx] = insImg.dataset.insImg.split(':').map(Number);
+        const url = notes[nIdx]?.images?.[imgIdx];
+        if (url) insertSingleImageAtCursor(url);
+        return;
+      }
+      const delImg = e.target.closest('[data-del-img]');
+      if (delImg) {
+        const [nIdx, imgIdx] = delImg.dataset.delImg.split(':').map(Number);
+        if (notes[nIdx]?.images) {
+          notes[nIdx].images.splice(imgIdx, 1);
+          renderNotes(nIdx);
+          saveNotes();
+          say('ลบรูปภาพจากกระดาษทดแล้ว');
+        }
+        return;
+      }
       const ins = e.target.closest('[data-note-ins]');
-      if (ins) { const t = notes[+ins.dataset.noteIns].trim(); if (t) insertAtCursor(t); else say('แผ่นนี้ยังว่าง'); return; }
+      if (ins) {
+        const n = notes[+ins.dataset.noteIns];
+        if (n) insertNoteAtCursor(n);
+        return;
+      }
       const del = e.target.closest('[data-note-del]');
       if (del) {
         const i = +del.dataset.noteDel;
-        if (notes[i].trim() && !confirm(`ลบกระดาษทดแผ่นที่ ${i + 1}?`)) return;
+        const n = notes[i];
+        const hasContent = (n?.text || '').trim() || (n?.images && n.images.length);
+        if (hasContent && !confirm(`ลบกระดาษทดแผ่นที่ ${i + 1}?`)) return;
         notes.splice(i, 1);
-        if (!notes.length) notes.push('');
+        if (!notes.length) notes.push({ text: '', images: [] });
         renderNotes();
         saveNotes();
       }
     });
+
     $('#scratchAdd').addEventListener('click', addNote);
     function setScratch(open) {
       scratch.hidden = !open;
@@ -1700,6 +1981,23 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
     $('#scratchClose').addEventListener('click', () => setScratch(false));
     renderNotes();
     if (savedScratch?.open) setScratch(true);
+
+    ed.scratch = {
+      open: () => setScratch(true),
+      close: () => setScratch(false),
+      toggle: () => setScratch(scratch.hidden),
+      notes: () => notes,
+      addNote: (text = '', images = []) => {
+        if (notes.length === 1 && !notes[0].text && (!notes[0].images || !notes[0].images.length)) {
+          notes[0] = { text, images };
+        } else {
+          notes.push({ text, images });
+        }
+        renderNotes(notes.length - 1);
+        saveNotes();
+      },
+      clear: () => { notes.length = 0; notes.push({ text: '', images: [] }); renderNotes(); saveNotes(); }
+    };
 
     // ================= มุมมอง: หน้ากระดาษ / เส้นบรรทัด / เครื่องหมายซ่อน =================
     const MARK_TYPES = [
@@ -1716,10 +2014,15 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
       $('#vwMarks').checked = s.showMarks;
       $('#vwParaNum').checked = s.paraNumbers;
       $('#vwLineNum').checked = s.lineNumbers;
+      if ($('#vwFullWidth')) $('#vwFullWidth').checked = ed.isFullWidth?.() || false;
+      if ($('#vwMarginPreset')) $('#vwMarginPreset').value = ed.getMarginPreset?.() || 'standard';
       const wVal = ed.textWidth?.() || 16;
       const wSel = $('#vwPaperWidth'), wOpt = $('#vwCustomOpt');
+      const isFull = ed.isFullWidth?.() || false;
       if (wSel) {
-        if (['16', '18', '20', '24.7'].includes(String(wVal))) {
+        if (isFull) {
+          wSel.value = 'full';
+        } else if (['16', '18', '20', '24.7'].includes(String(wVal))) {
           wSel.value = String(wVal);
           if (wOpt) wOpt.textContent = 'กำหนดเอง (ลากขอบกระดาษ)';
         } else {
@@ -1731,12 +2034,32 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
       $('#vwMarkList').innerHTML = MARK_TYPES.map(([k, label, sym]) => `<div class="row"><label class="inline grow"><input type="checkbox" data-mark="${k}"${s.marks[k] ? ' checked' : ''}> <b class="mk-sym" style="color:${s.markColors[k]}">${sym}</b> ${label}</label><input type="color" data-markcolor="${k}" value="${s.markColors[k]}" aria-label="สี${label}"></div>`).join('');
     }
     onTab.theme = renderView;
+    document.addEventListener('eoffice:fullwidth', e => {
+      const chk = $('#vwFullWidth');
+      if (chk) chk.checked = e.detail.fullWidth;
+      const sel = $('#vwPaperWidth');
+      if (sel) {
+        if (e.detail.fullWidth) sel.value = 'full';
+        else {
+          const w = ed.textWidth?.() || 16;
+          sel.value = ['16', '18', '20', '24.7'].includes(String(w)) ? String(w) : 'custom';
+        }
+      }
+    });
+    $('#vwFullWidth')?.addEventListener('change', e => {
+      ed.setFullWidth?.(e.target.checked);
+    });
+    $('#vwMarginPreset')?.addEventListener('change', e => {
+      ed.setMarginPreset?.(e.target.value);
+    });
     document.addEventListener('eoffice:paperwidth', e => {
       const sel = $('#vwPaperWidth');
       if (!sel) return;
       const w = e.detail.width;
       const opt = $('#vwCustomOpt');
-      if (['16', '18', '20', '24.7'].includes(String(w))) {
+      if (ed.isFullWidth?.()) {
+        sel.value = 'full';
+      } else if (['16', '18', '20', '24.7'].includes(String(w))) {
         sel.value = String(w);
         if (opt) opt.textContent = 'กำหนดเอง (ลากขอบกระดาษ)';
       } else {
@@ -1745,11 +2068,15 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
       }
     });
     $('#vwPaperWidth')?.addEventListener('change', e => {
-      if (e.target.value !== 'custom' && ed.setTextWidth) {
+      if (e.target.value === 'full') {
+        ed.setFullWidth?.(true);
+      } else if (e.target.value !== 'custom' && ed.setTextWidth) {
+        if (ed.isFullWidth?.()) ed.setFullWidth?.(false);
         ed.setTextWidth(+e.target.value);
       }
     });
     $('#btnResetWidth')?.addEventListener('click', () => {
+      if (ed.isFullWidth?.()) ed.setFullWidth?.(false);
       if (ed.resetTextWidth) ed.resetTextWidth();
       else if (ed.setTextWidth) ed.setTextWidth(16);
       const sel = $('#vwPaperWidth');
