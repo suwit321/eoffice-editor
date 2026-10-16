@@ -26,11 +26,12 @@
   --paper:#fff;--paper-ink:#000;
   --topbar-h:36px;
   --z:1;--vr:20px; /* --vr = ความกว้างไม้บรรทัดแนวดิ่ง */
+  --text-w:16cm;
 }
 html,body{margin:0}
 /* ระยะขอบกระดาษ: โหมดกะทัดรัด = 8px รอบด้าน, โหมด A4 = ขอบพิมพ์ บน 2.5 ขวา 2 ล่าง 2 ซ้าย 3 ซม. (กระดาษกว้าง 21 ซม.)
    --edge-x/--edge-y = ตำแหน่ง 0 ซม. ของไม้บรรทัด (ขอบกล่อง 1px + ระยะขอบ) */
-body{--pl:8px;--pr:8px;--pt:8px;--pb:8px;--min-h:18cm;--text-w:16cm;
+body{--pl:8px;--pr:8px;--pt:8px;--pb:8px;--min-h:18cm;
   --edge-x:calc(1px + var(--pl));--edge-y:calc(1px + var(--pt));--paper-w:calc(var(--text-w) + var(--pl) + var(--pr) + 2px)}
 body.a4{--pl:3cm;--pr:2cm;--pt:2.5cm;--pb:2cm;--min-h:25.2cm}
 /* โหมดกะทัดรัดไม่มีขอบกระดาษ: เปิดเลขที่ย่อหน้า/บรรทัดแล้วเว้นที่ด้านซ้ายให้ตัวเลข */
@@ -132,11 +133,11 @@ button,select,input{font:inherit;color:inherit}
 .ruler{flex:1;position:relative;height:20px;background:var(--ruler);border-bottom:1px solid #c2c2c2;user-select:none;touch-action:none}
 .ruler-scale,.ruler-marks{position:absolute;left:var(--edge-x);width:var(--text-w)}
 .ruler-scale{top:4px;bottom:4px;background:var(--ruler-scale)}
-.ruler-marks{top:0;bottom:0}
+.ruler-marks{top:0;bottom:0;z-index:9}
 .tick{position:absolute;top:50%;width:1px;background:var(--ruler-ink);transform:translate(-50%,-50%)}
 .tick.q{height:2px}.tick.h{height:6px}
 .num{position:absolute;top:50%;transform:translate(-50%,-50%);font:10px/1 Arial,sans-serif;color:var(--ruler-ink)}
-.mk{position:absolute;width:13px;margin-left:-6.5px;padding:0;border:0;background:none;cursor:ew-resize;touch-action:none}
+.mk{position:absolute;width:13px;margin-left:-6.5px;padding:0;border:0;background:none;cursor:ew-resize;touch-action:none;z-index:10}
 .mk svg{display:block;width:13px;height:100%;fill:#fff;stroke:#666;stroke-width:1}
 .mk:hover svg,.mk:focus-visible svg{fill:#d9e7fb;stroke:var(--accent)}
 .mk:focus-visible{outline:none}
@@ -145,7 +146,7 @@ button,select,input{font:inherit;color:inherit}
 .mk-box{top:17px;height:7px}
 .ruler.off .mk{visibility:hidden}
 .ruler-marks{cursor:crosshair}
-.ruler-tip{position:absolute;z-index:6;bottom:calc(100% + 3px);transform:translateX(-50%);background:#1f2328;color:#fff;font-size:12px;line-height:1;padding:4px 6px;border-radius:4px;white-space:nowrap;pointer-events:none}
+.ruler-tip{position:absolute;z-index:12;bottom:calc(100% + 3px);transform:translateX(-50%);background:#1f2328;color:#fff;font-size:12px;line-height:1;padding:4px 6px;border-radius:4px;white-space:nowrap;pointer-events:none}
 .ruler-band{position:absolute;top:4px;bottom:4px;background:rgba(27,95,180,.25);border-left:1px solid var(--accent);border-right:1px solid var(--accent);pointer-events:none}
 /* มือจับลากขยายขอบกระดาษ */
 .ruler-edge-handle{position:absolute;left:calc(var(--edge-x) + var(--text-w));top:0;bottom:0;width:12px;margin-left:-6px;cursor:ew-resize;z-index:8;touch-action:none;display:flex;align-items:center;justify-content:center}
@@ -3811,6 +3812,10 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
   if (rulerCm < 10 || rulerCm > 40) rulerCm = 16;
   document.documentElement.style.setProperty('--text-w', `${rulerCm}cm`);
   document.documentElement.style.setProperty('--paper-w', `calc(${rulerCm}cm + var(--pl) + var(--pr) + 2px)`);
+  if (document.body) {
+    document.body.style.setProperty('--text-w', `${rulerCm}cm`);
+    document.body.style.setProperty('--paper-w', `calc(${rulerCm}cm + var(--pl) + var(--pr) + 2px)`);
+  }
   document.body.classList.toggle('a4', settings.paper === 'a4');
   document.body.classList.toggle('grid-on', !!settings.grid);
   document.body.classList.toggle('numbers-on', !!(settings.paraNumbers || settings.lineNumbers));
@@ -6189,7 +6194,9 @@ ${body}
       const val = kind === 'first' ? m.first : kind === 'right' ? m.right : m.left;
       tip.hidden = false;
       tip.style.left = `${pos}cm`;
-      tip.textContent = `${LABEL[kind]} ${fmt(val)} ซม.`;
+      tip.textContent = (kind === 'right' && drag && drag.expanding)
+        ? `ขยายกั้นขวา ${fmt(rulerCm)} ซม. (พื้นที่พิมพ์ ${fmt(rulerCm)} ซม.)`
+        : `${LABEL[kind]} ${fmt(val)} ซม.`;
       guide.hidden = false;
       guide.style.left = `calc(var(--vr) + var(--edge-x) + ${pos}cm)`;
     }
@@ -6218,33 +6225,63 @@ ${body}
     function xToCm(clientX, fine) {
       const rect = marks.getBoundingClientRect();
       const step = fine ? FINE : SNAP;
-      return Math.round((clientX - rect.left) / rect.width * rulerCm / step) * step;
+      const pxPerCm = rect.width > 0 ? (rect.width / rulerCm) : (CM * (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--z')) || 1));
+      return Math.round((clientX - rect.left) / pxPerCm / step) * step;
     }
-    marks.addEventListener('pointerdown', e => {
-      const mk = e.target.closest('.mk');
-      if (!mk || rulerEl.classList.contains('off') || e.button !== 0) return;
-      e.preventDefault();
-      mk.setPointerCapture(e.pointerId);
-      drag = { kind: mk.dataset.kind, start: { ...rm }, m: { ...rm }, r: currentRange(), id: e.pointerId };
-      showTip(drag.kind, rm);
-    });
-    marks.addEventListener('pointermove', e => {
+    function onMarkMove(e) {
       if (!drag || e.pointerId !== drag.id) return;
-      drag.m = dragResult(drag.kind, drag.start, xToCm(e.clientX, e.altKey));
+      const rawX = xToCm(e.clientX, e.altKey);
+      if (drag.kind === 'right' && rawX > rulerCm) {
+        drag.expanding = true;
+        const nextW = clamp(e.altKey ? Math.round(rawX * 20) / 20 : Math.round(rawX * 4) / 4, 10, 40);
+        setTextWidth(nextW, false);
+        drag.m = { ...drag.start, right: 0 };
+        placeMarks(drag.m);
+        showTip(drag.kind, drag.m);
+        return;
+      }
+      if (drag.kind === 'right' && drag.expanding) {
+        if (rawX >= drag.startW) {
+          const nextW = clamp(e.altKey ? Math.round(rawX * 20) / 20 : Math.round(rawX * 4) / 4, 10, 40);
+          setTextWidth(nextW, false);
+          drag.m = { ...drag.start, right: 0 };
+          placeMarks(drag.m);
+          showTip(drag.kind, drag.m);
+          return;
+        }
+        drag.expanding = false;
+        if (rulerCm !== drag.startW) setTextWidth(drag.startW, false);
+      }
+      drag.m = dragResult(drag.kind, drag.start, rawX);
       placeMarks(drag.m);
       showTip(drag.kind, drag.m);
-    });
+    }
     const endDrag = e => {
       if (!drag || e.pointerId !== drag.id) return;
+      window.removeEventListener('pointermove', onMarkMove);
+      window.removeEventListener('pointerup', endDrag);
+      window.removeEventListener('pointercancel', endDrag);
       const d = drag;
       drag = null;
       hideTip();
+      if (d.kind === 'right' && rulerCm !== settings.textWidth) {
+        setTextWidth(rulerCm, true);
+      }
       if (e.type === 'pointerup' && changed(d.start, d.m)) commit(d.kind, d.m, d.r);
       else placeMarks(rm);
       schedule();
     };
-    marks.addEventListener('pointerup', endDrag);
-    marks.addEventListener('pointercancel', endDrag);
+    marks.addEventListener('pointerdown', e => {
+      const mk = e.target.closest('.mk');
+      if (!mk || rulerEl.classList.contains('off') || e.button !== 0) return;
+      e.preventDefault();
+      try { mk.setPointerCapture(e.pointerId); } catch {}
+      drag = { kind: mk.dataset.kind, start: { ...rm }, m: { ...rm }, r: currentRange(), id: e.pointerId, startW: rulerCm, expanding: false };
+      showTip(drag.kind, rm);
+      window.addEventListener('pointermove', onMarkMove);
+      window.addEventListener('pointerup', endDrag);
+      window.addEventListener('pointercancel', endDrag);
+    });
     marks.addEventListener('keydown', e => {
       const mk = e.target.closest('.mk');
       const dir = { ArrowLeft: -1, ArrowRight: 1 }[e.key];
@@ -6261,6 +6298,10 @@ ${body}
     function updatePaperWidthCss(cm) {
       document.documentElement.style.setProperty('--text-w', `${cm}cm`);
       document.documentElement.style.setProperty('--paper-w', `calc(${cm}cm + var(--pl) + var(--pr) + 2px)`);
+      if (document.body) {
+        document.body.style.setProperty('--text-w', `${cm}cm`);
+        document.body.style.setProperty('--paper-w', `calc(${cm}cm + var(--pl) + var(--pr) + 2px)`);
+      }
     }
     function setTextWidth(cm, commit = true) {
       cm = round2(clamp(cm, 10, 40));
@@ -6297,13 +6338,16 @@ ${body}
     function startEdgeDrag(e, handle) {
       if (e.button !== 0) return;
       e.preventDefault();
-      handle.setPointerCapture(e.pointerId);
+      try { handle.setPointerCapture(e.pointerId); } catch {}
       handle.classList.add('dragging');
       const startX = e.clientX;
       const startW = rulerCm;
       const currentZ = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--z')) || 1;
       edgeDrag = { id: e.pointerId, handle, startX, startW, currentZ, curW: startW };
       showEdgeTip(startW);
+      window.addEventListener('pointermove', onEdgeMove);
+      window.addEventListener('pointerup', onEdgeEnd);
+      window.addEventListener('pointercancel', onEdgeEnd);
     }
 
     function onEdgeMove(e) {
@@ -6326,8 +6370,12 @@ ${body}
 
     function onEdgeEnd(e) {
       if (!edgeDrag || e.pointerId !== edgeDrag.id) return;
+      window.removeEventListener('pointermove', onEdgeMove);
+      window.removeEventListener('pointerup', onEdgeEnd);
+      window.removeEventListener('pointercancel', onEdgeEnd);
       const d = edgeDrag;
       edgeDrag = null;
+      try { d.handle.releasePointerCapture(e.pointerId); } catch {}
       d.handle.classList.remove('dragging');
       tip.hidden = true;
       guide.hidden = true;
@@ -6343,9 +6391,6 @@ ${body}
     [rulerEdgeHandle, paperEdgeHandle].forEach(h => {
       if (!h) return;
       h.addEventListener('pointerdown', e => startEdgeDrag(e, h));
-      h.addEventListener('pointermove', onEdgeMove);
-      h.addEventListener('pointerup', onEdgeEnd);
-      h.addEventListener('pointercancel', onEdgeEnd);
       h.addEventListener('dblclick', resetPaperWidth);
     });
 
