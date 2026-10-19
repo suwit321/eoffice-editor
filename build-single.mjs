@@ -31,29 +31,30 @@ const linkRe = /<link rel="stylesheet" href="\.\/quill\.snow\.css"[^>]*>/;
 must(linkRe.test(html), 'แท็ก <link> ของ quill.snow.css');
 html = html.replace(linkRe, () => `<style>${safeCss(read('quill.snow.css'))}</style>`);
 
-const tagRe = /<script src="\.\/eoffice-pastetest\.js"[^>]*><\/script>\s*<script src="\.\/eoffice-tools\.js"[^>]*><\/script>/;
-must(tagRe.test(html), 'แท็ก <script> ของ eoffice-pastetest.js / eoffice-tools.js');
+const tagRe = /<script src="\.\/eoffice-pastetest\.js"[^>]*><\/script>\s*<script src="\.\/eoffice-tools\.js"[^>]*><\/script>\s*<script src="\.\/eoffice-cloud\.js"[^>]*><\/script>/;
+must(tagRe.test(html), 'แท็ก <script> ของ eoffice-pastetest.js / eoffice-tools.js / eoffice-cloud.js');
 html = html.replace(tagRe, '');
 
-// Quill + pastetest + tools ฝังก่อนสคริปต์หลัก (สคริปต์หลักข้ามการโหลด Quill เมื่อ window.Quill มีแล้ว)
+// Quill + pastetest + tools + cloud ฝังก่อนสคริปต์หลัก (สคริปต์หลักข้ามการโหลด Quill เมื่อ window.Quill มีแล้ว)
 const mainTag = '\n<script>\n';
 const at = html.indexOf(mainTag);
 must(at > 0 && html.indexOf(mainTag, at + 1) === -1, 'แท็ก <script> หลักตัวเดียว');
-const inlined = ['quill.js', 'eoffice-pastetest.js', 'eoffice-tools.js'].map(f => `<script>/* ${f} */\n${safeJs(read(f))}\n</script>`).join('\n');
+const inlined = ['quill.js', 'eoffice-pastetest.js', 'eoffice-tools.js', 'eoffice-cloud.js'].map(f => `<script>/* ${f} */\n${safeJs(read(f))}\n</script>`).join('\n');
 const base = html.slice(0, at) + '\n' + inlined + html.slice(at);
 must(!/\son(?:error|load|click)=/i.test(base.replace(/<script>[\s\S]*?<\/script>/g, '')), 'ไม่ควรมี event handler แบบ inline (HTML attribute) เหลือ — จะขัดกับ CSP');
 
 // ---- CSP: อนุญาตสคริปต์เฉพาะที่มีแฮชตรงกับโค้ดจริง ----
 const hashes = [...base.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m => `'sha256-${createHash('sha256').update(m[1], 'utf8').digest('base64')}'`);
-must(hashes.length === 4, `สคริปต์ inline 4 ก้อน (พบ ${hashes.length})`);
+must(hashes.length === 5, `สคริปต์ inline 5 ก้อน (พบ ${hashes.length})`);
 const csp = [
   "default-src 'none'",
-  `script-src 'self' ${hashes.join(' ')}`,
+  `script-src 'self' https://www.gstatic.com https://apis.google.com https://accounts.google.com ${hashes.join(' ')}`,
   "style-src 'self' 'unsafe-inline'",                 // Quill และแอปตั้ง style แบบ inline ทั่วไป (CSS ไม่รันโค้ด)
-  "img-src 'self' data: blob:",
+  "img-src 'self' data: blob: https://*.googleusercontent.com https://*.gstatic.com",
   "font-src 'self' data:",
-  // ปลายทาง AI ที่รองรับ + เซิร์ฟเวอร์ในเครื่อง (Ollama ฯลฯ) — เซิร์ฟเวอร์ OpenAI-compatible ของหน่วยงานให้เพิ่มชื่อโดเมนที่นี่
-  "connect-src 'self' https://api.anthropic.com https://api.openai.com https://generativelanguage.googleapis.com http://localhost:* http://127.0.0.1:*",
+  "frame-src 'self' https://*.firebaseapp.com https://accounts.google.com",
+  // ปลายทาง AI ที่รองรับ + Firebase Cloud + Google Drive + เซิร์ฟเวอร์ในเครื่อง (Ollama ฯลฯ)
+  "connect-src 'self' https://api.anthropic.com https://api.openai.com https://generativelanguage.googleapis.com https://*.googleapis.com https://*.firebaseio.com https://accounts.google.com http://localhost:* http://127.0.0.1:*",
   "base-uri 'none'", "form-action 'none'", "object-src 'none'", "manifest-src 'none'",
 ];
 const cspMeta = csp.join('; ');

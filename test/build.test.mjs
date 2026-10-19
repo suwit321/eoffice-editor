@@ -29,12 +29,12 @@ describe('build-single.mjs and dist artifacts', () => {
     }
   });
 
-  test('dist/index.html มี CSP ตรงกับแฮชของสคริปต์ inline ทั้ง 4 ก้อน', () => {
+  test('dist/index.html มี CSP ตรงกับแฮชของสคริปต์ inline ทั้ง 5 ก้อน', () => {
     const html = readFileSync(join(root, 'dist/index.html'), 'utf8');
     assert.ok(html.includes('<meta http-equiv="Content-Security-Policy"'), 'ต้องมี meta CSP');
 
     const scripts = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)];
-    assert.equal(scripts.length, 4, 'ต้องมี script inline 4 ก้อน');
+    assert.equal(scripts.length, 5, 'ต้องมี script inline 5 ก้อน');
 
     for (const match of scripts) {
       const hash = `sha256-${createHash('sha256').update(match[1], 'utf8').digest('base64')}`;

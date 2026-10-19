@@ -522,6 +522,9 @@ body.ls-docked .desk{padding-left:240px}
         <button type="button" class="btn" id="btnOpenMenu" title="เปิดไฟล์ร่าง (.html / .txt)">เปิดไฟล์…</button>
         <button type="button" class="btn" id="btnAddPageMenu" title="เพิ่มหน้าใหม่ต่อจากหน้านี้">เพิ่มหน้าใหม่</button>
         <hr>
+        <button type="button" class="btn" id="btnCloudSave" title="บันทึกเอกสารไปยังโฟลเดอร์ใน Google Drive">📁 บันทึกลง Google Drive</button>
+        <button type="button" class="btn" id="btnCloudOpen" title="เปิดเอกสารจาก Google Drive หรือแชร์ลิงก์">📁 เปิดจาก Google Drive…</button>
+        <hr>
         <button type="button" class="btn" id="btnSaveAs" title="Ctrl+Shift+S — เลือกไฟล์ใหม่ แล้วใช้ไฟล์นั้นเป็นที่บันทึก">บันทึกเป็น…</button>
         <button type="button" class="btn" id="btnSave" title="ดาวน์โหลดสำเนาเป็นไฟล์ .html (ไม่ผูกไฟล์)">ดาวน์โหลดสำเนา .html</button>
         <button type="button" class="btn" id="btnFile" title="เลือกไฟล์ .html ในเครื่อง แล้วบันทึกทับให้อัตโนมัติทุกครั้งที่แก้ไข">บันทึกลงไฟล์อัตโนมัติ</button>
@@ -907,6 +910,7 @@ body.ls-docked .desk{padding-left:240px}
 
 <script src="./eoffice-pastetest.js" defer onerror="(window.__missing=window.__missing||[]).push('eoffice-pastetest.js')"></script>
 <script src="./eoffice-tools.js" defer onerror="(window.__missing=window.__missing||[]).push('eoffice-tools.js')"></script>
+<script src="./eoffice-cloud.js" defer onerror="(window.__missing=window.__missing||[]).push('eoffice-cloud.js')"></script>
 <noscript><div class="load-banner">แอปนี้ต้องเปิด JavaScript ในเบราว์เซอร์จึงจะใช้งานได้</div></noscript>
 <input type="file" id="fileImage" accept="image/png,image/jpeg,image/gif,image/webp" hidden>
 <input type="file" id="fileOpen" accept=".html,.htm,.txt,text/html,text/plain" hidden>
@@ -1076,7 +1080,7 @@ body.ls-docked .desk{padding-left:240px}
   }
   function checkCompanions() {
     const missing = window.__missing || [];
-    if (missing.length) banner(`ไม่พบไฟล์ <code>${missing.join('</code>, <code>')}</code> — ${missing.some(f => /tools|pastetest/.test(f)) ? 'เครื่องมือเสริมจะไม่ทำงาน ' : ''}คัดลอกไฟล์ให้ครบหรือใช้ไฟล์เดี่ยว <code>eoffice-editor-single.html</code>`);
+    if (missing.length) banner(`ไม่พบไฟล์ <code>${missing.join('</code>, <code>')}</code> — ${missing.some(f => /tools|pastetest|cloud/.test(f)) ? 'เครื่องมือเสริมหรือระบบ Cloud จะไม่ทำงาน ' : ''}คัดลอกไฟล์ให้ครบหรือใช้ไฟล์เดี่ยว <code>eoffice-editor-single.html</code>`);
     // quill.snow.css จำเป็นต่อการแสดงผลกล่องพิมพ์ (white-space: pre-wrap ฯลฯ)
     if (typeof getComputedStyle === 'function' && window.eofficeEditor && getComputedStyle(window.eofficeEditor.quill.root).whiteSpace !== 'pre-wrap') {
       banner('ไม่พบไฟล์ <code>quill.snow.css</code> — หน้าตาและการเว้นวรรคในกล่องพิมพ์อาจผิดเพี้ยน คัดลอกไฟล์ให้ครบหรือใช้ไฟล์เดี่ยว');
@@ -4978,6 +4982,21 @@ ${body}
     }
     $('#btnOpenMenu').addEventListener('click', () => $('[data-cmd=open]').click());
     $('#btnAddPageMenu').addEventListener('click', () => addPage());
+    $('#btnCloudSave')?.addEventListener('click', async () => {
+      const c = window.eofficeCloud;
+      if (!c || !c.getUser()) {
+        window.eofficeTools?.setOpen?.(true);
+        window.eofficeTools?.showTab?.('cloud');
+      } else {
+        await c.saveToCloud();
+      }
+    });
+    $('#btnCloudOpen')?.addEventListener('click', () => {
+      window.eofficeTools?.setOpen?.(true);
+      window.eofficeTools?.showTab?.('cloud');
+    });
+    document.addEventListener('eoffice:cloud:saved', () => saveInfo());
+    document.addEventListener('eoffice:cloud:loaded', () => saveInfo());
     $('#pagebar').addEventListener('click', e => {
       const b = e.target.closest('button');
       if (!b) return;
@@ -4996,7 +5015,8 @@ ${body}
       const el = $('#saveInfo');
       const text = localFailed ? '⚠ บันทึกไม่ได้' : localSavedAt ? `✓ บันทึก ${hm(localSavedAt)}` : '✓ บันทึกอัตโนมัติ';
       const fileText = !file.handle ? '' : file.error ? ' · ไฟล์รออนุญาต' : ` · ไฟล์ ${file.savedAt ? hm(file.savedAt) : '✓'}`;
-      el.textContent = text + fileText;
+      const cloudText = window.eofficeCloud?.getCloudDocId() ? ' · 📁 Drive' : '';
+      el.textContent = text + fileText + cloudText;
       el.classList.toggle('warn', localFailed || (!!file.handle && file.error));
       el.title = [localFailed ? 'บันทึกในเบราว์เซอร์ไม่ได้ (พื้นที่เต็ม)' : localSavedAt ? `บันทึกอัตโนมัติในเบราว์เซอร์ ${clock(localSavedAt)}` : 'บันทึกอัตโนมัติในเบราว์เซอร์: เปิด',
         file.handle ? (file.error ? `ไฟล์ ${file.handle.name}: รออนุญาต` : `บันทึกทับไฟล์ ${file.handle.name}${file.savedAt ? ' ' + clock(file.savedAt) : ''}`) : ''].filter(Boolean).join(' · ');

@@ -631,6 +631,32 @@ body.tools-open .topbar,body.tools-open .desk,body.tools-open .statusbar{margin-
 
 .tsub-btn[data-tab="file"]{--tab-color:#475569;--tab-bg:#f8fafc;--tab-bd:#cbd5e1}
 .tsub-btn[data-tab="paste"]{--tab-color:#0d9488;--tab-bg:#f0fdfa;--tab-bd:#99f6e4}
+.tsub-btn[data-tab="cloud"]{--tab-color:#2563eb;--tab-bg:#eff6ff;--tab-bd:#bfdbfe}
+
+/* Cloud panel styles */
+.cloud-user{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:#f8fafc;margin-bottom:10px}
+.cloud-user img{width:36px;height:36px;border-radius:50%;border:2px solid #e2e8f0;flex:none}
+.cloud-user .cloud-name{flex:1;min-width:0;overflow:hidden}
+.cloud-user .cloud-name strong{display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cloud-user .cloud-name small{display:block;font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cloud-login-btn{width:100%;height:38px;display:flex;align-items:center;justify-content:center;gap:8px;border:1px solid #dadce0;border-radius:8px;background:#fff;cursor:pointer;font:500 13px/1 inherit;color:#3c4043;transition:all .15s}
+.cloud-login-btn:hover{background:#f7f8f8;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.cloud-login-btn svg{width:18px;height:18px;flex:none}
+.cloud-status{display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:6px;font-size:12px;margin:6px 0}
+.cloud-status.saving{background:#fef3c7;color:#92400e}
+.cloud-status.saved{background:#d1fae5;color:#065f46}
+.cloud-status.error{background:#fee2e2;color:#991b1b}
+.cloud-status.synced{background:#dbeafe;color:#1e40af}
+.cloud-doc-list{list-style:none;margin:8px 0 0;padding:0}
+.cloud-doc-list li{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--line);border-radius:7px;margin-bottom:6px;font-size:12.5px;cursor:pointer;transition:background .12s,border-color .12s}
+.cloud-doc-list li:hover{background:var(--hover);border-color:var(--line-strong)}
+.cloud-doc-list li.current{border-color:var(--accent);background:#eff6ff}
+.cloud-doc-list .doc-name{flex:1;min-width:0;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cloud-doc-list .doc-time{color:var(--muted);font-size:11px;flex:none;white-space:nowrap}
+.cloud-doc-list .doc-acts{display:flex;gap:3px;flex:none}
+.cloud-doc-list .doc-acts button{width:24px;height:24px;border:1px solid var(--line);border-radius:5px;background:#fff;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:all .12s}
+.cloud-doc-list .doc-acts button:hover{background:var(--hover);border-color:var(--line-strong)}
+.cloud-doc-list .doc-shared{font-size:10px;padding:1px 6px;border-radius:4px;background:#dbeafe;color:#1e40af;font-weight:600;flex:none}
 
 /* Collapsible folds styling (ย่อส่วนที่ไม่จำเป็นลงเพื่อประหยัดพื้นที่) */
 .tools-fold{margin:10px 0;border:1px solid var(--line);border-radius:7px;background:#fafbfc;overflow:hidden;transition:border-color .15s}
@@ -792,6 +818,7 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
     <button type="button" role="tab" class="tsub-btn" data-tab="ai" data-group="audit" aria-selected="false"><span class="tab-dot"></span>ผู้ช่วย AI</button>
 
     <!-- กลุ่ม 4: ไฟล์และระบบ -->
+    <button type="button" role="tab" class="tsub-btn" data-tab="cloud" data-group="file" aria-selected="false"><span class="tab-dot"></span>Google Drive 📁</button>
     <button type="button" role="tab" class="tsub-btn" data-tab="file" data-group="file" aria-selected="false"><span class="tab-dot"></span>ไฟล์</button>
     <button type="button" role="tab" class="tsub-btn" data-tab="paste" data-group="file" aria-selected="false"><span class="tab-dot"></span>ทดสอบวาง</button>
   </div>
@@ -839,6 +866,81 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
     <ul class="phrase-list" id="phraseList"></ul>
     <div class="row"><input type="text" id="phraseIn" class="grow" placeholder="พิมพ์คำหรือสำนวนใหม่" maxlength="300"><button type="button" class="tbtn primary" data-act="phraseAdd">เพิ่ม</button></div>
     <div class="row"><button type="button" class="tbtn" data-act="phraseFromSel">เพิ่มจากข้อความที่เลือก</button><button type="button" class="tbtn" data-act="phraseReset">คืนค่ารายการตัวอย่าง</button></div>
+  </section>
+
+  <section data-panel="cloud" hidden>
+    <h3>📁 Google Drive (เก็บไฟล์ลงโฟลเดอร์เฉพาะ)</h3>
+    <div id="cloudUserArea">
+      <div class="cloud-user" id="cloudUserInfo" hidden>
+        <img id="cloudUserPhoto" src="" alt="User Avatar">
+        <div class="cloud-name">
+          <strong id="cloudUserName">-</strong>
+          <small id="cloudUserEmail">-</small>
+        </div>
+        <button type="button" class="tbtn" id="btnCloudSignOut" title="ออกจากระบบ">ออก</button>
+      </div>
+      <div id="cloudLoginPrompt">
+        <button type="button" class="cloud-login-btn" id="btnCloudSignIn">
+          <svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+          <span>เข้าสู่ระบบด้วย Google (Google Drive)</span>
+        </button>
+        <p class="hint" style="margin-top:6px">เข้าสู่ระบบเพื่อบันทึกและเปิดเอกสารจากโฟลเดอร์ <b>"E-Office Documents"</b> ใน Google Drive ของคุณ</p>
+      </div>
+    </div>
+
+    <!-- แถบแสดงโฟลเดอร์เฉพาะใน Google Drive -->
+    <div id="cloudFolderBox" style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:7px;padding:8px 10px;margin:8px 0;font-size:12px;display:flex;align-items:center;justify-content:space-between">
+      <span>📁 โฟลเดอร์: <b id="cloudFolderName">E-Office Documents</b></span>
+      <a id="cloudFolderLink" href="https://drive.google.com" target="_blank" rel="noopener" style="color:#0369a1;font-weight:600;text-decoration:none">เปิดใน Drive ↗</a>
+    </div>
+
+    <div id="cloudStatusMsg" class="cloud-status synced" hidden></div>
+
+    <h3>สถานะเอกสารปัจจุบัน</h3>
+    <div class="row">
+      <span id="cloudDocBadge" class="hint">ยังไม่ได้เชื่อมต่อ Google Drive</span>
+    </div>
+    <div class="row">
+      <label class="inline"><input type="checkbox" id="cloudAutoSave"> บันทึกอัตโนมัติไปยัง Google Drive (Auto-save)</label>
+    </div>
+    <div class="row">
+      <button type="button" class="tbtn primary" id="btnCloudSaveDoc">📁 บันทึกลง Drive</button>
+      <button type="button" class="tbtn" id="btnCloudNewDoc" title="เริ่มเอกสารใหม่ใน Google Drive">เอกสารใหม่</button>
+      <button type="button" class="tbtn" id="btnCloudShareDoc" title="เปิดดูไฟล์ใน Google Drive หรือคัดลอกลิงก์">🔗 เปิดใน Drive</button>
+    </div>
+
+    <h3>เอกสารในโฟลเดอร์ E-Office Documents</h3>
+    <div class="row">
+      <button type="button" class="tbtn" id="btnCloudRefresh">🔄 โหลดรายการใหม่</button>
+      <span class="hint" id="cloudDocCount"></span>
+    </div>
+    <ul class="cloud-doc-list" id="cloudDocList"></ul>
+
+    <details class="tools-fold" id="cloudConfigFold">
+      <summary><span class="fold-icon">⚙️</span> ตั้งค่า Google Client ID (Google Drive)</summary>
+      <div class="fold-body">
+        <p class="hint">ใส่ <b>OAuth 2.0 Client ID</b> จาก Google Cloud Console:</p>
+        <div class="row">
+          <input type="text" id="gdriveClientIdIn" class="grow" placeholder="xxxx.apps.googleusercontent.com" style="font:11.5px Consolas,monospace;height:32px;padding:0 8px;border:1px solid var(--line-strong);border-radius:6px">
+        </div>
+        <div class="row">
+          <button type="button" class="tbtn primary" id="btnSaveGdriveClient">บันทึก Client ID</button>
+          <button type="button" class="tbtn" id="btnClearGdriveClient">ล้างค่า</button>
+        </div>
+        <p class="hint" id="cloudCfgStatus"></p>
+        <div style="margin-top:8px;padding:8px 10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;font-size:11.5px;line-height:1.55;color:#334155">
+          <strong style="color:#0f172a">วิธีรับ Client ID ฟรี (ใช้โปรเจกต์เดิมได้ทันที ไม่ติด Limit):</strong>
+          <ol style="margin:4px 0 0;padding-left:18px">
+            <li>เปิด <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener" style="color:#2563eb">Google Cloud Console &gt; Credentials</a> (เลือกโปรเจกต์เดิมที่มีอยู่)</li>
+            <li>ไปที่ <a href="https://console.cloud.google.com/apis/library/drive.googleapis.com" target="_blank" rel="noopener" style="color:#2563eb">Enabled APIs</a> ค้นหา <b>Google Drive API</b> แล้วกด <b>Enable</b></li>
+            <li>คลิก <b>Create Credentials &gt; OAuth client ID</b></li>
+            <li>เลือก Application type เป็น <b>Web application</b></li>
+            <li>ในช่อง <b>Authorized JavaScript origins</b> ให้ใส่ Origin นี้ของคุณ:<br><code id="currentOriginBadge" style="background:#e2e8f0;padding:2px 6px;border-radius:4px;font-weight:600;display:inline-block;margin-top:2px"></code></li>
+            <li>กด Create แล้วคัดลอก Client ID มาวางในช่องด้านบน</li>
+          </ol>
+        </div>
+      </div>
+    </details>
   </section>
 
   <section data-panel="file" hidden>
@@ -1076,9 +1178,9 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
       num: 'text', find: 'text', phrase: 'text', nobreak: 'text',
       layout: 'format', style: 'format', theme: 'format',
       auto: 'audit', check: 'audit', ai: 'audit',
-      file: 'file', paste: 'file'
+      file: 'file', paste: 'file', cloud: 'file'
     };
-    const lastTabOfGroup = { text: 'num', format: 'layout', audit: 'auto', file: 'file' };
+    const lastTabOfGroup = { text: 'num', format: 'layout', audit: 'auto', file: 'cloud' };
 
     function showTab(name) {
       if (!$(`section[data-panel="${name}"]`, panel)) name = 'num';
@@ -1485,6 +1587,284 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
     });
     $('#fileName').addEventListener('change', e => ed.setDocName(e.target.value));
     $('#docName').addEventListener('change', () => { $('#fileName').value = ed.docName(); });
+
+    // ================= Cloud (Google Drive / Firebase) =================
+    const cloudUserInfo = $('#cloudUserInfo', panel);
+    const cloudUserPhoto = $('#cloudUserPhoto', panel);
+    const cloudUserName = $('#cloudUserName', panel);
+    const cloudUserEmail = $('#cloudUserEmail', panel);
+    const cloudLoginPrompt = $('#cloudLoginPrompt', panel);
+    const cloudFolderBox = $('#cloudFolderBox', panel);
+    const cloudFolderName = $('#cloudFolderName', panel);
+    const cloudFolderLink = $('#cloudFolderLink', panel);
+    const cloudStatusMsg = $('#cloudStatusMsg', panel);
+    const cloudDocBadge = $('#cloudDocBadge', panel);
+    const cloudAutoSave = $('#cloudAutoSave', panel);
+    const btnCloudSignIn = $('#btnCloudSignIn', panel);
+    const btnCloudSignOut = $('#btnCloudSignOut', panel);
+    const btnCloudSaveDoc = $('#btnCloudSaveDoc', panel);
+    const btnCloudNewDoc = $('#btnCloudNewDoc', panel);
+    const btnCloudShareDoc = $('#btnCloudShareDoc', panel);
+    const btnCloudRefresh = $('#btnCloudRefresh', panel);
+    const cloudDocList = $('#cloudDocList', panel);
+    const cloudDocCount = $('#cloudDocCount', panel);
+    const cloudConfigFold = $('#cloudConfigFold', panel);
+    const gdriveClientIdIn = $('#gdriveClientIdIn', panel);
+    const btnSaveGdriveClient = $('#btnSaveGdriveClient', panel);
+    const btnClearGdriveClient = $('#btnClearGdriveClient', panel);
+    const cloudCfgStatus = $('#cloudCfgStatus', panel);
+    const currentOriginBadge = $('#currentOriginBadge', panel);
+
+    let cloudStatusTimer = null;
+    function showCloudStatus(msg, type = 'synced', timeout = 4000) {
+      if (!cloudStatusMsg) return;
+      cloudStatusMsg.textContent = msg;
+      cloudStatusMsg.className = `cloud-status ${type}`;
+      cloudStatusMsg.hidden = false;
+      if (timeout) {
+        clearTimeout(cloudStatusTimer);
+        cloudStatusTimer = setTimeout(() => { cloudStatusMsg.hidden = true; }, timeout);
+      }
+    }
+
+    function renderCloudUser(u) {
+      if (!cloudUserInfo) return;
+      const c = window.eofficeCloud;
+      if (u) {
+        cloudUserInfo.hidden = false;
+        if (cloudLoginPrompt) cloudLoginPrompt.hidden = true;
+        cloudUserName.textContent = u.name || 'ผู้ใช้งาน Google';
+        cloudUserEmail.textContent = u.email || '';
+        if (u.photo) {
+          cloudUserPhoto.src = u.photo;
+          cloudUserPhoto.hidden = false;
+        } else {
+          cloudUserPhoto.hidden = true;
+        }
+        if (cloudFolderBox) {
+          const finfo = c?.getFolderInfo();
+          if (cloudFolderLink && finfo?.link) cloudFolderLink.href = finfo.link;
+          cloudFolderBox.hidden = false;
+        }
+      } else {
+        cloudUserInfo.hidden = true;
+        if (cloudLoginPrompt) cloudLoginPrompt.hidden = false;
+      }
+      updateCloudDocBadge();
+    }
+
+    function updateCloudDocBadge() {
+      if (!cloudDocBadge) return;
+      const c = window.eofficeCloud;
+      if (!c) {
+        cloudDocBadge.textContent = 'โมดูล Cloud กำลังโหลด…';
+        return;
+      }
+      const u = c.getUser();
+      const docId = c.getCloudDocId();
+      if (!u) {
+        cloudDocBadge.textContent = 'ยังไม่ได้เชื่อมต่อ Google Drive';
+      } else if (docId) {
+        cloudDocBadge.innerHTML = `📁 เชื่อมโยงใน Drive แล้ว <small style="color:var(--muted)">(${esc(docId.slice(0, 10))}…)</small>`;
+      } else {
+        cloudDocBadge.textContent = '📄 เอกสารใหม่ (ยังไม่ได้บันทึกลง Google Drive)';
+      }
+      if (cloudAutoSave) cloudAutoSave.checked = c.getAutoSave();
+    }
+
+    async function renderCloudDocList() {
+      if (!cloudDocList) return;
+      const c = window.eofficeCloud;
+      if (!c || !c.getUser()) {
+        cloudDocList.innerHTML = '<li style="color:var(--muted);justify-content:center;cursor:default">กรุณาล็อกอินด้วย Google เพื่อดูเอกสารในโฟลเดอร์</li>';
+        if (cloudDocCount) cloudDocCount.textContent = '';
+        return;
+      }
+      cloudDocList.innerHTML = '<li style="color:var(--muted);justify-content:center;cursor:default">กำลังโหลดรายการ…</li>';
+      const docs = await c.listMyDocs();
+      if (cloudDocCount) cloudDocCount.textContent = `(${docs.length} รายการ)`;
+      if (!docs.length) {
+        cloudDocList.innerHTML = '<li style="color:var(--muted);justify-content:center;cursor:default">ยังไม่มีเอกสารในโฟลเดอร์ — กดปุ่ม “📁 บันทึกลง Drive” เพื่อบันทึกไฟล์แรก</li>';
+        return;
+      }
+      const curId = c.getCloudDocId();
+      cloudDocList.innerHTML = docs.map(d => {
+        const isCurrent = d.id === curId;
+        const timeStr = d.updatedAt ? new Date(d.updatedAt).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '-';
+        const sizeStr = d.size ? `${(d.size / 1024).toFixed(1)} KB` : '';
+        return `<li class="${isCurrent ? 'current' : ''}" data-doc-id="${esc(d.id)}">
+          <span class="doc-name" title="${esc(d.name)}">${isCurrent ? '📌 ' : '📄 '}${esc(d.name || 'เอกสารไม่มีชื่อ')}</span>
+          ${sizeStr ? `<span style="font-size:11px;color:var(--muted)">${sizeStr}</span>` : ''}
+          <span class="doc-time">${timeStr}</span>
+          <span class="doc-acts">
+            ${d.webViewLink ? `<a href="${esc(d.webViewLink)}" target="_blank" rel="noopener" class="tbtn" style="text-decoration:none;display:inline-flex;align-items:center;padding:2px 6px;font-size:11px" title="เปิดดูใน Google Drive" onclick="event.stopPropagation()">Drive ↗</a>` : ''}
+            <button type="button" data-cloud-act="del" data-doc-id="${esc(d.id)}" data-doc-name="${esc(d.name)}" title="ลบไฟล์นี้">🗑️</button>
+          </span>
+        </li>`;
+      }).join('');
+    }
+
+    function renderCloudConfig() {
+      const c = window.eofficeCloud;
+      if (!c) return;
+      const cid = c.getGdriveClientId?.() || '';
+      if (gdriveClientIdIn) gdriveClientIdIn.value = cid;
+      if (!cid && cloudConfigFold) cloudConfigFold.open = true;
+
+      if (currentOriginBadge) {
+        const origin = window.location.origin;
+        if (origin && origin !== 'null' && !origin.startsWith('file:')) {
+          currentOriginBadge.textContent = origin;
+        } else {
+          currentOriginBadge.innerHTML = '<code>http://localhost:8080</code> (แนะนำเปิดผ่าน localhost)';
+        }
+      }
+    }
+
+    // Bind Cloud Events
+    document.addEventListener('eoffice:cloud:ready', e => {
+      renderCloudUser(e.detail?.user || window.eofficeCloud?.getUser());
+      renderCloudDocList();
+    });
+    document.addEventListener('eoffice:cloud:saving', () => showCloudStatus('กำลังบันทึกไปยัง Google Drive…', 'saving', 0));
+    document.addEventListener('eoffice:cloud:saved', e => {
+      showCloudStatus(`บันทึกเรียบร้อย (${e.detail.name})`, 'saved');
+      updateCloudDocBadge();
+      renderCloudDocList();
+    });
+    document.addEventListener('eoffice:cloud:loading', () => showCloudStatus('กำลังโหลดเอกสารจาก Google Drive…', 'saving', 0));
+    document.addEventListener('eoffice:cloud:loaded', e => {
+      showCloudStatus(`โหลดสำเร็จ: ${e.detail.name}`, 'saved');
+      updateCloudDocBadge();
+      renderCloudDocList();
+    });
+    document.addEventListener('eoffice:cloud:error', e => showCloudStatus(e.detail.message, 'error', 6000));
+    document.addEventListener('eoffice:cloud:deleted', () => {
+      updateCloudDocBadge();
+      renderCloudDocList();
+    });
+    document.addEventListener('eoffice:cloud:new', () => updateCloudDocBadge());
+    document.addEventListener('eoffice:cloud:signout', () => {
+      renderCloudUser(null);
+      renderCloudDocList();
+    });
+    document.addEventListener('eoffice:cloud:need-config', () => {
+      if (cloudConfigFold) cloudConfigFold.open = true;
+      if (cloudCfgStatus) {
+        cloudCfgStatus.style.color = '#991b1b';
+        cloudCfgStatus.textContent = 'กรุณาใส่ Google Client ID ด้านล่างก่อนเข้าสู่ระบบ';
+      }
+    });
+
+    // UI Click Handlers
+    btnCloudSignIn?.addEventListener('click', async () => {
+      const c = window.eofficeCloud;
+      if (!c) return;
+      if (!c.isConfigured()) {
+        cloudConfigFold.open = true;
+        cloudCfgStatus.style.color = '#991b1b';
+        cloudCfgStatus.textContent = 'กรุณาใส่ Google Client ID ด้านล่างก่อนเข้าสู่ระบบ';
+        return;
+      }
+      await c.signIn();
+    });
+
+    btnCloudSignOut?.addEventListener('click', async () => {
+      if (confirm('ต้องการออกจากระบบ Google หรือไม่?')) {
+        await window.eofficeCloud?.signOut();
+      }
+    });
+
+    btnCloudSaveDoc?.addEventListener('click', async () => {
+      const c = window.eofficeCloud;
+      if (!c) return;
+      if (!c.getUser()) {
+        showCloudStatus('กรุณาเข้าสู่ระบบ Google ก่อนบันทึก', 'error');
+        return;
+      }
+      await c.saveToCloud();
+    });
+
+    btnCloudNewDoc?.addEventListener('click', () => {
+      window.eofficeCloud?.newCloudDoc();
+      showCloudStatus('ตั้งเป็นเอกสารใหม่แล้ว เมื่อบันทึกจะสร้างไฟล์ใหม่ใน Google Drive', 'synced');
+    });
+
+    btnCloudShareDoc?.addEventListener('click', async () => {
+      const c = window.eofficeCloud;
+      if (!c) return;
+      const link = c.getShareLink();
+      if (link) {
+        window.open(link, '_blank');
+      } else {
+        showCloudStatus('ต้องบันทึกเอกสารลง Google Drive ก่อนเปิดดูใน Drive', 'error');
+      }
+    });
+
+    btnCloudRefresh?.addEventListener('click', () => renderCloudDocList());
+
+    cloudAutoSave?.addEventListener('change', e => {
+      window.eofficeCloud?.setAutoSave(e.target.checked);
+      if (e.target.checked && !window.eofficeCloud?.getCloudDocId()) {
+        showCloudStatus('เปิดบันทึกอัตโนมัติแล้ว — จะเริ่มทำงานเมื่อบันทึกเอกสารครั้งแรก', 'synced');
+      }
+    });
+
+    cloudDocList?.addEventListener('click', async e => {
+      const c = window.eofficeCloud;
+      if (!c) return;
+      const actBtn = e.target.closest('[data-cloud-act]');
+      if (actBtn) {
+        const act = actBtn.dataset.cloudAct;
+        const docId = actBtn.dataset.docId;
+        if (act === 'del') {
+          const name = actBtn.dataset.docName || 'เอกสารนี้';
+          if (confirm(`ต้องการลบ "${name}" ออกจาก Google Drive ใช่หรือไม่?`)) {
+            await c.deleteDoc(docId);
+          }
+        }
+        return;
+      }
+
+      const li = e.target.closest('li[data-doc-id]');
+      if (li) {
+        const docId = li.dataset.docId;
+        if (confirm('ต้องการเปิดเอกสารนี้จาก Google Drive ใช่หรือไม่? (หากมีข้อความที่ยังไม่บันทึกอาจสูญหาย)')) {
+          await c.loadFromCloud(docId);
+        }
+      }
+    });
+
+    btnSaveGdriveClient?.addEventListener('click', () => {
+      try {
+        const val = (gdriveClientIdIn?.value || '').trim();
+        if (!val) throw new Error('กรุณาใส่ Google Client ID');
+        if (!val.includes('.apps.googleusercontent.com') && !val.includes('.')) {
+          throw new Error('รูปแบบ Client ID ต้องลงท้ายด้วย .apps.googleusercontent.com');
+        }
+        window.eofficeCloud?.setGdriveClientId(val);
+        cloudCfgStatus.style.color = '#065f46';
+        cloudCfgStatus.textContent = 'บันทึก Client ID สำเร็จ! กดปุ่มเข้าสู่ระบบด้านบนได้เลย';
+        window.eofficeCloud?.init();
+      } catch (err) {
+        cloudCfgStatus.style.color = '#991b1b';
+        cloudCfgStatus.textContent = err.message;
+      }
+    });
+
+    btnClearGdriveClient?.addEventListener('click', () => {
+      if (confirm('ต้องการล้างค่า Google Client ID หรือไม่?')) {
+        window.eofficeCloud?.setGdriveClientId('');
+        if (gdriveClientIdIn) gdriveClientIdIn.value = '';
+        cloudCfgStatus.textContent = 'ล้างค่าแล้ว';
+      }
+    });
+
+    onTab.cloud = () => {
+      renderCloudUser(window.eofficeCloud?.getUser());
+      renderCloudDocList();
+      renderCloudConfig();
+    };
 
     // ================= แม่แบบบันทึกข้อความ =================
     // ตามระเบียบสำนักนายกรัฐมนตรีว่าด้วยงานสารบรรณ: หัว "บันทึกข้อความ" 29 pt ตัวหนา, หัวข้อ ส่วนราชการ/ที่/วันที่/เรื่อง 20 pt ตัวหนา,
@@ -3070,6 +3450,6 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
 
     showTab(store.get(KEY.tab) || 'num');
     if (store.get(KEY.panel) === '1') setOpen(true);
-    window.eofficeTools = { bahtText, thaiDate, scanOffline, replaceInDoc, toThai, toArabic };
+    window.eofficeTools = { bahtText, thaiDate, scanOffline, replaceInDoc, toThai, toArabic, showTab, setOpen };
   }
 })();

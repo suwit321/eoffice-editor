@@ -21,7 +21,7 @@ describe('Tools Panel Organization & Color-coded Sub-tabs (การจัดก
   });
 
   test('แท็บย่อยมีสีประจำแท็บที่แตกต่างกัน (Distinct Color Palette for each sub-tab)', () => {
-    const tabs = ['num', 'find', 'phrase', 'nobreak', 'layout', 'style', 'theme', 'auto', 'check', 'ai', 'file', 'paste'];
+    const tabs = ['num', 'find', 'phrase', 'nobreak', 'layout', 'style', 'theme', 'auto', 'check', 'ai', 'file', 'cloud', 'paste'];
     for (const t of tabs) {
       assert.ok(toolsCode.includes(`.tsub-btn[data-tab="${t}"]`), `ต้องมีการกำหนดสไตล์เฉพาะสำหรับแท็บ ${t}`);
       assert.ok(toolsCode.includes(`--tab-color`), `ต้องมีการใช้ตัวแปร --tab-color ในแท็บย่อย`);
@@ -128,7 +128,7 @@ describe('Tools Panel Organization & Color-coded Sub-tabs (การจัดก
 
       assert.ok(openResult.value.panelOpen, 'แผงเครื่องมือต้องเปิดขึ้นมา');
       assert.equal(openResult.value.groupsCount, 4, 'ต้องมี 4 หมวดหมู่หลัก');
-      assert.equal(openResult.value.subtabsCount, 12, 'ต้องมี 12 แท็บย่อยทั้งหมด');
+      assert.equal(openResult.value.subtabsCount, 13, 'ต้องมี 13 แท็บย่อยทั้งหมด (รวมแท็บ Cloud ☁️)');
       assert.equal(openResult.value.activeGroup, 'text', 'หมวดเริ่มต้นต้องเป็น text');
 
       // คลิกเปลี่ยนกลุ่มไปที่ "จัดหน้า" (format)
