@@ -1913,6 +1913,7 @@ body.tools-open .topbar,body.tools-open .desk,body.tools-open .statusbar{margin-
 .tsub-btn[data-tab="cloud"]{--tab-color:#2563eb;--tab-bg:#eff6ff;--tab-bd:#bfdbfe}
 
 /* Cloud panel styles */
+.cloud-user[hidden],#cloudFolderBox[hidden],#cloudLoginPrompt[hidden]{display:none!important}
 .cloud-user{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:#f8fafc;margin-bottom:10px}
 .cloud-user img{width:36px;height:36px;border-radius:50%;border:2px solid #e2e8f0;flex:none}
 .cloud-user .cloud-name{flex:1;min-width:0;overflow:hidden}
@@ -2168,7 +2169,7 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
     </div>
 
     <\!-- แถบแสดงโฟลเดอร์เฉพาะใน Google Drive -->
-    <div id="cloudFolderBox" style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:7px;padding:8px 10px;margin:8px 0;font-size:12px;display:flex;align-items:center;justify-content:space-between">
+    <div id="cloudFolderBox" hidden style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:7px;padding:8px 10px;margin:8px 0;font-size:12px;display:flex;align-items:center;justify-content:space-between">
       <span>📁 โฟลเดอร์: <b id="cloudFolderName">E-Office Documents</b></span>
       <a id="cloudFolderLink" href="https://drive.google.com" target="_blank" rel="noopener" style="color:#0369a1;font-weight:600;text-decoration:none">เปิดใน Drive ↗</a>
     </div>
@@ -2909,7 +2910,7 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
     function renderCloudUser(u) {
       if (!cloudUserInfo) return;
       const c = window.eofficeCloud;
-      if (u) {
+      if (u && u.uid) {
         cloudUserInfo.hidden = false;
         if (cloudLoginPrompt) cloudLoginPrompt.hidden = true;
         cloudUserName.textContent = u.name || 'ผู้ใช้งาน Google';
@@ -2928,6 +2929,7 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
       } else {
         cloudUserInfo.hidden = true;
         if (cloudLoginPrompt) cloudLoginPrompt.hidden = false;
+        if (cloudFolderBox) cloudFolderBox.hidden = true;
       }
       updateCloudDocBadge();
     }
@@ -3039,13 +3041,31 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
     btnCloudSignIn?.addEventListener('click', async () => {
       const c = window.eofficeCloud;
       if (!c) return;
+
+      if (window.location.protocol === 'file:') {
+        showCloudStatus('⚠️ Google ไม่อนุญาตให้ล็อกอินจาก file:// กรุณาเปิดผ่านเซิร์ฟเวอร์ในเครื่อง เช่น http://localhost:8080 (ดับเบิลคลิก start-server.bat)', 'error', 9000);
+        if (cloudConfigFold) {
+          cloudConfigFold.open = true;
+          cloudConfigFold.scrollIntoView({ behavior: 'smooth' });
+        }
+        return;
+      }
+
       if (!c.isConfigured()) {
         cloudConfigFold.open = true;
         cloudCfgStatus.style.color = '#991b1b';
         cloudCfgStatus.textContent = 'กรุณาใส่ Google Client ID ด้านล่างก่อนเข้าสู่ระบบ';
+        showCloudStatus('กรุณาใส่ Google Client ID ด้านล่างก่อนเข้าสู่ระบบ', 'error', 6000);
+        cloudConfigFold.scrollIntoView({ behavior: 'smooth' });
+        gdriveClientIdIn?.focus();
         return;
       }
-      await c.signIn();
+      try {
+        showCloudStatus('กำลังเปิดหน้าต่างเข้าสู่ระบบ Google…', 'saving', 4000);
+        await c.signIn();
+      } catch (err) {
+        showCloudStatus('เข้าสู่ระบบไม่สำเร็จ: ' + err.message, 'error', 8000);
+      }
     });
 
     btnCloudSignOut?.addEventListener('click', async () => {
@@ -3058,7 +3078,8 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
       const c = window.eofficeCloud;
       if (!c) return;
       if (!c.getUser()) {
-        showCloudStatus('กรุณาเข้าสู่ระบบ Google ก่อนบันทึก', 'error');
+        showCloudStatus('กรุณากดปุ่ม "เข้าสู่ระบบด้วย Google" ด้านบนก่อนบันทึก', 'error', 5000);
+        btnCloudSignIn?.scrollIntoView({ behavior: 'smooth' });
         return;
       }
       await c.saveToCloud();
