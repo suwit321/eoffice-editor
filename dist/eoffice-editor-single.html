@@ -104,6 +104,16 @@ button,select,input{font:inherit;color:inherit}
 .tb[aria-expanded="true"]{background:var(--press);border-color:var(--press-line)}
 .tb:disabled{opacity:.35;cursor:default;background:transparent;border-color:transparent}
 .tb.menu-btn::after{content:"";margin-left:1px;border-left:3px solid transparent;border-right:3px solid transparent;border-top:4px solid currentColor;opacity:.7}
+.tb-split{display:inline-flex;align-items:stretch;height:24px;border:1px solid transparent;border-radius:2px;box-sizing:border-box;vertical-align:middle}
+.tb-split:hover{border-color:#cfd5dd}
+.tb-split.menu-open{background:var(--hover);border-color:var(--press-line)}
+.tb-split.active{background:linear-gradient(#fff,#e9edf2);border-color:#b3bac4}
+.tb-split .tb-split-main{border:0;border-radius:2px 0 0 2px;min-width:20px;height:100%;padding:0 2px;background:transparent}
+.tb-split .tb-split-arrow{border:0;border-left:1px solid transparent;border-radius:0 2px 2px 0;width:11px;min-width:11px;height:100%;padding:0;background:transparent}
+.tb-split:hover .tb-split-arrow,.tb-split.menu-open .tb-split-arrow{border-left-color:rgba(0,0,0,0.12)}
+.tb-split-arrow::after{content:"";border-left:3px solid transparent;border-right:3px solid transparent;border-top:4px solid currentColor;opacity:.7}
+.tb-split .tb:hover{background:rgba(0,0,0,0.06);border-color:transparent}
+.tb-split .tb[aria-expanded="true"]{background:var(--press)}
 .sel{height:24px;border:1px solid #9a9a9a;background:#fff;padding:0 2px;font-size:13px;cursor:pointer}
 #fontSel{width:150px}
 #sizeSel{width:52px;margin-left:-1px}
@@ -631,8 +641,14 @@ body.ls-docked .desk{padding-left:240px}
             <button type="button" class="tb" data-cmd="indent" aria-label="เพิ่มการเยื้อง" title="เพิ่มการเยื้อง"><svg aria-hidden="true"><use href="#i-indent"/></svg></button>
           </div>
           <div class="grp">
-            <button type="button" class="tb menu-btn" id="btnColor" data-menu="m-color" aria-haspopup="true" aria-expanded="false" aria-label="สีตัวอักษร" title="สีตัวอักษร"><svg aria-hidden="true"><use href="#i-color"/></svg></button>
-            <button type="button" class="tb menu-btn" id="btnBg" data-menu="m-bg" aria-haspopup="true" aria-expanded="false" aria-label="สีเน้นข้อความ" title="สีเน้นข้อความ"><svg aria-hidden="true"><use href="#i-highlight"/></svg></button>
+            <div class="tb-split" id="splitColor" role="group" aria-label="สีตัวอักษร">
+              <button type="button" class="tb tb-split-main" id="btnColor" data-cmd="color" aria-label="ใส่สีตัวอักษรทันที" title="ใส่สีตัวอักษรทันที (คลิกเปลี่ยนสีทันที)"><svg aria-hidden="true"><use href="#i-color"/></svg></button>
+              <button type="button" class="tb tb-split-arrow" id="btnColorArrow" data-menu="m-color" aria-haspopup="true" aria-expanded="false" aria-label="เลือกสีตัวอักษรอื่น" title="เลือกสีตัวอักษรอื่น"></button>
+            </div>
+            <div class="tb-split" id="splitBg" role="group" aria-label="สีเน้นข้อความ">
+              <button type="button" class="tb tb-split-main" id="btnBg" data-cmd="background" aria-label="ใส่สีเน้นข้อความทันที" title="ใส่สีเน้นข้อความทันที (คลิกไฮไลต์ทันที)"><svg aria-hidden="true"><use href="#i-highlight"/></svg></button>
+              <button type="button" class="tb tb-split-arrow" id="btnBgArrow" data-menu="m-bg" aria-haspopup="true" aria-expanded="false" aria-label="เลือกสีเน้นข้อความอื่น" title="เลือกสีเน้นข้อความอื่น"></button>
+            </div>
           </div>
         </div>
         <div class="tb-row">
@@ -7012,7 +7028,8 @@ ${body}
       },
     };
     function placeMenu(m, btn) {
-      const b = btn.getBoundingClientRect();
+      const anchor = btn.closest('.tb-split') || btn;
+      const b = anchor.getBoundingClientRect();
       const w = m.offsetWidth, h = m.offsetHeight;
       const left = clamp(b.left, 8, innerWidth - w - 8);
       let top = b.bottom + 4;
@@ -7129,6 +7146,7 @@ ${body}
       placeMenu(m, btn);
       if (id === 'm-charspace' || id === 'm-lineheight') keepSelectionVisible(m);
       btn.setAttribute('aria-expanded', 'true');
+      btn.closest('.tb-split')?.classList.add('menu-open');
       openMenu = { id, m, btn };
     }
     function closeMenu() {
@@ -7137,15 +7155,69 @@ ${body}
       if (openMenu.id === 'm-lineheight') lhClose();
       openMenu.m.hidden = true;
       openMenu.btn.setAttribute('aria-expanded', 'false');
+      openMenu.btn.closest('.tb-split')?.classList.remove('menu-open');
       openMenu = null;
+    }
+
+    // ---------- จัดการสีตัวอักษรและสีเน้นข้อความแบบ Split Button (กดแล้วเปลี่ยนสีทันที) ----------
+    let activeTextColor = store.get('eoffice-editor:last-color') || '#e03e2d';
+    let activeBgColor = store.get('eoffice-editor:last-bg') || '#fff2cc';
+
+    function colorsMatch(c1, c2) {
+      if (!c1 || !c2) return false;
+      if (c1 === c2) return true;
+      const d = colorsMatch._d || (colorsMatch._d = document.createElement('div'));
+      d.style.color = c1;
+      const s1 = d.style.color;
+      d.style.color = c2;
+      return s1 === d.style.color && s1 !== '';
+    }
+
+    function updateColorSwatches() {
+      const btnColor = $('#btnColor'), btnBg = $('#btnBg');
+      if (btnColor) btnColor.style.setProperty('--swatch', activeTextColor);
+      if (btnBg) btnBg.style.setProperty('--swatch', activeBgColor);
+      const inColor = $('input[type=color][data-kind=color]');
+      if (inColor && activeTextColor.startsWith('#') && activeTextColor.length === 7) inColor.value = activeTextColor;
+      const inBg = $('input[type=color][data-kind=background]');
+      if (inBg && activeBgColor.startsWith('#') && activeBgColor.length === 7) inBg.value = activeBgColor;
+    }
+
+    function applyActiveColor() {
+      const r = useRange(activeRange());
+      const cur = quill.getFormat(r.index, r.length).color;
+      const isSame = colorsMatch(cur, activeTextColor);
+      quill.format('color', isSame ? false : activeTextColor, 'user');
+    }
+
+    function applyActiveBackground() {
+      const r = useRange(activeRange());
+      const cur = quill.getFormat(r.index, r.length).background;
+      const isSame = colorsMatch(cur, activeBgColor);
+      quill.format('background', isSame ? false : activeBgColor, 'user');
     }
 
     for (const pal of $$('.palette')) {
       pal.innerHTML = PALETTE.map(c => `<button type="button" class="sw" data-act="${pal.dataset.kind}" data-val="${c}" style="background:${c}" title="${c}" aria-label="${c}"></button>`).join('');
     }
     for (const input of $$('.menu input[type=color]')) {
-      input.addEventListener('change', () => { setInline(input.dataset.kind, input.value); closeMenu(); schedule(); });
+      input.addEventListener('change', () => {
+        const k = input.dataset.kind;
+        if (k === 'color') {
+          activeTextColor = input.value;
+          store.set('eoffice-editor:last-color', input.value);
+          updateColorSwatches();
+        } else if (k === 'background') {
+          activeBgColor = input.value;
+          store.set('eoffice-editor:last-bg', input.value);
+          updateColorSwatches();
+        }
+        setInline(k, input.value);
+        closeMenu();
+        schedule();
+      });
     }
+    updateColorSwatches();
     const tgrid = $('#tgrid');
     tgrid.innerHTML = Array.from({ length: 64 }, (_, i) => `<span data-r="${Math.floor(i / 8) + 1}" data-c="${i % 8 + 1}"></span>`).join('');
     tgrid.addEventListener('mouseover', e => {
@@ -7174,6 +7246,8 @@ ${body}
       list: toggleList,
       indent: () => shiftIndent(1),
       outdent: () => shiftIndent(-1),
+      color: applyActiveColor,
+      background: applyActiveBackground,
       cut: () => clip('cut'),
       copy: () => clip('copy'),
       undo: () => quill.history.undo(),
@@ -7190,8 +7264,22 @@ ${body}
       'lineheight-custom': () => (setLineHeight($('#lhCustom').value) ? undefined : 'keep'),
       spacebefore: v => { setLine({ spacebefore: +v ? `${v}pt` : false }, `ระยะก่อนย่อหน้า ${v} pt`); return 'keep'; },
       spaceafter: v => { setLine({ spaceafter: +v ? `${v}pt` : false }, `ระยะหลังย่อหน้า ${v} pt`); return 'keep'; },
-      color: v => setInline('color', v),
-      background: v => setInline('background', v),
+      color: v => {
+        if (v) {
+          activeTextColor = v;
+          store.set('eoffice-editor:last-color', v);
+          updateColorSwatches();
+        }
+        setInline('color', v);
+      },
+      background: v => {
+        if (v) {
+          activeBgColor = v;
+          store.set('eoffice-editor:last-bg', v);
+          updateColorSwatches();
+        }
+        setInline('background', v);
+      },
       'table-insert': () => insertTable(intIn($('#tRows').value, 1, 30), intIn($('#tCols').value, 1, 12)),
       'table-draw': () => { startDrawTableMode(); },
       'table-select-all': () => { selectEntireTable(); return 'keep'; },
@@ -9421,8 +9509,12 @@ ${body}
       const size = typeof f.size === 'string' ? f.size : (f.size ? '' : DEFAULTS.size);
       if (size && ![...sizeSel.options].some(o => o.value === size)) sizeSel.add(new Option(parseFloat(size), size));
       sizeSel.value = size;
-      $('#btnColor').style.setProperty('--swatch', typeof f.color === 'string' ? f.color : '#000');
-      $('#btnBg').style.setProperty('--swatch', typeof f.background === 'string' ? f.background : 'transparent');
+      press($('#btnColor'), colorsMatch(f.color, activeTextColor));
+      press($('#btnBg'), colorsMatch(f.background, activeBgColor));
+      $('#splitColor')?.classList.toggle('active', colorsMatch(f.color, activeTextColor));
+      $('#splitBg')?.classList.toggle('active', colorsMatch(f.background, activeBgColor));
+      $('#btnColor')?.style.setProperty('--swatch', activeTextColor);
+      $('#btnBg')?.style.setProperty('--swatch', activeBgColor);
       press($('#btnMarks'), settings.showMarks);
       press($('#btnLines'), settings.lineGuides);
       $('#btnNumbers').classList.toggle('on', !!(settings.paraNumbers || settings.lineNumbers || settings.showSpacing || settings.showParaSpace || settings.showLsNum));
