@@ -250,6 +250,28 @@ describe('Word-style Split Button for Font Color & Highlight (การปรั
       });
       assert.strictEqual(bgApplyRes.value.bg, '#fff2cc', 'คลิก #btnBg 1 ครั้งต้องใส่สีไฮไลต์ทันที');
 
+      // 9. ตรวจสอบว่าปุ่มช่องไฟตัวอักษร, ระยะห่างบรรทัด, ระยะก่อนหลังย่อหน้า มีสีเฉพาะที่แตกต่างกันและต่างจากปุ่มปกติ
+      const spacingColors = await send('Runtime.evaluate', {
+        expression: `(() => {
+          const cs = getComputedStyle(document.querySelector('[data-menu="m-charspace"]'));
+          const lh = getComputedStyle(document.querySelector('[data-menu="m-lineheight"]'));
+          const ps = getComputedStyle(document.querySelector('[data-menu="m-paraspace"]'));
+          const normal = getComputedStyle(document.querySelector('[data-cmd="bold"]'));
+          return {
+            csBg: cs.backgroundColor,
+            lhBg: lh.backgroundColor,
+            psBg: ps.backgroundColor,
+            normalBg: normal.backgroundColor
+          };
+        })()`,
+        returnByValue: true
+      });
+      assert.notStrictEqual(spacingColors.value.csBg, spacingColors.value.normalBg, 'ปุ่มช่องไฟตัวอักษรต้องมีสีพื้นต่างจากปุ่มปกติ');
+      assert.notStrictEqual(spacingColors.value.lhBg, spacingColors.value.normalBg, 'ปุ่มระยะห่างบรรทัดต้องมีสีพื้นต่างจากปุ่มปกติ');
+      assert.notStrictEqual(spacingColors.value.psBg, spacingColors.value.normalBg, 'ปุ่มระยะก่อน-หลังย่อหน้าต้องมีสีพื้นต่างจากปุ่มปกติ');
+      assert.notStrictEqual(spacingColors.value.csBg, spacingColors.value.lhBg, 'สีปุ่มช่องไฟและระยะห่างบรรทัดต้องต่างกัน');
+      assert.notStrictEqual(spacingColors.value.lhBg, spacingColors.value.psBg, 'สีปุ่มระยะห่างบรรทัดและระยะย่อหน้าต้องต่างกัน');
+
       // ถ่ายภาพหน้าจอเก็บเป็น Artifact
       const ssRes = await send('Page.captureScreenshot', { format: 'png' });
       if (ssRes && ssRes.data) {
