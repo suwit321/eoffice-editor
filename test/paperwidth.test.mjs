@@ -130,20 +130,16 @@ describe('Paper Width & Edge Dragging (การขยายหน้ากร�
       });
 
       // รอให้ eofficeEditor โหลดและพร้อมทำงาน
-      await send('Runtime.evaluate', {
-        expression: `new Promise((resolve) => {
-          if (window.eofficeEditor) return resolve();
-          document.addEventListener('eoffice:ready', () => resolve(), { once: true });
-          const t0 = Date.now();
-          const iv = setInterval(() => {
-            if (window.eofficeEditor || Date.now() - t0 > 5000) {
-              clearInterval(iv);
-              resolve();
-            }
-          }, 50);
-        })`,
-        awaitPromise: true
-      });
+      for (let i = 0; i < 40; i++) {
+        try {
+          const ready = await send('Runtime.evaluate', {
+            expression: `Boolean(window.eofficeEditor && window.eofficeEditor.quill)`,
+            returnByValue: true
+          });
+          if (ready?.value) break;
+        } catch {}
+        await new Promise(r => setTimeout(r, 100));
+      }
 
       // ตรวจสอบขนาดเริ่มต้นที่ 16 ซม.
       const m16 = await send('Runtime.evaluate', {
@@ -285,6 +281,30 @@ describe('Paper Width & Edge Dragging (การขยายหน้ากร�
       });
       assert.strictEqual(marginState.value.pl, '1.25cm', 'ขอบแคบต้องกำหนด --pl เป็น 1.25cm');
       assert.strictEqual(marginState.value.pr, '1.25cm', 'ขอบแคบต้องกำหนด --pr เป็น 1.25cm');
+
+      // 8. ทดสอบเมื่อเปิดเอกสารใหม่ ค่าเริ่มต้นของย่อหน้าบรรทัดแรกต้องเป็น 0.00 ซม. (0cm)
+      const indentState = await send('Runtime.evaluate', {
+        expression: `(() => {
+          document.querySelector('#btnNew').click();
+          const s = window.eofficeEditor.settings();
+          const mkFirst = document.querySelector('.mk[data-kind="first"]');
+          const mkHang = document.querySelector('.mk[data-kind="hang"]');
+          const paraInfo = document.querySelector('#paraInfo')?.textContent || '';
+          return {
+            defaultIndent: s.defaults.indent,
+            mkFirstVal: mkFirst?.getAttribute('aria-valuenow'),
+            mkFirstLeft: mkFirst?.style.left,
+            mkHangVal: mkHang?.getAttribute('aria-valuenow'),
+            paraInfo
+          };
+        })()`,
+        returnByValue: true
+      });
+      assert.strictEqual(indentState.value.defaultIndent, '0cm', 'ค่าเริ่มต้นของย่อหน้าเมื่อเปิดเอกสารใหม่ต้องเป็น 0cm (0.00)');
+      assert.strictEqual(indentState.value.mkFirstVal, '0.00', 'ตัวเลื่อนย่อหน้าบรรทัดแรก (.mk-first) ต้องมีค่าเป็น 0.00 ซม.');
+      assert.strictEqual(indentState.value.mkFirstLeft, '0cm', 'ตัวเลื่อนย่อหน้าบรรทัดแรก (.mk-first) ต้องอยู่ที่ 0cm');
+      assert.strictEqual(indentState.value.mkHangVal, '0.00', 'ตัวเลื่อนกั้นซ้าย (.mk-hang) ต้องมีค่าเป็น 0.00 ซม.');
+      assert.ok(indentState.value.paraInfo.includes('ย่อ 0'), 'แถบสถานะต้องแสดงระยะย่อ 0 ซม.');
 
       ws.close();
     } finally {

@@ -100,20 +100,16 @@ describe('Word-style Split Button for Font Color & Highlight (การปรั
       });
 
       // รอให้ eofficeEditor โหลดและพร้อมทำงาน
-      await send('Runtime.evaluate', {
-        expression: `new Promise((resolve) => {
-          if (window.eofficeEditor) return resolve();
-          document.addEventListener('eoffice:ready', () => resolve(), { once: true });
-          const t0 = Date.now();
-          const iv = setInterval(() => {
-            if (window.eofficeEditor || Date.now() - t0 > 5000) {
-              clearInterval(iv);
-              resolve();
-            }
-          }, 50);
-        })`,
-        awaitPromise: true
-      });
+      for (let i = 0; i < 40; i++) {
+        try {
+          const ready = await send('Runtime.evaluate', {
+            expression: `Boolean(window.eofficeEditor && window.eofficeEditor.quill)`,
+            returnByValue: true
+          });
+          if (ready?.value) break;
+        } catch {}
+        await new Promise(r => setTimeout(r, 100));
+      }
 
       // 1. ตรวจสอบค่าสีเริ่มต้นของ swatch บน #btnColor (เริ่มต้นคือสีแดง #e03e2d)
       const initSwatch = await send('Runtime.evaluate', {

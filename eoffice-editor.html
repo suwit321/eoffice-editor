@@ -339,6 +339,47 @@ body.grid-on .editor-box{background-image:linear-gradient(to right,rgba(59,130,2
 .st-count{background:#fff7ed;color:#c2410c;font-variant-numeric:tabular-nums}
 .st-save{background:#eff6ff;color:#1d4ed8}
 .st-save.warn{background:#fef2f2;color:#b91c1c}
+/* จุดแดงแบบซ่อนสำหรับดูสถิติการเข้าชมเว็บไซต์ในแถบสถานะขวาล่าง */
+.st-visit-dot{flex:none;display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;padding:0;margin-left:2px;border:0;background:transparent;cursor:pointer;outline:none}
+.st-visit-dot::before{content:"";width:6px;height:6px;border-radius:50%;background:#ef4444;opacity:.35;transition:opacity .15s,transform .15s,box-shadow .15s}
+.st-visit-dot:hover::before,.st-visit-dot:focus-visible::before{opacity:1;transform:scale(1.35);box-shadow:0 0 6px rgba(239,68,68,.65)}
+/* หน้าต่าง Popup แสดงรหัสผ่านและรายละเอียดการเข้าชมเว็บไซต์ */
+.visit-modal{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;background:rgba(15,23,42,.45);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);padding:16px}
+.visit-modal[hidden]{display:none!important}
+.visit-dialog{background:#fff;border:1px solid #cbd5e1;border-radius:12px;box-shadow:0 16px 40px rgba(15,23,42,.24);width:100%;max-width:520px;max-height:calc(100vh - 32px);display:flex;flex-direction:column;overflow:hidden;font-size:13px;color:var(--ink)}
+.visit-dialog.auth-mode{max-width:340px}
+.visit-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#f8fafc;border-bottom:1px solid var(--line);font-weight:600;font-size:14px}
+.visit-head .visit-close{border:0;background:none;font-size:20px;line-height:1;color:var(--muted);cursor:pointer;padding:2px 6px;border-radius:4px}
+.visit-head .visit-close:hover{background:#e2e8f0;color:var(--ink)}
+.visit-body{padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:14px}
+.visit-body[hidden]{display:none!important}
+.visit-pin-desc{margin:0;color:#475569;font-size:13px;text-align:center;line-height:1.5}
+.visit-pin-input{width:100%;height:42px;border:1.5px solid #cbd5e1;border-radius:8px;font-size:22px;font-weight:700;letter-spacing:8px;text-align:center;color:#0f172a;background:#f8fafc;outline:none;transition:border-color .15s,box-shadow .15s}
+.visit-pin-input:focus{border-color:var(--accent);background:#fff;box-shadow:0 0 0 3px rgba(27,95,180,.15)}
+.visit-pin-err{color:#dc2626;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:6px 10px;font-size:12px;text-align:center}
+.visit-pin-err[hidden]{display:none!important}
+.visit-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.visit-card{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 8px;text-align:center}
+.visit-card .vc-num{font-size:20px;font-weight:700;color:#1e3a8a;font-variant-numeric:tabular-nums;line-height:1.2}
+.visit-card.highlight{background:#fef2f2;border-color:#fecaca}
+.visit-card.highlight .vc-num{color:#dc2626}
+.visit-card .vc-lbl{font-size:11px;color:#64748b;margin-top:3px}
+.visit-sec-title{font-size:12px;font-weight:600;color:#334155;margin:0 0 6px;display:flex;align-items:center;justify-content:space-between}
+.visit-chart{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;align-items:end;height:96px;padding:10px 10px 6px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px}
+.visit-bar-col{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:3px}
+.visit-bar-val{font-size:10.5px;font-weight:600;color:#334155;font-variant-numeric:tabular-nums}
+.visit-bar{width:100%;max-width:26px;background:linear-gradient(180deg,#ef4444,#dc2626);border-radius:4px 4px 2px 2px;min-height:4px;transition:height .25s}
+.visit-bar-day{font-size:10px;color:#64748b;white-space:nowrap}
+.visit-meta{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;padding:10px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;font-size:12px}
+.visit-meta div{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.visit-meta b{color:#475569;font-weight:600}
+.visit-log-wrap{max-height:160px;overflow-y:auto;border:1px solid #e2e8f0;border-radius:8px}
+.visit-log-tbl{width:100%;border-collapse:collapse;font-size:11.5px}
+.visit-log-tbl th,.visit-log-tbl td{padding:6px 8px;text-align:left;border-bottom:1px solid #f1f5f9}
+.visit-log-tbl th{position:sticky;top:0;background:#f1f5f9;color:#475569;font-weight:600}
+.visit-log-tbl tr:last-child td{border-bottom:0}
+.visit-badge{display:inline-block;padding:1px 6px;border-radius:9px;font-size:10.5px;background:#eff6ff;color:#1d4ed8}
+.visit-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 16px;background:#f8fafc;border-top:1px solid var(--line)}
 
 /* เมนูแบบเลื่อนลง */
 .menu{position:fixed;z-index:50;min-width:190px;max-width:calc(100vw - 16px);max-height:calc(100vh - 16px);overflow:auto;background:#fff;border:1px solid #c5cad3;border-radius:6px;box-shadow:0 6px 20px rgba(20,30,50,.18);padding:6px;font-size:13px}
@@ -470,7 +511,7 @@ body.ls-docked .desk{padding-left:240px}
 @media print{
   @page{size:A4;margin:2.5cm 2cm 2cm 3cm}
   body{background:#fff}
-  .topbar,.desk,.statusbar,.menu,.fruler{display:none!important}
+  .topbar,.desk,.statusbar,.menu,.fruler,.visit-modal{display:none!important}
   #printArea{display:block!important;color:#000}
   #printArea img{max-width:100%}
 }
@@ -762,6 +803,7 @@ body.ls-docked .desk{padding-left:240px}
   <span id="lsInfo" class="st st-ls" title="ช่องไฟตัวอักษรตรงเคอร์เซอร์"></span>
   <span id="counts" class="st st-count" title="จำนวนคำและตัวอักษรในหน้านี้"></span>
   <span id="saveInfo" class="st st-save"></span>
+  <button type="button" id="visitDot" class="st-visit-dot" aria-label="สถิติการเข้าชมเว็บไซต์" title="•"></button>
 </footer>
 <div id="printArea" hidden></div>
 <div id="renderer" hidden></div>
@@ -924,6 +966,86 @@ body.ls-docked .desk{padding-left:240px}
   <div class="menu-row end"><button type="button" class="chip" id="linkRemove" data-act="link-remove">เอาลิงก์ออก</button><button type="button" class="chip primary" data-act="link-apply">ใช้ลิงก์</button></div>
 </div>
 
+<!-- Popup ตัวนับการเข้าชมเว็บไซต์ (ซ่อนหลังรหัสผ่าน 4321) -->
+<div class="visit-modal" id="visitModal" role="dialog" aria-modal="true" aria-labelledby="visitModalTitle" hidden>
+  <div class="visit-dialog auth-mode" id="visitDialog">
+    <div class="visit-head">
+      <span id="visitModalTitle">🔒 ยืนยันรหัสผ่าน</span>
+      <button type="button" class="visit-close" id="visitModalClose" aria-label="ปิด">×</button>
+    </div>
+    <!-- หน้าจอกรอกรหัส 4321 -->
+    <div class="visit-body" id="visitAuthView">
+      <p class="visit-pin-desc">กรุณากรอกรหัสผ่านเพื่อเปิดดูรายละเอียดการเข้าชมเว็บไซต์</p>
+      <input type="password" id="visitPinInput" class="visit-pin-input" inputmode="numeric" maxlength="8" placeholder="••••" autocomplete="off" aria-label="รหัสผ่านเข้าดูสถิติ">
+      <div id="visitPinErr" class="visit-pin-err" role="alert" hidden>รหัสไม่ถูกต้อง กรุณากรอกรหัส 4 หลักใหม่อีกครั้ง</div>
+      <div class="menu-row end" style="margin-top:4px">
+        <button type="button" class="btn" id="visitPinCancel">ยกเลิก</button>
+        <button type="button" class="btn primary" id="visitPinSubmit">ตกลง</button>
+      </div>
+    </div>
+    <!-- หน้าจอแสดงรายละเอียดการเข้าชมเว็บไซต์ -->
+    <div class="visit-body" id="visitStatsView" hidden>
+      <div class="visit-cards">
+        <div class="visit-card highlight">
+          <div class="vc-num" id="vTotalCount">0</div>
+          <div class="vc-lbl">เข้าชมทั้งหมด</div>
+        </div>
+        <div class="visit-card">
+          <div class="vc-num" id="vTodayCount">0</div>
+          <div class="vc-lbl">เข้าชมวันนี้</div>
+        </div>
+        <div class="visit-card">
+          <div class="vc-num" id="vSessionCount">0</div>
+          <div class="vc-lbl">เซสชันผู้ใช้</div>
+        </div>
+        <div class="visit-card">
+          <div class="vc-num" id="vAvgCount">0</div>
+          <div class="vc-lbl">เฉลี่ยต่อวัน</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="visit-sec-title"><span>📈 สถิติการเข้าชมย้อนหลัง 7 วัน</span><small id="vChartRange" style="color:#64748b;font-weight:400"></small></div>
+        <div class="visit-chart" id="vChart7Days"></div>
+      </div>
+
+      <div>
+        <div class="visit-sec-title"><span>💻 ข้อมูลระบบและเวลาเข้าชม</span></div>
+        <div class="visit-meta">
+          <div><b>เข้าชมครั้งแรก:</b> <span id="vFirstVisit">-</span></div>
+          <div><b>เข้าชมล่าสุด:</b> <span id="vLastVisit">-</span></div>
+          <div><b>เบราว์เซอร์/OS:</b> <span id="vEnvInfo">-</span></div>
+          <div><b>ความละเอียดจอ:</b> <span id="vScreenInfo">-</span></div>
+        </div>
+      </div>
+
+      <div>
+        <div class="visit-sec-title"><span>🕒 ประวัติการเข้าชมล่าสุด</span><small id="vLogCount" style="color:#64748b;font-weight:400"></small></div>
+        <div class="visit-log-wrap">
+          <table class="visit-log-tbl">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>วัน - เวลา</th>
+                <th>อุปกรณ์ / เบราว์เซอร์</th>
+                <th>สถานะ</th>
+              </tr>
+            </thead>
+            <tbody id="vHistoryBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="visit-foot" id="visitStatsFoot" hidden>
+      <div style="display:flex;gap:6px">
+        <button type="button" class="btn" id="visitExportCsv" title="ดาวน์โหลดประวัติการเข้าชมเป็นไฟล์ CSV">📥 ส่งออก CSV</button>
+        <button type="button" class="btn warn" id="visitResetBtn" title="ล้างข้อมูลสถิติและเริ่มนับใหม่">🔄 รีเซ็ตสถิติ</button>
+      </div>
+      <button type="button" class="btn primary" id="visitCloseBtn">ปิดหน้าต่าง</button>
+    </div>
+  </div>
+</div>
+
 <script src="./eoffice-pastetest.js" defer onerror="(window.__missing=window.__missing||[]).push('eoffice-pastetest.js')"></script>
 <script src="./eoffice-tools.js" defer onerror="(window.__missing=window.__missing||[]).push('eoffice-tools.js')"></script>
 <script src="./eoffice-cloud.js" defer onerror="(window.__missing=window.__missing||[]).push('eoffice-cloud.js')"></script>
@@ -942,7 +1064,8 @@ body.ls-docked .desk{padding-left:240px}
   // ค่าเริ่มต้นของเอกสาร (ยึดตาม para0) — แสดงผ่าน CSS ในเอดิเตอร์ และใส่เป็น inline style ตอนส่งออก
   // มาตรฐานเอกสาร: ค่าเริ่มต้นของย่อหน้าที่ไม่ได้ตั้งค่าเอง (แสดงผ่าน CSS และใส่เป็น inline style ตอนส่งออก)
   const PROFILES = {
-    standard: { label: 'หนังสือราชการ — ย่อหน้า 2.5 ซม. บรรทัดเดี่ยว', indent: '2.5cm', lineHeight: '100%' },
+    standard: { label: 'ค่าเริ่มต้น — ย่อหน้า 0.00 ซม. บรรทัดเดี่ยว', indent: '0cm', lineHeight: '100%' },
+    indent25: { label: 'หนังสือราชการ — ย่อหน้า 2.5 ซม. บรรทัดเดี่ยว', indent: '2.5cm', lineHeight: '100%' },
     para0: { label: 'แบบเดิม (para0) — ย่อหน้า 45px บรรทัด 150%', indent: '45px', lineHeight: '150%' },
   };
   const SETTINGS_KEY = 'eoffice-editor:settings';
@@ -5250,6 +5373,11 @@ ${body}
     $('#btnNew').addEventListener('click', async () => {
       if (!allEmpty() && !confirm(`เริ่มเอกสารใหม่? ทุกหน้า (${pages.length} หน้า) จะถูกล้างและกดย้อนกลับไม่ได้${file.handle ? ` และจะเลิกผูกไฟล์ “${file.handle.name}”` : ''}`)) return;
       await unlinkFile();
+      settings.profile = 'standard';
+      DEFAULTS.indent = PROFILES.standard.indent;
+      DEFAULTS.lineHeight = PROFILES.standard.lineHeight;
+      saveSettings();
+      renderDocCss();
       replaceAllPages([new Delta()]);
       setDocName('');
       quill.focus();
@@ -5304,6 +5432,270 @@ ${body}
         saveInfo();
       }).catch(() => { /* ไม่มี IndexedDB */ });
     }
+    // ---------- ระบบตัวนับการเข้าชมเว็บไซต์ (จุดแดงซ่อนขวาล่าง + รหัสผ่าน 4321) ----------
+    const VISIT_KEY = 'eoffice-editor:visitor-stats';
+    const VISIT_SESSION_KEY = 'eoffice-editor:visit-session';
+    const VISIT_PIN = '4321';
+
+    function localDateKey(d = new Date()) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+
+    function detectVisitorEnv() {
+      const ua = navigator.userAgent || '';
+      let browser = 'Browser';
+      if (/Edg\//i.test(ua)) browser = 'Microsoft Edge';
+      else if (/OPR\/|Opera/i.test(ua)) browser = 'Opera';
+      else if (/Chrome\//i.test(ua)) browser = 'Google Chrome';
+      else if (/Firefox\//i.test(ua)) browser = 'Firefox';
+      else if (/Safari\//i.test(ua)) browser = 'Safari';
+
+      let os = 'OS';
+      if (/Windows/i.test(ua)) os = 'Windows';
+      else if (/Android/i.test(ua)) os = 'Android';
+      else if (/iPhone|iPad|iPod/i.test(ua)) os = 'iOS';
+      else if (/Mac OS X|Macintosh/i.test(ua)) os = 'macOS';
+      else if (/Linux/i.test(ua)) os = 'Linux';
+
+      const scr = `${window.screen?.width || innerWidth}×${window.screen?.height || innerHeight}`;
+      return { browser, os, label: `${browser} (${os})`, screen: scr };
+    }
+
+    function loadVisitorStats() {
+      try {
+        const raw = store.get(VISIT_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && typeof parsed.totalVisits === 'number') {
+            parsed.daily = parsed.daily && typeof parsed.daily === 'object' ? parsed.daily : {};
+            parsed.history = Array.isArray(parsed.history) ? parsed.history : [];
+            parsed.uniqueSessions = Number(parsed.uniqueSessions) || 1;
+            return parsed;
+          }
+        }
+      } catch {}
+      const now = new Date().toISOString();
+      return {
+        totalVisits: 0,
+        uniqueSessions: 0,
+        firstVisitAt: now,
+        lastVisitAt: now,
+        daily: {},
+        history: [],
+      };
+    }
+
+    function saveVisitorStats(st) {
+      store.set(VISIT_KEY, JSON.stringify(st));
+    }
+
+    function recordPageVisit() {
+      const st = loadVisitorStats();
+      const now = new Date();
+      const nowIso = now.toISOString();
+      const dayKey = localDateKey(now);
+      const env = detectVisitorEnv();
+
+      let isNewSession = false;
+      try {
+        if (!sessionStorage.getItem(VISIT_SESSION_KEY)) {
+          sessionStorage.setItem(VISIT_SESSION_KEY, nowIso);
+          isNewSession = true;
+        }
+      } catch {
+        isNewSession = st.totalVisits === 0;
+      }
+
+      st.totalVisits = (st.totalVisits || 0) + 1;
+      if (isNewSession || !st.uniqueSessions) {
+        st.uniqueSessions = (st.uniqueSessions || 0) + 1;
+      }
+      if (!st.firstVisitAt) st.firstVisitAt = nowIso;
+      st.lastVisitAt = nowIso;
+      st.daily[dayKey] = (st.daily[dayKey] || 0) + 1;
+
+      st.history.unshift({
+        ts: nowIso,
+        ua: env.label,
+        screen: env.screen,
+        isNewSession,
+      });
+      if (st.history.length > 50) st.history.length = 50;
+
+      saveVisitorStats(st);
+      return st;
+    }
+
+    const TH_MONTHS_SHORT = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+    function fmtVisitDateTime(iso) {
+      if (!iso) return '-';
+      const d = new Date(iso);
+      if (isNaN(d.getTime())) return '-';
+      const day = d.getDate();
+      const mo = TH_MONTHS_SHORT[d.getMonth()];
+      const yr = (d.getFullYear() + 543) % 100;
+      const hh = String(d.getHours()).padStart(2, '0');
+      const mm = String(d.getMinutes()).padStart(2, '0');
+      const ss = String(d.getSeconds()).padStart(2, '0');
+      return `${day} ${mo} ${yr} ${hh}:${mm}:${ss}`;
+    }
+
+    function renderVisitorStats() {
+      const st = loadVisitorStats();
+      const todayKey = localDateKey(new Date());
+      const todayVisits = st.daily[todayKey] || 0;
+      const dayKeys = Object.keys(st.daily);
+      const avgVisits = dayKeys.length ? Math.max(1, Math.round(st.totalVisits / dayKeys.length)) : st.totalVisits;
+      const env = detectVisitorEnv();
+
+      $('#vTotalCount').textContent = st.totalVisits.toLocaleString();
+      $('#vTodayCount').textContent = todayVisits.toLocaleString();
+      $('#vSessionCount').textContent = (st.uniqueSessions || 1).toLocaleString();
+      $('#vAvgCount').textContent = avgVisits.toLocaleString();
+
+      $('#vFirstVisit').textContent = fmtVisitDateTime(st.firstVisitAt);
+      $('#vLastVisit').textContent = fmtVisitDateTime(st.lastVisitAt);
+      $('#vEnvInfo').textContent = env.label;
+      $('#vScreenInfo').textContent = env.screen;
+
+      // กราฟย้อนหลัง 7 วัน
+      const days7 = [];
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        const k = localDateKey(d);
+        days7.push({
+          key: k,
+          label: `${d.getDate()} ${TH_MONTHS_SHORT[d.getMonth()]}`,
+          val: st.daily[k] || 0,
+        });
+      }
+      const maxVal = Math.max(1, ...days7.map(x => x.val));
+      $('#vChartRange').textContent = `${days7[0].label} – ${days7[6].label}`;
+      $('#vChart7Days').innerHTML = days7.map(item => {
+        const hPct = item.val > 0 ? Math.max(12, Math.round((item.val / maxVal) * 100)) : 4;
+        return `<div class="visit-bar-col">
+          <span class="visit-bar-val">${item.val}</span>
+          <div class="visit-bar" style="height:${hPct}%" title="${item.label}: ${item.val} ครั้ง"></div>
+          <span class="visit-bar-day">${item.label}</span>
+        </div>`;
+      }).join('');
+
+      // ตารางประวัติการเข้าชมล่าสุด
+      const logs = st.history.slice(0, 30);
+      $('#vLogCount').textContent = `แสดง ${logs.length} รายการล่าสุด`;
+      $('#vHistoryBody').innerHTML = logs.map((row, idx) => {
+        const badge = row.isNewSession ? 'เซสชันใหม่' : 'เปิดซ้ำ';
+        return `<tr>
+          <td>${idx + 1}</td>
+          <td>${esc(fmtVisitDateTime(row.ts))}</td>
+          <td>${esc(row.ua || '-')} <small style="color:#64748b">(${esc(row.screen || '')})</small></td>
+          <td><span class="visit-badge">${badge}</span></td>
+        </tr>`;
+      }).join('');
+    }
+
+    function openVisitPopup() {
+      const modal = $('#visitModal');
+      const dialog = $('#visitDialog');
+      if (!modal || !dialog) return;
+      dialog.classList.add('auth-mode');
+      $('#visitModalTitle').textContent = '🔒 ยืนยันรหัสผ่านเข้าดูสถิติ';
+      $('#visitAuthView').hidden = false;
+      $('#visitStatsView').hidden = true;
+      $('#visitStatsFoot').hidden = true;
+      $('#visitPinErr').hidden = true;
+      const pinIn = $('#visitPinInput');
+      if (pinIn) {
+        pinIn.value = '';
+        setTimeout(() => pinIn.focus(), 20);
+      }
+      modal.hidden = false;
+    }
+
+    function closeVisitPopup() {
+      const modal = $('#visitModal');
+      if (modal) modal.hidden = true;
+    }
+
+    function unlockVisitPopup(pinValue) {
+      const pin = String(pinValue ?? $('#visitPinInput')?.value ?? '').trim();
+      if (pin !== VISIT_PIN) {
+        const err = $('#visitPinErr');
+        if (err) err.hidden = false;
+        const pinIn = $('#visitPinInput');
+        if (pinIn) {
+          pinIn.value = '';
+          pinIn.focus();
+        }
+        return false;
+      }
+      $('#visitPinErr').hidden = true;
+      $('#visitDialog').classList.remove('auth-mode');
+      $('#visitModalTitle').textContent = '📊 รายละเอียดการเข้าชมเว็บไซต์';
+      $('#visitAuthView').hidden = true;
+      $('#visitStatsView').hidden = false;
+      $('#visitStatsFoot').hidden = false;
+      renderVisitorStats();
+      return true;
+    }
+
+    function resetVisitorStats() {
+      store.del(VISIT_KEY);
+      try { sessionStorage.removeItem(VISIT_SESSION_KEY); } catch {}
+      recordPageVisit();
+      renderVisitorStats();
+      say('รีเซ็ตสถิติการเข้าชมเว็บไซต์เรียบร้อยแล้ว');
+    }
+
+    function exportVisitorCsv() {
+      const st = loadVisitorStats();
+      const rows = [
+        ['ลำดับ', 'วันเวลา (ISO)', 'วันเวลา (ไทย)', 'เบราว์เซอร์และระบบ', 'ความละเอียดหน้าจอ', 'สถานะเซสชัน'],
+        ...st.history.map((r, i) => [
+          i + 1,
+          r.ts,
+          fmtVisitDateTime(r.ts),
+          r.ua || '',
+          r.screen || '',
+          r.isNewSession ? 'เซสชันใหม่' : 'เปิดซ้ำ',
+        ]),
+      ];
+      const csv = '\uFEFF' + rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\r\n');
+      download(`eoffice-visitor-stats-${localDateKey()}.csv`, csv, 'text/csv;charset=utf-8');
+      say('ดาวน์โหลดไฟล์ประวัติการเข้าชม CSV แล้ว');
+    }
+
+    // บันทึกการเข้าชมทันทีที่เปิดหน้าเว็บ
+    recordPageVisit();
+
+    $('#visitDot')?.addEventListener('click', openVisitPopup);
+    $('#visitModalClose')?.addEventListener('click', closeVisitPopup);
+    $('#visitPinCancel')?.addEventListener('click', closeVisitPopup);
+    $('#visitCloseBtn')?.addEventListener('click', closeVisitPopup);
+    $('#visitPinSubmit')?.addEventListener('click', () => unlockVisitPopup());
+    $('#visitPinInput')?.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        unlockVisitPopup();
+      } else if ($('#visitPinErr') && !$('#visitPinErr').hidden) {
+        $('#visitPinErr').hidden = true;
+      }
+    });
+    $('#visitExportCsv')?.addEventListener('click', exportVisitorCsv);
+    $('#visitResetBtn')?.addEventListener('click', resetVisitorStats);
+    $('#visitModal')?.addEventListener('click', e => {
+      if (e.target.id === 'visitModal') closeVisitPopup();
+    });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && $('#visitModal') && !$('#visitModal').hidden) {
+        closeVisitPopup();
+      }
+    });
+
     // ช่องทางให้ eoffice-tools.js (แผงเครื่องมือเสริม) ใช้งานเอดิเตอร์
     window.eofficeEditor = {
       quill, Delta, say, exportHtml, draftDocument,
@@ -5485,6 +5877,14 @@ ${body}
         startCropMode,
         stopCropMode,
         applyCrop,
+      },
+      visitorStats: {
+        getStats: loadVisitorStats,
+        recordVisit: recordPageVisit,
+        openPopup: openVisitPopup,
+        closePopup: closeVisitPopup,
+        unlock: unlockVisitPopup,
+        reset: resetVisitorStats,
       },
     };
     document.dispatchEvent(new CustomEvent('eoffice:ready'));
