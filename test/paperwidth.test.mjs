@@ -38,9 +38,9 @@ describe('Paper Width & Right Margin Dragging (การขยายหน้า
     assert.ok(html.includes('--paper-w:calc(var(--text-w) + var(--pl) + var(--pr) + 2px)'), 'ความกว้างกระดาษต้องผูกกับ var(--text-w) + ขอบซ้ายขวา');
   });
 
-  test('การลากปุ่มกั้นขวา (mk-right) ออกไปทางขวาเกิน rulerCm สามารถขยายความกว้างหน้ากระดาษได้', () => {
-    assert.ok(html.includes("drag.kind === 'right' && rawX > rulerCm"), 'ต้องมีโค้ดลาก mk-right ขยายกระดาษ');
-    assert.ok(distSingle.includes("drag.kind === 'right' && rawX > rulerCm"), 'distSingle ต้องมีโค้ดลาก mk-right ขยายกระดาษ');
+  test('การลากปุ่มกั้นขวา (mk-right) ปรับขนาดพื้นที่กระดาษตามการเลื่อนทั้งซ้ายและขวา', () => {
+    assert.ok(html.includes("drag.kind === 'right'"), 'ต้องมีโค้ดลาก mk-right ปรับขนาดพื้นที่กระดาษ');
+    assert.ok(distSingle.includes("drag.kind === 'right'"), 'distSingle ต้องมีโค้ดลาก mk-right ปรับขนาดพื้นที่กระดาษ');
   });
 
   test('มีฟังก์ชัน setTextWidth, resetPaperWidth และ Event eoffice:paperwidth', () => {

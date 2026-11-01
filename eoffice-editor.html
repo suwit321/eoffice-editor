@@ -4313,8 +4313,8 @@ ${body}
       const val = kind === 'first' ? m.first : kind === 'right' ? m.right : m.left;
       tip.hidden = false;
       tip.style.left = `${pos}cm`;
-      tip.textContent = (kind === 'right' && drag && drag.expanding)
-        ? `ขยายกั้นขวา ${fmt(rulerCm)} ซม. (พื้นที่พิมพ์ ${fmt(rulerCm)} ซม.)`
+      tip.textContent = kind === 'right'
+        ? `กั้นขวา ${fmt(rulerCm)} ซม. (พื้นที่กระดาษ ${fmt(rulerCm)} ซม.)`
         : `${LABEL[kind]} ${fmt(val)} ซม.`;
       guide.hidden = false;
       guide.style.left = `calc(var(--vr) + var(--edge-x) + ${pos}cm)`;
@@ -4350,26 +4350,13 @@ ${body}
     function onMarkMove(e) {
       if (!drag || e.pointerId !== drag.id) return;
       const rawX = xToCm(e.clientX, e.altKey);
-      if (drag.kind === 'right' && rawX > rulerCm) {
-        drag.expanding = true;
-        const nextW = clamp(e.altKey ? Math.round(rawX * 20) / 20 : Math.round(rawX * 4) / 4, 10, 40);
+      if (drag.kind === 'right') {
+        const nextW = clamp(e.altKey ? Math.round(rawX * 20) / 20 : Math.round(rawX * 4) / 4, 10, 45);
         setTextWidth(nextW, false);
         drag.m = { ...drag.start, right: 0 };
         placeMarks(drag.m);
-        showTip(drag.kind, drag.m);
+        showTip('right', drag.m);
         return;
-      }
-      if (drag.kind === 'right' && drag.expanding) {
-        if (rawX >= drag.startW) {
-          const nextW = clamp(e.altKey ? Math.round(rawX * 20) / 20 : Math.round(rawX * 4) / 4, 10, 40);
-          setTextWidth(nextW, false);
-          drag.m = { ...drag.start, right: 0 };
-          placeMarks(drag.m);
-          showTip(drag.kind, drag.m);
-          return;
-        }
-        drag.expanding = false;
-        if (rulerCm !== drag.startW) setTextWidth(drag.startW, false);
       }
       drag.m = dragResult(drag.kind, drag.start, rawX);
       placeMarks(drag.m);
@@ -4383,11 +4370,15 @@ ${body}
       const d = drag;
       drag = null;
       hideTip();
-      if (d.kind === 'right' && rulerCm !== settings.textWidth) {
+      if (d.kind === 'right') {
         setTextWidth(rulerCm, true);
+        if (d.r) quill.formatLine(d.r.index, d.r.length, { marginright: false }, 'user');
+        rm.right = 0;
+        placeMarks(rm);
+      } else {
+        if (e.type === 'pointerup' && changed(d.start, d.m)) commit(d.kind, d.m, d.r);
+        else placeMarks(rm);
       }
-      if (e.type === 'pointerup' && changed(d.start, d.m)) commit(d.kind, d.m, d.r);
-      else placeMarks(rm);
       schedule();
     };
     marks.addEventListener('pointerdown', e => {
@@ -4413,6 +4404,13 @@ ${body}
       e.preventDefault();
       const kind = mk.dataset.kind;
       const step = e.shiftKey ? 1 : e.altKey ? FINE : SNAP;
+      if (kind === 'right') {
+        const nextW = clamp(round2(rulerCm + dir * step), 10, 45);
+        setTextWidth(nextW, true);
+        mk.focus();
+        schedule();
+        return;
+      }
       const m = dragResult(kind, rm, markPos(kind, rm) + dir * step);
       if (changed(rm, m)) { commit(kind, m, currentRange()); mk.focus(); schedule(); }
     });
