@@ -31,6 +31,20 @@ describe('Hidden Red Dot Visitor Counter & PIN 4321 Popup (ตัวนับก
     assert.ok(distSingle.includes('id="visitModal"'), 'distSingle ต้องมี #visitModal');
   });
 
+  test('เชื่อมต่อ Global Counter API (แนวทางที่ 1) เพื่อนับยอดเข้าชมรวมจากผู้ใช้และอุปกรณ์ทั้งหมด', () => {
+    assert.ok(html.includes('https://abacus.jasoncameron.dev'), 'eoffice-editor.html ต้องมีโดเมน Counter API');
+    assert.ok(distSingle.includes('https://abacus.jasoncameron.dev'), 'distSingle ต้องมีโดเมน Counter API');
+    assert.ok(html.includes('syncGlobalCounter'), 'ต้องมีฟังก์ชัน syncGlobalCounter');
+    assert.ok(html.includes('id="vSyncBar"'), 'ต้องมีแถบแสดงสถานะซิงค์คลาวด์ #vSyncBar');
+    assert.ok(html.includes('id="vRefreshBtn"'), 'ต้องมีปุ่มรีเฟรชข้อมูล #vRefreshBtn');
+
+    // ตรวจสอบ CSP ใน dist/index.html และ dist/_headers ต้องอนุญาต https://abacus.jasoncameron.dev
+    const distIndex = readFileSync(join(root, 'dist/index.html'), 'utf8');
+    const distHeaders = readFileSync(join(root, 'dist/_headers'), 'utf8');
+    assert.ok(distIndex.includes('https://abacus.jasoncameron.dev'), 'dist/index.html CSP ต้องอนุญาต Counter API');
+    assert.ok(distHeaders.includes('https://abacus.jasoncameron.dev'), 'dist/_headers CSP ต้องอนุญาต Counter API');
+  });
+
   test('ทดสอบในเบราว์เซอร์จริง (Edge Headless): นับจำนวนเข้าชมอัตโนมัติ กดจุดแดง ตรวจสอบรหัสผิด/ถูก (4321) และแสดงรายละเอียด', async (t) => {
     const edgePath = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
     if (!existsSync(edgePath)) {
@@ -173,7 +187,9 @@ describe('Hidden Red Dot Visitor Counter & PIN 4321 Popup (ตัวนับก
             totalText: document.querySelector('#vTotalCount').textContent.trim(),
             todayText: document.querySelector('#vTodayCount').textContent.trim(),
             chartBars: document.querySelectorAll('#vChart7Days .visit-bar-col').length,
-            logRows: document.querySelectorAll('#vHistoryBody tr').length
+            logRows: document.querySelectorAll('#vHistoryBody tr').length,
+            syncBarText: document.querySelector('#vSyncText')?.textContent || '',
+            hasRefreshBtn: Boolean(document.querySelector('#vRefreshBtn'))
           };
         })()`,
         returnByValue: true
@@ -181,8 +197,10 @@ describe('Hidden Red Dot Visitor Counter & PIN 4321 Popup (ตัวนับก
 
       assert.strictEqual(unlockState.value.authHidden, true, 'เมื่อกรอกรหัส 4321 ถูกต้อง หน้ากรอกรหัสต้องซ่อนลง');
       assert.strictEqual(unlockState.value.statsHidden, false, 'เมื่อกรอกรหัส 4321 ถูกต้อง ต้องแสดงหน้ารายละเอียดการเข้าชม');
-      assert.strictEqual(unlockState.value.totalText, '3', 'ยอดเข้าชมทั้งหมดต้องแสดงเป็น 3');
-      assert.strictEqual(unlockState.value.todayText, '3', 'ยอดเข้าชมวันนี้ต้องแสดงเป็น 3');
+      assert.ok(Number(unlockState.value.totalText.replace(/,/g, '')) >= 3, 'ยอดเข้าชมทั้งหมดต้องเป็นตัวเลข >= 3');
+      assert.ok(Number(unlockState.value.todayText.replace(/,/g, '')) >= 3, 'ยอดเข้าชมวันนี้ต้องเป็นตัวเลข >= 3');
+      assert.ok(unlockState.value.syncBarText.length > 0, 'ต้องมีข้อความสถานะซิงค์คลาวด์');
+      assert.strictEqual(unlockState.value.hasRefreshBtn, true, 'ต้องมีปุ่มรีเฟรชยอดเข้าชม');
       assert.strictEqual(unlockState.value.chartBars, 7, 'ต้องแสดงกราฟย้อนหลัง 7 วันครบ 7 แท่ง');
       assert.strictEqual(unlockState.value.logRows, 3, 'ตารางประวัติการเข้าชมต้องแสดงรายการเข้าชมครบ 3 รายการ');
 

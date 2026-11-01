@@ -53,8 +53,8 @@ const csp = [
   "img-src 'self' data: blob: https://*.googleusercontent.com https://*.gstatic.com",
   "font-src 'self' data:",
   "frame-src 'self' https://*.firebaseapp.com https://accounts.google.com",
-  // ปลายทาง AI ที่รองรับ + Firebase Cloud + Google Drive + เซิร์ฟเวอร์ในเครื่อง (Ollama ฯลฯ)
-  "connect-src 'self' https://api.anthropic.com https://api.openai.com https://generativelanguage.googleapis.com https://*.googleapis.com https://*.firebaseio.com https://accounts.google.com http://localhost:* http://127.0.0.1:*",
+  // ปลายทาง AI ที่รองรับ + Firebase Cloud + Google Drive + เซิร์ฟเวอร์ในเครื่อง (Ollama ฯลฯ) + Global Counter API
+  "connect-src 'self' https://api.anthropic.com https://api.openai.com https://generativelanguage.googleapis.com https://*.googleapis.com https://*.firebaseio.com https://accounts.google.com https://abacus.jasoncameron.dev http://localhost:* http://127.0.0.1:*",
   "base-uri 'none'", "form-action 'none'", "object-src 'none'", "manifest-src 'none'",
 ];
 const cspMeta = csp.join('; ');

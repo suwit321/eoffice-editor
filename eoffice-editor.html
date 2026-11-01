@@ -370,7 +370,10 @@ body.grid-on .editor-box{background-image:linear-gradient(to right,rgba(59,130,2
 .visit-log-tbl th,.visit-log-tbl td{padding:6px 8px;text-align:left;border-bottom:1px solid #f1f5f9}
 .visit-log-tbl th{position:sticky;top:0;background:#f1f5f9;color:#475569;font-weight:600}
 .visit-log-tbl tr:last-child td{border-bottom:0}
-.visit-badge{display:inline-block;padding:1px 6px;border-radius:9px;font-size:10.5px;background:#eff6ff;color:#1d4ed8}
+.visit-badge{display:inline-block;padding:1px 6px;border-radius:999px;font-size:10.5px;background:#eff6ff;color:#1d4ed8}
+.visit-sync-bar{display:flex;align-items:center;justify-content:space-between;padding:5px 10px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;font-size:11.5px;color:#166534}
+.visit-sync-bar.syncing{background:#eff6ff;border-color:#bfdbfe;color:#1e40af}
+.visit-sync-bar.offline{background:#fef2f2;border-color:#fecaca;color:#991b1b}
 .visit-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 16px;background:#f8fafc;border-top:1px solid var(--line)}
 
 /* เมนูแบบเลื่อนลง */
@@ -999,6 +1002,10 @@ body.ls-docked .desk{padding-left:240px}
     </div>
     <!-- หน้าจอแสดงรายละเอียดการเข้าชมเว็บไซต์ -->
     <div class="visit-body" id="visitStatsView" hidden>
+      <div class="visit-sync-bar" id="vSyncBar">
+        <span id="vSyncText">🌐 นับยอดเข้าชมจากผู้ใช้ทั้งหมด (Global Counter API)</span>
+        <button type="button" class="btn" id="vRefreshBtn" style="height:22px;padding:1px 8px;font-size:11px;border-radius:4px" title="รีเฟรชยอดเข้าชมล่าสุด">🔄 รีเฟรช</button>
+      </div>
       <div class="visit-cards">
         <div class="visit-card highlight">
           <div class="vc-num" id="vTotalCount">0</div>
@@ -5425,10 +5432,12 @@ ${body}
         saveInfo();
       }).catch(() => { /* ไม่มี IndexedDB */ });
     }
-    // ---------- ระบบตัวนับการเข้าชมเว็บไซต์ (จุดแดงซ่อนขวาล่าง + รหัสผ่าน 4321) ----------
+    // ---------- ระบบตัวนับการเข้าชมเว็บไซต์ (จุดแดงซ่อนขวาล่าง + รหัสผ่าน 4321 + Global Counter API) ----------
     const VISIT_KEY = 'eoffice-editor:visitor-stats';
     const VISIT_SESSION_KEY = 'eoffice-editor:visit-session';
     const VISIT_PIN = '4321';
+    const COUNTER_API_BASE = 'https://abacus.jasoncameron.dev';
+    const COUNTER_NAMESPACE = 'sw-eoffice';
 
     function localDateKey(d = new Date()) {
       const y = d.getFullYear();
@@ -5485,6 +5494,63 @@ ${body}
       store.set(VISIT_KEY, JSON.stringify(st));
     }
 
+    // ซิงค์ยอดเข้าชมรวมกับ Cloud Counter API แบบไม่ระบุตัวตน (นับผู้ใช้ทุกคนข้ามเครื่อง)
+    async function syncGlobalCounter(isNewSession = false) {
+      if (typeof fetch !== 'function') return null;
+      const dayKey = localDateKey();
+      const action = isNewSession ? 'hit' : 'get';
+      const ns = window.__EOFFICE_COUNTER_NS__ || COUNTER_NAMESPACE;
+      const syncBar = $('#vSyncBar');
+      const syncText = $('#vSyncText');
+      if (syncBar) syncBar.className = 'visit-sync-bar syncing';
+      if (syncText) syncText.textContent = '⏳ กำลังซิงค์ยอดเข้าชมจากคลาวด์...';
+
+      try {
+        const headers = { Origin: location.origin || 'https://suwit321.github.io' };
+        const signal = (typeof AbortSignal !== 'undefined' && AbortSignal.timeout)
+          ? AbortSignal.timeout(4500)
+          : undefined;
+
+        const [totRes, dayRes] = await Promise.allSettled([
+          fetch(`${COUNTER_API_BASE}/${action}/${ns}/visits`, { headers, signal }).then(r => r.ok ? r.json() : null),
+          fetch(`${COUNTER_API_BASE}/${action}/${ns}/visits-${dayKey}`, { headers, signal }).then(r => r.ok ? r.json() : null)
+        ]);
+
+        const totVal = (totRes.status === 'fulfilled' && typeof totRes.value?.value === 'number') ? totRes.value.value : null;
+        const dayVal = (dayRes.status === 'fulfilled' && typeof dayRes.value?.value === 'number') ? dayRes.value.value : null;
+
+        if (totVal !== null || dayVal !== null) {
+          const st = loadVisitorStats();
+          let updated = false;
+          if (totVal !== null && totVal > (st.totalVisits || 0)) {
+            st.totalVisits = totVal;
+            updated = true;
+          }
+          if (dayVal !== null && dayVal > (st.daily[dayKey] || 0)) {
+            st.daily[dayKey] = dayVal;
+            updated = true;
+          }
+          st.isGlobalSynced = true;
+          st.lastSyncedAt = new Date().toISOString();
+          saveVisitorStats(st);
+
+          if (syncBar) syncBar.className = 'visit-sync-bar';
+          if (syncText) syncText.textContent = '🌐 นับยอดเข้าชมจากผู้ใช้ทั้งหมด (Global Counter API)';
+          const statsView = $('#visitStatsView');
+          if (statsView && !statsView.hidden) {
+            renderVisitorStats();
+          }
+          return { total: st.totalVisits, today: st.daily[dayKey] };
+        } else {
+          throw new Error('No data');
+        }
+      } catch {
+        if (syncBar) syncBar.className = 'visit-sync-bar';
+        if (syncText) syncText.textContent = '🌐 โหมดออฟไลน์ / บันทึกในเครื่อง (Local Storage)';
+      }
+      return null;
+    }
+
     function recordPageVisit() {
       const st = loadVisitorStats();
       const now = new Date();
@@ -5519,6 +5585,10 @@ ${body}
       if (st.history.length > 50) st.history.length = 50;
 
       saveVisitorStats(st);
+
+      // ส่งคำขอนับยอดเข้าชมไปยัง Cloud Counter API แบบเบื้องหลัง (ไม่บล็อกหน้าเว็บ)
+      syncGlobalCounter(isNewSession);
+
       return st;
     }
 
@@ -5633,6 +5703,7 @@ ${body}
       $('#visitStatsView').hidden = false;
       $('#visitStatsFoot').hidden = false;
       renderVisitorStats();
+      syncGlobalCounter(false);
       return true;
     }
 
@@ -5680,6 +5751,9 @@ ${body}
     });
     $('#visitExportCsv')?.addEventListener('click', exportVisitorCsv);
     $('#visitResetBtn')?.addEventListener('click', resetVisitorStats);
+    $('#vRefreshBtn')?.addEventListener('click', () => {
+      syncGlobalCounter(false);
+    });
     $('#visitModal')?.addEventListener('click', e => {
       if (e.target.id === 'visitModal') closeVisitPopup();
     });
@@ -5878,6 +5952,7 @@ ${body}
       visitorStats: {
         getStats: loadVisitorStats,
         recordVisit: recordPageVisit,
+        syncCounter: syncGlobalCounter,
         openPopup: openVisitPopup,
         closePopup: closeVisitPopup,
         unlock: unlockVisitPopup,
