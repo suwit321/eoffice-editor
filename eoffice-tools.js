@@ -1109,7 +1109,6 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
   <section data-panel="theme" hidden>
     <h3>หน้ากระดาษ & ระยะขอบ</h3>
     <div class="row"><label class="inline"><input type="checkbox" id="vwPaper"> แสดงเป็นกระดาษ A4 แนวตั้ง</label></div>
-    <div class="row"><label class="inline"><input type="checkbox" id="vwFullWidth"> ↔ ขยายเต็มหน้าจอ (ซ่อนขอบกระดาษสีเทาซ้าย-ขวา)</label></div>
     <div class="row">
       <label class="inline grow">ระยะขอบกระดาษ <select id="vwMarginPreset" class="grow">
         <option value="standard">มาตรฐาน A4 (ซ้าย 3 ซม. ขวา 2 ซม.)</option>
@@ -1119,17 +1118,12 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
       </select></label>
     </div>
     <div class="row">
-      <label class="inline grow">ความกว้างพิมพ์ <select id="vwPaperWidth" class="grow">
-        <option value="16">16 ซม. (A4 แนวตั้ง — มาตรฐานราชการ)</option>
-        <option value="18">18 ซม. (กว้างปานกลาง)</option>
-        <option value="20">20 ซม. (กว้างพิเศษ)</option>
-        <option value="24.7">24.7 ซม. (A4 แนวนอน)</option>
-        <option value="full">เต็มความกว้างหน้าจอ (ซ่อนขอบเทา)</option>
-        <option value="custom" id="vwCustomOpt">กำหนดเอง (ลากขอบกระดาษ)</option>
+      <label class="inline grow">ขนาดหน้ากระดาษ <select id="vwPaperWidth" class="grow" disabled>
+        <option value="16" selected>A4 มาตรฐานราชการ (กว้างพิมพ์ 16 ซม.)</option>
       </select></label>
       <button type="button" class="tbtn" id="btnResetWidth" title="คืนค่า 16 ซม. (มาตรฐาน A4)">คืนค่า 16 ซม.</button>
     </div>
-    <p class="hint">ชี้ที่ขอบซ้ายหรือขวาของกระดาษ/ไม้บรรทัด แล้วคลิกลากขยายได้อิสระ (ดับเบิลคลิกเพื่อคืนค่า 16 ซม.)</p>
+    <p class="hint">หน้ากระดาษกำหนดเป็น A4 มาตรฐานราชการ (ซ้าย 3 ซม. ขวา 2 ซม. พื้นที่พิมพ์ 16 ซม.)</p>
 
     <details class="tools-fold">
       <summary><span class="fold-icon">📏</span> เส้นช่วยจัดและเครื่องหมายซ่อน (¶, เส้นบรรทัด, ตาราง)</summary>
@@ -2531,69 +2525,21 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
       $('#vwMarks').checked = s.showMarks;
       $('#vwParaNum').checked = s.paraNumbers;
       $('#vwLineNum').checked = s.lineNumbers;
-      if ($('#vwFullWidth')) $('#vwFullWidth').checked = ed.isFullWidth?.() || false;
       if ($('#vwMarginPreset')) $('#vwMarginPreset').value = ed.getMarginPreset?.() || 'standard';
-      const wVal = ed.textWidth?.() || 16;
-      const wSel = $('#vwPaperWidth'), wOpt = $('#vwCustomOpt');
-      const isFull = ed.isFullWidth?.() || false;
-      if (wSel) {
-        if (isFull) {
-          wSel.value = 'full';
-        } else if (['16', '18', '20', '24.7'].includes(String(wVal))) {
-          wSel.value = String(wVal);
-          if (wOpt) wOpt.textContent = 'กำหนดเอง (ลากขอบกระดาษ)';
-        } else {
-          if (wOpt) wOpt.textContent = `กำหนดเอง (${wVal} ซม.)`;
-          wSel.value = 'custom';
-        }
-      }
+      const wSel = $('#vwPaperWidth');
+      if (wSel) wSel.value = '16';
       $('#vwLineColors').innerHTML = s.lineColors.map((c, i) => `<label class="inline">สี ${i + 1} <input type="color" data-linecolor="${i}" value="${c}"></label>`).join('');
       $('#vwMarkList').innerHTML = MARK_TYPES.map(([k, label, sym]) => `<div class="row"><label class="inline grow"><input type="checkbox" data-mark="${k}"${s.marks[k] ? ' checked' : ''}> <b class="mk-sym" style="color:${s.markColors[k]}">${sym}</b> ${label}</label><input type="color" data-markcolor="${k}" value="${s.markColors[k]}" aria-label="สี${label}"></div>`).join('');
     }
     onTab.theme = renderView;
-    document.addEventListener('eoffice:fullwidth', e => {
-      const chk = $('#vwFullWidth');
-      if (chk) chk.checked = e.detail.fullWidth;
-      const sel = $('#vwPaperWidth');
-      if (sel) {
-        if (e.detail.fullWidth) sel.value = 'full';
-        else {
-          const w = ed.textWidth?.() || 16;
-          sel.value = ['16', '18', '20', '24.7'].includes(String(w)) ? String(w) : 'custom';
-        }
-      }
-    });
-    $('#vwFullWidth')?.addEventListener('change', e => {
-      ed.setFullWidth?.(e.target.checked);
-    });
     $('#vwMarginPreset')?.addEventListener('change', e => {
       ed.setMarginPreset?.(e.target.value);
     });
-    document.addEventListener('eoffice:paperwidth', e => {
+    document.addEventListener('eoffice:paperwidth', () => {
       const sel = $('#vwPaperWidth');
-      if (!sel) return;
-      const w = e.detail.width;
-      const opt = $('#vwCustomOpt');
-      if (ed.isFullWidth?.()) {
-        sel.value = 'full';
-      } else if (['16', '18', '20', '24.7'].includes(String(w))) {
-        sel.value = String(w);
-        if (opt) opt.textContent = 'กำหนดเอง (ลากขอบกระดาษ)';
-      } else {
-        if (opt) opt.textContent = `กำหนดเอง (${w} ซม.)`;
-        sel.value = 'custom';
-      }
-    });
-    $('#vwPaperWidth')?.addEventListener('change', e => {
-      if (e.target.value === 'full') {
-        ed.setFullWidth?.(true);
-      } else if (e.target.value !== 'custom' && ed.setTextWidth) {
-        if (ed.isFullWidth?.()) ed.setFullWidth?.(false);
-        ed.setTextWidth(+e.target.value);
-      }
+      if (sel) sel.value = '16';
     });
     $('#btnResetWidth')?.addEventListener('click', () => {
-      if (ed.isFullWidth?.()) ed.setFullWidth?.(false);
       if (ed.resetTextWidth) ed.resetTextWidth();
       else if (ed.setTextWidth) ed.setTextWidth(16);
       const sel = $('#vwPaperWidth');

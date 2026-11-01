@@ -108,16 +108,16 @@ describe('Scratchpad Images (กระดาษทดสามารถใส่
       });
 
       // รอให้ eofficeEditor และ scratch พร้อมทำงาน
-      await send('Runtime.evaluate', {
-        expression: `new Promise((resolve) => {
-          const check = () => {
-            if (window.eofficeEditor?.scratch) return resolve();
-            setTimeout(check, 100);
-          };
-          check();
-        })`,
-        awaitPromise: true
-      });
+      for (let i = 0; i < 40; i++) {
+        try {
+          const ready = await send('Runtime.evaluate', {
+            expression: `Boolean(window.eofficeEditor?.scratch)`,
+            returnByValue: true
+          });
+          if (ready?.value) break;
+        } catch {}
+        await new Promise(r => setTimeout(r, 100));
+      }
 
       // 1. เปิดกระดาษทด และใส่โน้ตที่มีทั้งข้อความและรูปภาพ 1 รูป
       const samplePng = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAALElEQVRYR+3QQREAAAzCMPunf68T5GBHAuLWrX1wAgQIECBAgAABAgQIECBAgMAr4D8H3XyqRksAAAAASUVORK5CYII=';

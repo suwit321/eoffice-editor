@@ -10,36 +10,35 @@ import http from 'node:http';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, '..');
 
-describe('Paper Width & Edge Dragging (การขยายหน้ากระดาษด้วยการลากขอบ)', () => {
+describe('Paper Fixed A4 & No Edge Dragging (fix กระดาษเป็น A4 มาตรฐานราชการ ไร้มือจับขยายขอบ)', () => {
   const html = readFileSync(join(root, 'eoffice-editor.html'), 'utf8');
   const tools = readFileSync(join(root, 'eoffice-tools.js'), 'utf8');
   const distSingle = readFileSync(join(root, 'dist/eoffice-editor-single.html'), 'utf8');
 
-  test('มี Handle สำหรับลากขยายขอบกระดาษทั้งบนไม้บรรทัดและขอบกระดาษ (ทั้งด้านซ้ายและด้านขวา)', () => {
-    assert.ok(html.includes('id="rulerEdgeHandle"'), 'ต้องมี #rulerEdgeHandle บนไม้บรรทัด');
-    assert.ok(html.includes('id="paperEdgeHandle"'), 'ต้องมี #paperEdgeHandle ที่ขอบกระดาษด้านขวา');
-    assert.ok(html.includes('id="rulerEdgeHandleLeft"'), 'ต้องมี #rulerEdgeHandleLeft ที่ขอบซ้ายไม้บรรทัด');
-    assert.ok(html.includes('id="paperEdgeHandleLeft"'), 'ต้องมี #paperEdgeHandleLeft ที่ขอบกระดาษด้านซ้าย');
-    assert.ok(html.includes('.ruler-edge-handle'), 'ต้องมี class .ruler-edge-handle ใน CSS');
-    assert.ok(html.includes('.paper-edge-handle'), 'ต้องมี class .paper-edge-handle ใน CSS');
-    assert.ok(html.includes('.ruler-edge-handle-left'), 'ต้องมี class .ruler-edge-handle-left ใน CSS');
-    assert.ok(html.includes('.paper-edge-handle-left'), 'ต้องมี class .paper-edge-handle-left ใน CSS');
+  test('ไม่มี Handle สำหรับลากขยายขอบกระดาษทั้งบนไม้บรรทัดและขอบกระดาษ (ซ้ายและขวา)', () => {
+    assert.ok(!html.includes('id="rulerEdgeHandle"'), 'ต้องไม่มี #rulerEdgeHandle บนไม้บรรทัด');
+    assert.ok(!html.includes('id="paperEdgeHandle"'), 'ต้องไม่มี #paperEdgeHandle ที่ขอบกระดาษด้านขวา');
+    assert.ok(!html.includes('id="rulerEdgeHandleLeft"'), 'ต้องไม่มี #rulerEdgeHandleLeft ที่ขอบซ้ายไม้บรรทัด');
+    assert.ok(!html.includes('id="paperEdgeHandleLeft"'), 'ต้องไม่มี #paperEdgeHandleLeft ที่ขอบกระดาษด้านซ้าย');
+    assert.ok(!html.includes('.ruler-edge-handle'), 'ต้องไม่มี class .ruler-edge-handle ใน CSS');
+    assert.ok(!html.includes('.paper-edge-handle'), 'ต้องไม่มี class .paper-edge-handle ใน CSS');
+    assert.ok(!html.includes('.ruler-edge-handle-left'), 'ต้องไม่มี class .ruler-edge-handle-left ใน CSS');
+    assert.ok(!html.includes('.paper-edge-handle-left'), 'ต้องไม่มี class .paper-edge-handle-left ใน CSS');
   });
 
-  test('มีปุ่มและสไตล์สำหรับโหมด "ขยายเต็มหน้าจอ (ซ่อนขอบสีเทาซ้าย-ขวา)"', () => {
-    assert.ok(html.includes('id="btnFullWidth"'), 'ต้องมีปุ่ม #btnFullWidth ใน topbar');
-    assert.ok(html.includes('body.full-width'), 'ต้องมีสไตล์ body.full-width ใน CSS');
-    assert.ok(tools.includes('id="vwFullWidth"'), 'ต้องมี checkbox #vwFullWidth ในแผงเครื่องมือ');
-    assert.ok(tools.includes('id="vwMarginPreset"'), 'ต้องมีตัวเลือกระยะขอบ #vwMarginPreset ในแผงเครื่องมือ');
+  test('ไม่มีปุ่มและสไตล์สำหรับโหมดขยายเต็มหน้าจอ (#btnFullWidth, body.full-width)', () => {
+    assert.ok(!html.includes('id="btnFullWidth"'), 'ต้องไม่มีปุ่ม #btnFullWidth ใน topbar');
+    assert.ok(!html.includes('body.full-width'), 'ต้องไม่มีสไตล์ body.full-width ใน CSS');
+    assert.ok(!tools.includes('id="vwFullWidth"'), 'ต้องไม่มี checkbox #vwFullWidth ในแผงเครื่องมือ');
   });
 
-  test('CSS รองรับตัวแปร --text-w และ --paper-w แบบ dynamic', () => {
+  test('CSS กำหนดขนาดหน้ากระดาษเป็น A4 มาตรฐานราชการ (พื้นที่พิมพ์ 16 ซม., ขอบซ้าย 3 ซม., ขอบขวา 2 ซม.)', () => {
     assert.ok(html.includes('--text-w:16cm'), 'ต้องมีตัวแปรเริ่มต้น --text-w:16cm');
-    assert.ok(html.includes('width:var(--text-w)'), 'สเกลไม้บรรทัดต้องผูกกับ var(--text-w)');
-    assert.ok(html.includes('--paper-w:calc(var(--text-w)'), 'ความกว้างกระดาษต้องผูกกับ var(--text-w)');
+    assert.ok(html.includes('body.a4{--pl:3cm;--pr:2cm;--pt:2.5cm;--pb:2cm;--min-h:25.2cm}'), 'body.a4 ต้องมีระยะขอบมาตรฐาน 3/2/2.5/2 ซม.');
+    assert.ok(html.includes('--paper-w:calc(var(--text-w) + var(--pl) + var(--pr) + 2px)'), 'ความกว้างกระดาษต้องผูกกับ var(--text-w) + ขอบซ้ายขวา');
   });
 
-  test('มีฟังก์ชัน setTextWidth, resetPaperWidth และ Event eoffice:paperwidth', () => {
+  test('มีฟังก์ชัน setTextWidth, resetPaperWidth และ eofficeEditor export textWidth คงที่ 16 ซม.', () => {
     assert.ok(html.includes('function setTextWidth'), 'ต้องมีฟังก์ชัน setTextWidth');
     assert.ok(html.includes('function resetPaperWidth'), 'ต้องมีฟังก์ชัน resetPaperWidth');
     assert.ok(html.includes('eoffice:paperwidth'), 'ต้องยิง custom event eoffice:paperwidth');
@@ -47,30 +46,26 @@ describe('Paper Width & Edge Dragging (การขยายหน้ากร�
     assert.ok(html.includes('setTextWidth: (w) => setTextWidth'), 'eofficeEditor ต้อง export setTextWidth');
   });
 
-  test('แผงเครื่องมือเสริม (eoffice-tools.js) มีตัวเลือกความกว้างหน้ากระดาษและปุ่มคืนค่า', () => {
+  test('แผงเครื่องมือเสริม (eoffice-tools.js) มีตัวเลือกกระดาษ A4 มาตรฐานราชการและปุ่มคืนค่า', () => {
     assert.ok(tools.includes('id="vwPaperWidth"'), 'ต้องมี dropdown #vwPaperWidth ในแท็บมุมมอง');
     assert.ok(tools.includes('id="btnResetWidth"'), 'ต้องมีปุ่ม #btnResetWidth คืนค่า 16 ซม.');
     assert.ok(tools.includes('eoffice:paperwidth'), 'eoffice-tools ต้องดักฟัง event eoffice:paperwidth');
   });
 
-  test('ไฟล์ผลลัพธ์ dist/eoffice-editor-single.html มีฟังก์ชันขยายหน้ากระดาษฝังพร้อมใช้งาน', () => {
-    assert.ok(distSingle.includes('id="rulerEdgeHandle"'), 'dist/eoffice-editor-single.html ต้องมี #rulerEdgeHandle');
-    assert.ok(distSingle.includes('id="paperEdgeHandle"'), 'dist/eoffice-editor-single.html ต้องมี #paperEdgeHandle');
-    assert.ok(distSingle.includes('id="vwPaperWidth"'), 'dist/eoffice-editor-single.html ต้องมี #vwPaperWidth');
+  test('ไฟล์ผลลัพธ์ dist/eoffice-editor-single.html ไม่มี Handle ลากขอบและไม่มีปุ่มเต็มจอ', () => {
+    assert.ok(!distSingle.includes('id="rulerEdgeHandle"'), 'distSingle ต้องไม่มี #rulerEdgeHandle');
+    assert.ok(!distSingle.includes('id="paperEdgeHandle"'), 'distSingle ต้องไม่มี #paperEdgeHandle');
+    assert.ok(!distSingle.includes('id="rulerEdgeHandleLeft"'), 'distSingle ต้องไม่มี #rulerEdgeHandleLeft');
+    assert.ok(!distSingle.includes('id="paperEdgeHandleLeft"'), 'distSingle ต้องไม่มี #paperEdgeHandleLeft');
+    assert.ok(!distSingle.includes('id="btnFullWidth"'), 'distSingle ต้องไม่มี #btnFullWidth');
   });
 
-  test('updatePaperWidthCss อัปเดตตัวแปร --text-w และ --paper-w บน document.body เพื่อให้พื้นที่ทำงานขยับตาม', () => {
-    assert.ok(html.includes("document.body.style.setProperty('--text-w'"), 'updatePaperWidthCss ต้องอัปเดต --text-w บน body');
-    assert.ok(html.includes("document.body.style.setProperty('--paper-w'"), 'updatePaperWidthCss ต้องอัปเดต --paper-w บน body');
-    assert.ok(distSingle.includes("document.body.style.setProperty('--text-w'"), 'distSingle ต้องอัปเดต --text-w บน body เช่นกัน');
+  test('การลากปุ่มกั้นขวา (mk-right) ถูกจำกัดในพื้นที่พิมพ์ ไม่ขยายกระดาษเกิน 16 ซม.', () => {
+    assert.ok(!html.includes("drag.kind === 'right' && rawX > rulerCm"), 'ต้องไม่มีโค้ดลาก mk-right ขยายกระดาษ');
+    assert.ok(!distSingle.includes("drag.kind === 'right' && rawX > rulerCm"), 'distSingle ต้องไม่มีโค้ดลาก mk-right ขยายกระดาษ');
   });
 
-  test('การลากปุ่มกั้นขวา (mk-right) ออกไปทางขวาเกิน rulerCm สามารถขยายความกว้างหน้ากระดาษได้', () => {
-    assert.ok(html.includes("drag.kind === 'right' && rawX > rulerCm"), 'ต้องรองรับการลาก mk-right ขยายความกว้างหน้ากระดาษ');
-    assert.ok(distSingle.includes("drag.kind === 'right' && rawX > rulerCm"), 'distSingle ต้องรองรับการลาก mk-right ขยายความกว้างหน้ากระดาษ');
-  });
-
-  test('ทดสอบในเบราว์เซอร์จริง (Edge Headless): พื้นที่ทำงานขยายตามกั้นขวาที่ 17 ซม. อย่างสมบูรณ์', async (t) => {
+  test('ทดสอบในเบราว์เซอร์จริง (Edge Headless): กระดาษ fix ขนาด A4 (16 ซม.) และไม่มี Handle ลากขอบ', async (t) => {
     const edgePath = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
     if (!existsSync(edgePath)) {
       t.skip('ไม่พบ msedge.exe ข้ามการทดสอบเบราว์เซอร์จริง');
@@ -141,12 +136,16 @@ describe('Paper Width & Edge Dragging (การขยายหน้ากร�
         await new Promise(r => setTimeout(r, 100));
       }
 
-      // ตรวจสอบขนาดเริ่มต้นที่ 16 ซม.
+      // ตรวจสอบขนาดมาตรฐาน A4 ที่ 16 ซม. และไม่มี Edge Handles
       const m16 = await send('Runtime.evaluate', {
         expression: `(() => {
           const box = document.querySelector('.editor-box');
           const marks = document.querySelector('#rulerMarks');
-          const handle = document.querySelector('#rulerEdgeHandle');
+          const handleRight = document.querySelector('#rulerEdgeHandle');
+          const handleLeft = document.querySelector('#rulerEdgeHandleLeft');
+          const paperHandleRight = document.querySelector('#paperEdgeHandle');
+          const paperHandleLeft = document.querySelector('#paperEdgeHandleLeft');
+          const btnFull = document.querySelector('#btnFullWidth');
           const mkRight = document.querySelector('.mk-right');
           const bodyStyle = getComputedStyle(document.body);
           return {
@@ -155,119 +154,33 @@ describe('Paper Width & Edge Dragging (การขยายหน้ากร�
             boxWidth: box.getBoundingClientRect().width,
             marksWidth: marks.getBoundingClientRect().width,
             marksLeft: marks.getBoundingClientRect().left,
-            handleLeft: handle.getBoundingClientRect().left,
+            hasHandleRight: !!handleRight,
+            hasHandleLeft: !!handleLeft,
+            hasPaperHandleRight: !!paperHandleRight,
+            hasPaperHandleLeft: !!paperHandleLeft,
+            hasBtnFull: !!btnFull,
             mkRightLeft: mkRight.getBoundingClientRect().left
           };
         })()`,
         returnByValue: true
       });
 
-      assert.equal(m16.value.textW, 16, 'ความกว้างเริ่มต้นต้องเป็น 16 ซม.');
+      assert.equal(m16.value.textW, 16, 'ความกว้างหน้ากระดาษต้อง fix ที่ 16 ซม. A4');
+      assert.equal(m16.value.bodyTextW, '16cm', 'body --text-w ต้องเป็น 16cm');
+      assert.equal(m16.value.hasHandleRight, false, 'ต้องไม่มี #rulerEdgeHandle');
+      assert.equal(m16.value.hasHandleLeft, false, 'ต้องไม่มี #rulerEdgeHandleLeft');
+      assert.equal(m16.value.hasPaperHandleRight, false, 'ต้องไม่มี #paperEdgeHandle');
+      assert.equal(m16.value.hasPaperHandleLeft, false, 'ต้องไม่มี #paperEdgeHandleLeft');
+      assert.equal(m16.value.hasBtnFull, false, 'ต้องไม่มี #btnFullWidth');
 
-      // ขยายกั้นขวา / พื้นที่พิมพ์เป็น 17 ซม.
-      const m17 = await send('Runtime.evaluate', {
-        expression: `(() => {
-          window.eofficeEditor.setTextWidth(17);
-          const box = document.querySelector('.editor-box');
-          const marks = document.querySelector('#rulerMarks');
-          const handle = document.querySelector('#rulerEdgeHandle');
-          const mkRight = document.querySelector('.mk-right');
-          const bodyStyle = getComputedStyle(document.body);
-          return {
-            textW: window.eofficeEditor.textWidth(),
-            bodyTextW: bodyStyle.getPropertyValue('--text-w').trim(),
-            boxWidth: box.getBoundingClientRect().width,
-            marksWidth: marks.getBoundingClientRect().width,
-            marksLeft: marks.getBoundingClientRect().left,
-            handleLeft: handle.getBoundingClientRect().left,
-            mkRightLeft: mkRight.getBoundingClientRect().left
-          };
-        })()`,
-        returnByValue: true
-      });
-
-      assert.equal(m17.value.textW, 17, 'textWidth ต้องเป็น 17 ซม.');
-      assert.equal(m17.value.bodyTextW, '17cm', 'body --text-w ต้องเป็น 17cm');
-
-      // ตรวจสอบว่า .editor-box ขยายตามกั้นขวาพอดี (+1 ซม. หรือประมาณ 37.8px)
-      const diffBox = m17.value.boxWidth - m16.value.boxWidth;
-      assert.ok(Math.abs(diffBox - 37.795) < 1.5, `editor-box ต้องขยายกว้างขึ้นประมาณ 37.8px (ได้ ${diffBox}px)`);
-
-      // ตรวจสอบว่าไม้บรรทัด #rulerMarks ขยายตาม (+1 ซม.)
-      const diffMarks = m17.value.marksWidth - m16.value.marksWidth;
-      assert.ok(Math.abs(diffMarks - 37.795) < 1.5, `rulerMarks ต้องขยายกว้างขึ้นประมาณ 37.8px (ได้ ${diffMarks}px)`);
-
-      // ตรวจสอบว่ามือจับขอบกระดาษขยับตามสเกลไม้บรรทัด (+1 ซม. จากจุด 0 ซม.)
-      const distHandle16 = m16.value.handleLeft - m16.value.marksLeft;
-      const distHandle17 = m17.value.handleLeft - m17.value.marksLeft;
-      const diffHandle = distHandle17 - distHandle16;
-      assert.ok(Math.abs(diffHandle - 37.795) < 1.5, `rulerEdgeHandle ต้องขยับไปทางขวาประมาณ 37.8px (ได้ ${diffHandle}px)`);
-
-      // ตรวจสอบว่ากั้นขวา .mk-right อยู่ที่ 17 ซม. (+1 ซม. จากจุด 0 ซม.)
-      const distRight16 = m16.value.mkRightLeft - m16.value.marksLeft;
-      const distRight17 = m17.value.mkRightLeft - m17.value.marksLeft;
-      const diffRight = distRight17 - distRight16;
-      assert.ok(Math.abs(diffRight - 37.795) < 1.5, `mk-right ต้องขยับไปทางขวาประมาณ 37.8px (ได้ ${diffRight}px)`);
-
-      // บันทึกภาพหน้าจอขณะขยายกั้นขวาเป็น 17 ซม.
+      // บันทึกภาพหน้าจอขณะกระดาษ fix A4
       const ssRes = await send('Page.captureScreenshot', { format: 'png' });
       if (ssRes && ssRes.data) {
         const artifactDir = 'C:\\Users\\suwit\\.gemini\\antigravity\\brain\\3e316c91-ec18-4b0a-9a1e-3224837de510';
-        writeFileSync(join(artifactDir, 'workspace-expanded-17cm.png'), Buffer.from(ssRes.data, 'base64'));
+        writeFileSync(join(artifactDir, 'workspace-fixed-a4.png'), Buffer.from(ssRes.data, 'base64'));
       }
 
-      // 5. ทดสอบการมีอยู่ของมือจับขอบซ้าย #paperEdgeHandleLeft และ #rulerEdgeHandleLeft
-      const leftHandleRes = await send('Runtime.evaluate', {
-        expression: `(() => {
-          const hl = document.querySelector('#paperEdgeHandleLeft');
-          const hr = document.querySelector('#rulerEdgeHandleLeft');
-          return {
-            hasPaperLeft: !!hl,
-            hasRulerLeft: !!hr
-          };
-        })()`,
-        returnByValue: true
-      });
-      assert.strictEqual(leftHandleRes.value.hasPaperLeft, true, 'ต้องมี #paperEdgeHandleLeft');
-      assert.strictEqual(leftHandleRes.value.hasRulerLeft, true, 'ต้องมี #rulerEdgeHandleLeft');
-
-      // 6. ทดสอบโหมดขยายเต็มหน้าจอ (ซ่อนขอบสีเทาซ้าย-ขวา)
-      await send('Runtime.evaluate', {
-        expression: `window.eofficeEditor.setFullWidth(true)`
-      });
-      const fullWidthState = await send('Runtime.evaluate', {
-        expression: `(() => {
-          const bodyHasClass = document.body.classList.contains('full-width');
-          const sheet = document.querySelector('.sheet');
-          const desk = document.querySelector('.desk');
-          const btn = document.querySelector('#btnFullWidth');
-          const sheetW = sheet.getBoundingClientRect().width;
-          const deskW = desk.getBoundingClientRect().width;
-          return {
-            bodyHasClass,
-            btnPressed: btn?.getAttribute('aria-pressed'),
-            diffWidth: Math.abs(sheetW - deskW)
-          };
-        })()`,
-        returnByValue: true
-      });
-      assert.strictEqual(fullWidthState.value.bodyHasClass, true, 'body ต้องมี class full-width');
-      assert.strictEqual(fullWidthState.value.btnPressed, 'true', '#btnFullWidth ต้องมี aria-pressed="true"');
-      assert.ok(fullWidthState.value.diffWidth < 2, 'ในโหมดเต็มจอ .sheet ต้องกว้างเท่ากับ .desk (ไร้ขอบสีเทาซ้าย-ขวา)');
-
-      // บันทึกภาพหน้าจอขณะเปิดโหมดขยายเต็มหน้าจอ ไร้ขอบสีเทา
-      const ssFull = await send('Page.captureScreenshot', { format: 'png' });
-      if (ssFull && ssFull.data) {
-        const artifactDir = 'C:\\Users\\suwit\\.gemini\\antigravity\\brain\\3e316c91-ec18-4b0a-9a1e-3224837de510';
-        writeFileSync(join(artifactDir, 'workspace-full-width-no-gray.png'), Buffer.from(ssFull.data, 'base64'));
-      }
-
-      // ปิดโหมดเต็มจอ
-      await send('Runtime.evaluate', {
-        expression: `window.eofficeEditor.setFullWidth(false)`
-      });
-
-      // 7. ทดสอบการปรับระยะขอบกระดาษ (Margin Preset)
+      // ทดสอบการปรับระยะขอบกระดาษ (Margin Preset)
       await send('Runtime.evaluate', {
         expression: `window.eofficeEditor.setMarginPreset('narrow')`
       });
@@ -282,7 +195,12 @@ describe('Paper Width & Edge Dragging (การขยายหน้ากร�
       assert.strictEqual(marginState.value.pl, '1.25cm', 'ขอบแคบต้องกำหนด --pl เป็น 1.25cm');
       assert.strictEqual(marginState.value.pr, '1.25cm', 'ขอบแคบต้องกำหนด --pr เป็น 1.25cm');
 
-      // 8. ทดสอบเมื่อเปิดเอกสารใหม่ ค่าเริ่มต้นของย่อหน้าบรรทัดแรกต้องเป็น 0.00 ซม. (0cm)
+      // คืนค่าขอบมาตรฐาน
+      await send('Runtime.evaluate', {
+        expression: `window.eofficeEditor.setMarginPreset('standard')`
+      });
+
+      // ทดสอบเมื่อเปิดเอกสารใหม่ ค่าเริ่มต้นของย่อหน้าบรรทัดแรกต้องเป็น 0.00 ซม. (0cm)
       const indentState = await send('Runtime.evaluate', {
         expression: `(() => {
           document.querySelector('#btnNew').click();
