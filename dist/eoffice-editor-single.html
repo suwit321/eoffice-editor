@@ -27,7 +27,7 @@
   --paper:#fff;--paper-ink:#000;
   --topbar-h:36px;
   --z:1;--vr:20px; /* --vr = ความกว้างไม้บรรทัดแนวดิ่ง */
-  --text-w:16cm;
+  --text-w:16.25cm;
 }
 html,body{margin:0}
 /* ระยะขอบกระดาษ: โหมดกะทัดรัด = 8px รอบด้าน, โหมด A4 = ขอบพิมพ์ บน 2.5 ขวา 2 ล่าง 2 ซ้าย 3 ซม. (กระดาษกว้าง 21 ซม.)
@@ -730,10 +730,10 @@ body.ls-docked .desk{padding-left:240px}
         <div class="ruler off" id="ruler">
           <div class="ruler-scale" id="rulerScale"></div>
           <div class="ruler-marks" id="rulerMarks">
-            <button type="button" class="mk mk-first" data-kind="first" role="slider" aria-valuemin="0" aria-valuemax="16" aria-label="ย่อหน้าบรรทัดแรก"><svg viewBox="0 0 13 9" aria-hidden="true"><path d="M.5.5h12l-6 8z"/></svg></button>
-            <button type="button" class="mk mk-hang" data-kind="hang" role="slider" aria-valuemin="0" aria-valuemax="16" aria-label="ย่อหน้าแขวน"><svg viewBox="0 0 13 8" aria-hidden="true"><path d="M6.5.5l6 7H.5z"/></svg></button>
-            <button type="button" class="mk mk-box" data-kind="box" role="slider" aria-valuemin="0" aria-valuemax="16" aria-label="กั้นซ้าย"><svg viewBox="0 0 13 7" aria-hidden="true"><rect x=".5" y=".5" width="12" height="6"/></svg></button>
-            <button type="button" class="mk mk-right" data-kind="right" role="slider" aria-valuemin="0" aria-valuemax="16" aria-label="กั้นขวา"><svg viewBox="0 0 13 8" aria-hidden="true"><path d="M6.5.5l6 7H.5z"/></svg></button>
+            <button type="button" class="mk mk-first" data-kind="first" role="slider" aria-valuemin="0" aria-valuemax="16.25" aria-label="ย่อหน้าบรรทัดแรก"><svg viewBox="0 0 13 9" aria-hidden="true"><path d="M.5.5h12l-6 8z"/></svg></button>
+            <button type="button" class="mk mk-hang" data-kind="hang" role="slider" aria-valuemin="0" aria-valuemax="16.25" aria-label="ย่อหน้าแขวน"><svg viewBox="0 0 13 8" aria-hidden="true"><path d="M6.5.5l6 7H.5z"/></svg></button>
+            <button type="button" class="mk mk-box" data-kind="box" role="slider" aria-valuemin="0" aria-valuemax="16.25" aria-label="กั้นซ้าย"><svg viewBox="0 0 13 7" aria-hidden="true"><rect x=".5" y=".5" width="12" height="6"/></svg></button>
+            <button type="button" class="mk mk-right" data-kind="right" role="slider" aria-valuemin="0" aria-valuemax="16.25" aria-label="กั้นขวา"><svg viewBox="0 0 13 8" aria-hidden="true"><path d="M6.5.5l6 7H.5z"/></svg></button>
             <div class="ruler-tip" id="rulerTip" hidden></div>
           </div>
         </div>
@@ -2550,15 +2550,16 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
     </div>
     <div class="row">
       <label class="inline grow">ความกว้างพิมพ์ <select id="vwPaperWidth" class="grow">
+        <option value="16.25">16.25 ซม. (ค่าเริ่มต้นมาตรฐาน)</option>
         <option value="16">16 ซม. (A4 แนวตั้ง — มาตรฐานราชการ)</option>
         <option value="18">18 ซม. (กว้างปานกลาง)</option>
         <option value="20">20 ซม. (กว้างพิเศษ)</option>
         <option value="24.7">24.7 ซม. (A4 แนวนอน)</option>
         <option value="custom" id="vwCustomOpt">กำหนดเอง (ลากกั้นขวา)</option>
       </select></label>
-      <button type="button" class="tbtn" id="btnResetWidth" title="คืนค่า 16 ซม. (มาตรฐาน A4)">คืนค่า 16 ซม.</button>
+      <button type="button" class="tbtn" id="btnResetWidth" title="คืนค่า 16.25 ซม. (ค่าเริ่มต้น)">คืนค่า 16.25 ซม.</button>
     </div>
-    <p class="hint">ลากตัวเลื่อนกั้นขวา (mk-right) ไปทางขวาเพื่อขยายความกว้างกระดาษได้อิสระ (ดับเบิลคลิกที่กั้นขวาเพื่อคืนค่า 16 ซม.)</p>
+    <p class="hint">ลากตัวเลื่อนกั้นขวา (mk-right) ไปทางขวาเพื่อขยายความกว้างกระดาษได้อิสระ (ดับเบิลคลิกที่กั้นขวาเพื่อคืนค่า 16.25 ซม.)</p>
 
     <details class="tools-fold">
       <summary><span class="fold-icon">📏</span> เส้นช่วยจัดและเครื่องหมายซ่อน (¶, เส้นบรรทัด, ตาราง)</summary>
@@ -3961,10 +3962,10 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
       $('#vwParaNum').checked = s.paraNumbers;
       $('#vwLineNum').checked = s.lineNumbers;
       if ($('#vwMarginPreset')) $('#vwMarginPreset').value = ed.getMarginPreset?.() || 'standard';
-      const wVal = ed.textWidth?.() || 16;
+      const wVal = ed.textWidth?.() || 16.25;
       const wSel = $('#vwPaperWidth'), wOpt = $('#vwCustomOpt');
       if (wSel) {
-        if (['16', '18', '20', '24.7'].includes(String(wVal))) {
+        if (['16.25', '16', '18', '20', '24.7'].includes(String(wVal))) {
           wSel.value = String(wVal);
           if (wOpt) wOpt.textContent = 'กำหนดเอง (ลากกั้นขวา)';
         } else {
@@ -3982,9 +3983,9 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
     document.addEventListener('eoffice:paperwidth', e => {
       const sel = $('#vwPaperWidth');
       if (!sel) return;
-      const w = e.detail?.width || ed.textWidth?.() || 16;
+      const w = e.detail?.width || ed.textWidth?.() || 16.25;
       const opt = $('#vwCustomOpt');
-      if (['16', '18', '20', '24.7'].includes(String(w))) {
+      if (['16.25', '16', '18', '20', '24.7'].includes(String(w))) {
         sel.value = String(w);
         if (opt) opt.textContent = 'กำหนดเอง (ลากกั้นขวา)';
       } else {
@@ -3999,9 +4000,9 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
     });
     $('#btnResetWidth')?.addEventListener('click', () => {
       if (ed.resetTextWidth) ed.resetTextWidth();
-      else if (ed.setTextWidth) ed.setTextWidth(16);
+      else if (ed.setTextWidth) ed.setTextWidth(16.25);
       const sel = $('#vwPaperWidth');
-      if (sel) sel.value = '16';
+      if (sel) sel.value = '16.25';
     });
     $('#vwPaper').addEventListener('change', e => { ed.setSetting('paper', e.target.checked ? 'a4' : 'compact'); renderView(); });
     $('#vwBreaks').addEventListener('change', e => ed.setSetting('pageBreaks', e.target.checked));
@@ -5665,7 +5666,7 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
       profile: 'standard', listDigits: 'arabic', pageNumbers: true, pageDigits: 'thai',
       // การแสดงผลบนจอ (ไม่มีผลกับการพิมพ์/ส่งออก)
       paper: 'a4', pageBreaks: true, grid: false,
-      textWidth: 16,
+      textWidth: 16.25,
       showMarks: false,
       marks: { space: true, nbsp: true, tab: true, para: true, zw: true, dup: true, wj: true },
       markColors: { space: '#2563eb', nbsp: '#d97706', tab: '#16a34a', para: '#7c3aed', zw: '#dc2626', dup: '#fecaca', wj: '#0d9488' },
@@ -5675,12 +5676,13 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
     };
     try {
       const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
+      if (saved.textWidth === 16) saved.textWidth = 16.25;
       return { ...base, ...saved, marks: { ...base.marks, ...saved.marks }, markColors: { ...base.markColors, ...saved.markColors } };
     } catch { return base; }
   })();
   if (!PROFILES[settings.profile]) settings.profile = 'standard';
-  let rulerCm = Number(settings.textWidth) || 16;
-  if (rulerCm < 10 || rulerCm > 45) rulerCm = 16;
+  let rulerCm = Number(settings.textWidth) || 16.25;
+  if (rulerCm < 10 || rulerCm > 45) rulerCm = 16.25;
   if (settings.marginPreset) {
     let pl = '3cm', pr = '2cm';
     if (settings.marginPreset === 'moderate') { pl = '2cm'; pr = '1.5cm'; }
@@ -9017,14 +9019,14 @@ ${body}
         settings.textWidth = rulerCm;
         store.set(SETTINGS_KEY, JSON.stringify(settings));
         setupZoom();
-        say(`ปรับความกว้างหน้ากระดาษเป็น ${rulerCm} ซม.${rulerCm === 16 ? ' (มาตรฐาน A4)' : ''}`);
+        say(`ปรับความกว้างหน้ากระดาษเป็น ${rulerCm} ซม.${rulerCm === 16.25 ? ' (ค่าเริ่มต้น 16.25 ซม.)' : ''}`);
         document.dispatchEvent(new CustomEvent('eoffice:paperwidth', { detail: { width: rulerCm } }));
       }
     }
 
     function resetPaperWidth() {
-      setTextWidth(16, true);
-      say('คืนค่าความกว้างหน้ากระดาษเป็น 16 ซม. (มาตรฐาน A4 หนังสือราชการ)');
+      setTextWidth(16.25, true);
+      say('คืนค่าความกว้างหน้ากระดาษเป็น 16.25 ซม. (ค่าเริ่มต้น)');
     }
 
     function setMarginPreset(preset) {

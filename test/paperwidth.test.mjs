@@ -32,8 +32,8 @@ describe('Paper Width & Right Margin Dragging (การขยายหน้า
     assert.ok(!tools.includes('id="vwFullWidth"'), 'ต้องไม่มี checkbox #vwFullWidth ในแผงเครื่องมือ');
   });
 
-  test('CSS กำหนดขนาดหน้ากระดาษเริ่มต้นเป็น A4 มาตรฐานราชการ (พื้นที่พิมพ์ 16 ซม., ขอบซ้าย 3 ซม., ขอบขวา 2 ซม.)', () => {
-    assert.ok(html.includes('--text-w:16cm'), 'ต้องมีตัวแปรเริ่มต้น --text-w:16cm');
+  test('CSS กำหนดขนาดหน้ากระดาษเริ่มต้นเป็น 16.25 ซม. (ขอบซ้าย 3 ซม., ขอบขวา 2 ซม.)', () => {
+    assert.ok(html.includes('--text-w:16.25cm'), 'ต้องมีตัวแปรเริ่มต้น --text-w:16.25cm');
     assert.ok(html.includes('body.a4{--pl:3cm;--pr:2cm;--pt:2.5cm;--pb:2cm;--min-h:25.2cm}'), 'body.a4 ต้องมีระยะขอบมาตรฐาน 3/2/2.5/2 ซม.');
     assert.ok(html.includes('--paper-w:calc(var(--text-w) + var(--pl) + var(--pr) + 2px)'), 'ความกว้างกระดาษต้องผูกกับ var(--text-w) + ขอบซ้ายขวา');
   });
@@ -165,18 +165,18 @@ describe('Paper Width & Right Margin Dragging (การขยายหน้า
         returnByValue: true
       });
 
-      assert.equal(m16.value.textW, 16, 'ความกว้างหน้ากระดาษเริ่มต้นต้องเป็น 16 ซม. A4');
-      assert.equal(m16.value.bodyTextW, '16cm', 'body --text-w ต้องเป็น 16cm');
+      assert.equal(m16.value.textW, 16.25, 'ความกว้างหน้ากระดาษเริ่มต้นต้องเป็น 16.25 ซม.');
+      assert.equal(m16.value.bodyTextW, '16.25cm', 'body --text-w ต้องเป็น 16.25cm');
       assert.equal(m16.value.hasHandleRight, false, 'ต้องไม่มี #rulerEdgeHandle');
       assert.equal(m16.value.hasHandleLeft, false, 'ต้องไม่มี #rulerEdgeHandleLeft');
       assert.equal(m16.value.hasPaperHandleRight, false, 'ต้องไม่มี #paperEdgeHandle');
       assert.equal(m16.value.hasPaperHandleLeft, false, 'ต้องไม่มี #paperEdgeHandleLeft');
       assert.equal(m16.value.hasBtnFull, false, 'ต้องไม่มี #btnFullWidth');
 
-      // ขยายกั้นขวา / พื้นที่พิมพ์เป็น 17 ซม.
-      const m17 = await send('Runtime.evaluate', {
+      // ขยายกั้นขวา / พื้นที่พิมพ์เป็น 18 ซม.
+      const m18 = await send('Runtime.evaluate', {
         expression: `(() => {
-          window.eofficeEditor.setTextWidth(17);
+          window.eofficeEditor.setTextWidth(18);
           const box = document.querySelector('.editor-box');
           const marks = document.querySelector('#rulerMarks');
           const mkRight = document.querySelector('.mk-right');
@@ -193,14 +193,14 @@ describe('Paper Width & Right Margin Dragging (การขยายหน้า
         returnByValue: true
       });
 
-      assert.equal(m17.value.textW, 17, 'textWidth ต้องเป็น 17 ซม.');
-      assert.equal(m17.value.bodyTextW, '17cm', 'body --text-w ต้องเป็น 17cm');
+      assert.equal(m18.value.textW, 18, 'textWidth ต้องเป็น 18 ซม.');
+      assert.equal(m18.value.bodyTextW, '18cm', 'body --text-w ต้องเป็น 18cm');
 
-      // ตรวจสอบว่า .editor-box ขยายตามกั้นขวาพอดี (+1 ซม. หรือประมาณ 37.8px)
-      const diffBox = m17.value.boxWidth - m16.value.boxWidth;
-      assert.ok(Math.abs(diffBox - 37.795) < 1.5, `editor-box ต้องขยายกว้างขึ้นประมาณ 37.8px (ได้ ${diffBox}px)`);
+      // ตรวจสอบว่า .editor-box ขยายตามกั้นขวาพอดี (+1.75 ซม. หรือประมาณ 66.14px)
+      const diffBox = m18.value.boxWidth - m16.value.boxWidth;
+      assert.ok(Math.abs(diffBox - (1.75 * 37.795)) < 2, `editor-box ต้องขยายกว้างขึ้นประมาณ 66.1px (ได้ ${diffBox}px)`);
 
-      // คืนค่าความกว้างเป็น 16 ซม.
+      // คืนค่าความกว้างเป็น 16.25 ซม.
       await send('Runtime.evaluate', {
         expression: `window.eofficeEditor.resetTextWidth()`
       });
@@ -208,7 +208,7 @@ describe('Paper Width & Right Margin Dragging (การขยายหน้า
         expression: `window.eofficeEditor.textWidth()`,
         returnByValue: true
       });
-      assert.equal(resetW.value, 16, 'คืนค่าความกว้างต้องกลับมาเป็น 16 ซม.');
+      assert.equal(resetW.value, 16.25, 'คืนค่าความกว้างต้องกลับมาเป็น 16.25 ซม.');
 
       // ทดสอบการปรับระยะขอบกระดาษ (Margin Preset)
       await send('Runtime.evaluate', {
