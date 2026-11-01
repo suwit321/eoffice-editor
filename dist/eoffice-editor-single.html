@@ -302,6 +302,7 @@ body.table-drawing-mode #editor .ql-editor{cursor:crosshair!important}
 .tbl-line-guide.row .tbl-guide-badge{left:4px;top:0;transform:translateY(-50%)}
 .tbl-guide-badge .tbl-guide-icon{font-size:14px;font-weight:700;color:#38bdf8;line-height:1}
 .tbl-hover-pill{position:absolute;z-index:36;pointer-events:none;display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:#1e3a8a;color:#38bdf8;border:1.5px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.32);font-size:13px;font-weight:700;line-height:1;transform:translate(-50%,-50%);transition:transform .06s ease-out}
+.tbl-hover-pill[hidden],.tbl-line-guide[hidden]{display:none!important}
 body.tbl-resizing-col,body.tbl-resizing-col *,#editor.tbl-cursor-col,#editor.tbl-cursor-col *,#editor.tbl-cursor-col .ql-editor,#editor.tbl-cursor-col .ql-editor *{cursor:col-resize!important}
 body.tbl-resizing-row,body.tbl-resizing-row *,#editor.tbl-cursor-row,#editor.tbl-cursor-row *,#editor.tbl-cursor-row .ql-editor,#editor.tbl-cursor-row .ql-editor *{cursor:row-resize!important}
 
@@ -751,8 +752,8 @@ body.ls-docked .desk{padding-left:240px}
           <div class="tbl-handle-resize" id="tblHandleResize" title="ลากเพื่อปรับขนาดตาราง" aria-label="ปรับขนาดตาราง">⤡</div>
         </div>
         <div class="tbl-draw-box" id="tblDrawBox" hidden><span id="tblDrawLabel">2 × 2</span></div>
-        <div class="tbl-line-guide" id="tblLineGuide" hidden><span class="tbl-guide-badge" id="tblGuideBadge"><span class="tbl-guide-icon" id="tblGuideIcon">↔</span><span id="tblGuideText"></span></span></div>
-        <div class="tbl-hover-pill" id="tblHoverPill" hidden>↔</div>
+        <div class="tbl-line-guide" id="tblLineGuide" hidden style="display:none"><span class="tbl-guide-badge" id="tblGuideBadge"><span class="tbl-guide-icon" id="tblGuideIcon">↔</span><span id="tblGuideText"></span></span></div>
+        <div class="tbl-hover-pill" id="tblHoverPill" hidden style="display:none">↔</div>
         <!-- ตัวจัดการรูปภาพแบบ Word (Overlay, มือจับ 8 ทิศ, แถบคำสั่งลอย, ครอบตัด) -->
         <div class="img-overlay" id="imgOverlay" hidden>
           <div class="img-size-badge" id="imgSizeBadge">0 × 0 px</div>
@@ -7631,6 +7632,18 @@ ${body}
       }
 
       // ตรวจจับการเลื่อนเมาส์ชี้เส้นตาราง ปรับเคอร์เซอร์และแสดงตัวอักษรสองหัว (↔ / ↕) เพื่อบอกสถานะ
+      const clearHoverPill = () => {
+        if (!isBorderDragging) {
+          hoveredBorder = null;
+          document.body.style.cursor = '';
+          $('#editor')?.classList.remove('tbl-cursor-col', 'tbl-cursor-row');
+          if (hoverPill) {
+            hoverPill.hidden = true;
+            hoverPill.style.display = 'none';
+          }
+        }
+      };
+
       $('#editor').addEventListener('pointermove', e => {
         if (isBorderDragging || isDrawTableActive) return;
         const detected = detectTableBorder(e);
@@ -7654,24 +7667,16 @@ ${body}
               hoverPill.style.left = `${(e.clientX - boxRect.left) / z}px`;
               hoverPill.style.top = `${(detected.splitY - boxRect.top) / z}px`;
             }
+            hoverPill.style.display = 'inline-flex';
             hoverPill.hidden = false;
           }
-        } else if (hoveredBorder) {
-          hoveredBorder = null;
-          document.body.style.cursor = '';
-          editor.classList.remove('tbl-cursor-col', 'tbl-cursor-row');
-          if (hoverPill) hoverPill.hidden = true;
+        } else {
+          clearHoverPill();
         }
       });
 
-      $('#editor').addEventListener('pointerleave', () => {
-        if (!isBorderDragging && hoveredBorder) {
-          hoveredBorder = null;
-          document.body.style.cursor = '';
-          $('#editor').classList.remove('tbl-cursor-col', 'tbl-cursor-row');
-          if (hoverPill) hoverPill.hidden = true;
-        }
-      });
+      $('#editor').addEventListener('pointerleave', clearHoverPill);
+      window.addEventListener('blur', clearHoverPill);
 
       // ลากปรับเส้นตารางอิสระ (Free table gridline resizing)
       $('#editor').addEventListener('pointerdown', e => {
@@ -7683,7 +7688,10 @@ ${body}
         isBorderDragging = true;
         const table = dragBorder.table;
         activeTableEl = table;
-        if (hoverPill) hoverPill.hidden = true;
+        if (hoverPill) {
+          hoverPill.hidden = true;
+          hoverPill.style.display = 'none';
+        }
         document.body.classList.add(dragBorder.type === 'col' ? 'tbl-resizing-col' : 'tbl-resizing-row');
         $('#editor').classList.toggle('tbl-cursor-col', dragBorder.type === 'col');
         $('#editor').classList.toggle('tbl-cursor-row', dragBorder.type === 'row');
@@ -7741,6 +7749,7 @@ ${body}
             if (guideBadge) {
               guideBadge.innerHTML = `<span class="tbl-guide-icon">↔</span> <span>คอลัมน์ ${cIdx + 1}: ${curCm} ซม.</span>`;
             }
+            lineGuide.style.display = 'block';
             lineGuide.hidden = false;
           } else {
             lineGuide.className = 'tbl-line-guide row';
@@ -7754,6 +7763,7 @@ ${body}
             if (guideBadge) {
               guideBadge.innerHTML = `<span class="tbl-guide-icon">↕</span> <span>แถว ${rIdx + 1}: ${curCm} ซม.</span>`;
             }
+            lineGuide.style.display = 'block';
             lineGuide.hidden = false;
           }
         }
@@ -7814,8 +7824,14 @@ ${body}
           window.removeEventListener('pointermove', onDragMove);
           window.removeEventListener('pointerup', onDragUp);
 
-          if (lineGuide) lineGuide.hidden = true;
-          if (hoverPill) hoverPill.hidden = true;
+          if (lineGuide) {
+            lineGuide.hidden = true;
+            lineGuide.style.display = 'none';
+          }
+          if (hoverPill) {
+            hoverPill.hidden = true;
+            hoverPill.style.display = 'none';
+          }
 
           if (dragBorder.type === 'col') {
             resizeTableColumn(table, dragBorder.colIndex, currentDeltaX);

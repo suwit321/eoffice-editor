@@ -344,6 +344,8 @@ describe('Table Enhancement (เครื่องมือตาราง ว�
           });
           c0.dispatchEvent(evtAway);
           const cursorAway = document.body.style.cursor;
+          const hoverPillAwayHidden = document.querySelector('#tblHoverPill')?.hidden;
+          const hoverPillAwayDisplay = getComputedStyle(document.querySelector('#tblHoverPill')).display;
 
           return {
             diffW0: afterW0 - beforeW0,
@@ -357,7 +359,9 @@ describe('Table Enhancement (เครื่องมือตาราง ว�
             hoverPillRowHidden,
             dragGuideBadgeText,
             isGuideLineVisible,
-            cursorAway
+            cursorAway,
+            hoverPillAwayHidden,
+            hoverPillAwayDisplay
           };
         })()`,
         returnByValue: true
@@ -375,6 +379,8 @@ describe('Table Enhancement (เครื่องมือตาราง ว�
       assert.equal(lineDragRes.value.isGuideLineVisible, true, 'ขณะกดลากเส้นตาราง ต้องแสดงเส้นกะระยะ #tblLineGuide');
       assert.ok(lineDragRes.value.dragGuideBadgeText.includes('↔'), 'ป้ายเส้นกะระยะขณะลากคอลัมน์ต้องมีตัวอักษรสองหัว ↔ เพื่อบอกสถานะ');
       assert.equal(lineDragRes.value.cursorAway, '', 'เมื่อออกจากเส้นตาราง เคอร์เซอร์ต้องกลับเป็นค่าปกติ');
+      assert.equal(lineDragRes.value.hoverPillAwayHidden, true, 'เมื่อออกจากเส้นตาราง ป้าย #tblHoverPill ต้องถูกซ่อน');
+      assert.equal(lineDragRes.value.hoverPillAwayDisplay, 'none', 'เมื่อออกจากเส้นตาราง display ของ #tblHoverPill ต้องเป็น none (ไม่แสดงตลอดเวลา)');
 
       // ถ่ายภาพหน้าจอเก็บเป็น Artifact
       const ssRes = await send('Page.captureScreenshot', { format: 'png' });
