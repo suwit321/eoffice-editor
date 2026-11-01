@@ -370,7 +370,9 @@ body.grid-on .editor-box{background-image:linear-gradient(to right,rgba(59,130,2
 .visit-log-tbl th,.visit-log-tbl td{padding:6px 8px;text-align:left;border-bottom:1px solid #f1f5f9}
 .visit-log-tbl th{position:sticky;top:0;background:#f1f5f9;color:#475569;font-weight:600}
 .visit-log-tbl tr:last-child td{border-bottom:0}
-.visit-badge{display:inline-block;padding:1px 6px;border-radius:999px;font-size:10.5px;background:#eff6ff;color:#1d4ed8}
+.visit-badge{display:inline-block;padding:1px 6px;border-radius:999px;font-size:10.5px;background:#eff6ff;color:#1d4ed8;font-weight:600}
+.visit-badge.counted{background:#ecfdf5;color:#047857}
+.visit-badge.dup-hour{background:#fffbeb;color:#b45309}
 .visit-sync-bar{display:flex;align-items:center;justify-content:space-between;padding:5px 10px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;font-size:11.5px;color:#166534}
 .visit-sync-bar.syncing{background:#eff6ff;border-color:#bfdbfe;color:#1e40af}
 .visit-sync-bar.offline{background:#fef2f2;border-color:#fecaca;color:#991b1b}
@@ -1033,12 +1035,14 @@ body.ls-docked .desk{padding-left:240px}
       </div>
 
       <div>
-        <div class="visit-sec-title"><span>💻 ข้อมูลระบบและเวลาเข้าชม</span></div>
+        <div class="visit-sec-title"><span>💻 ข้อมูลระบบและเวลาเข้าชม</span><small style="color:#059669;font-weight:600">🛡️ ป้องกัน IP ซ้ำใน 1 ชม.</small></div>
         <div class="visit-meta">
           <div><b>เข้าชมครั้งแรก:</b> <span id="vFirstVisit">-</span></div>
           <div><b>เข้าชมล่าสุด:</b> <span id="vLastVisit">-</span></div>
           <div><b>เบราว์เซอร์/OS:</b> <span id="vEnvInfo">-</span></div>
+          <div><b>IP ปัจจุบัน:</b> <span id="vIpInfo">-</span></div>
           <div><b>ความละเอียดจอ:</b> <span id="vScreenInfo">-</span></div>
+          <div><b>ระบบนับยอด:</b> <span id="vCountRule" style="color:#059669;font-weight:600">ไม่นับซ้ำ IP เดิมใน 1 ชม.</span></div>
         </div>
       </div>
 
@@ -1050,8 +1054,8 @@ body.ls-docked .desk{padding-left:240px}
               <tr>
                 <th>#</th>
                 <th>วัน - เวลา</th>
-                <th>อุปกรณ์ / เบราว์เซอร์</th>
-                <th>สถานะ</th>
+                <th>IP / อุปกรณ์</th>
+                <th>สถานะการนับ</th>
               </tr>
             </thead>
             <tbody id="vHistoryBody"></tbody>
@@ -5434,7 +5438,7 @@ ${body}
         saveInfo();
       }).catch(() => { /* ไม่มี IndexedDB */ });
     }
-    // ---------- ระบบตัวนับการเข้าชมเว็บไซต์ (จุดแดงซ่อนขวาล่าง + รหัสผ่าน 4321 + Global Counter API) ----------
+    // ---------- ระบบตัวนับการเข้าชมเว็บไซต์ (จุดแดงซ่อนขวาล่าง + รหัสผ่าน 4321 + Global Counter API + ไม่นับซ้ำ IP ใน 1 ชม.) ----------
     const VISIT_KEY = 'eoffice-editor:visitor-stats';
     const VISIT_SESSION_KEY = 'eoffice-editor:visit-session';
     const VISIT_PIN = '4321';
@@ -5446,6 +5450,14 @@ ${body}
       const m = String(d.getMonth() + 1).padStart(2, '0');
       const day = String(d.getDate()).padStart(2, '0');
       return `${y}-${m}-${day}`;
+    }
+
+    function localHourKey(d = new Date()) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      const h = String(d.getHours()).padStart(2, '0');
+      return `${y}-${m}-${day}-${h}`;
     }
 
     function detectVisitorEnv() {
@@ -5468,6 +5480,46 @@ ${body}
       return { browser, os, label: `${browser} (${os})`, screen: scr };
     }
 
+    async function getVisitorIp() {
+      if (typeof fetch !== 'function') return null;
+      const signal = (typeof AbortSignal !== 'undefined' && AbortSignal.timeout)
+        ? AbortSignal.timeout(3000)
+        : undefined;
+      try {
+        const res = await fetch('https://api64.ipify.org?format=json', { signal });
+        if (res.ok) {
+          const d = await res.json();
+          if (d && typeof d.ip === 'string') return d.ip.trim();
+        }
+      } catch {}
+      try {
+        const res = await fetch('https://api.ipify.org?format=json', { signal });
+        if (res.ok) {
+          const d = await res.json();
+          if (d && typeof d.ip === 'string') return d.ip.trim();
+        }
+      } catch {}
+      return null;
+    }
+
+    function maskIp(ip) {
+      if (!ip) return '-';
+      if (ip.includes('.')) {
+        const parts = ip.split('.');
+        return parts.length === 4 ? `${parts[0]}.${parts[1]}.***.***` : ip;
+      }
+      if (ip.includes(':')) {
+        const parts = ip.split(':');
+        return parts.length >= 3 ? `${parts[0]}:${parts[1]}:****:****` : ip;
+      }
+      return ip;
+    }
+
+    function safeIpKey(ip, hourKey) {
+      const clean = (ip || 'local').replace(/[^a-zA-Z0-9_-]/g, '_');
+      return `ip_${clean}_${hourKey}`;
+    }
+
     function loadVisitorStats() {
       try {
         const raw = store.get(VISIT_KEY);
@@ -5487,6 +5539,9 @@ ${body}
         uniqueSessions: 0,
         firstVisitAt: now,
         lastVisitAt: now,
+        lastCountedAt: '',
+        lastCountedHour: '',
+        currentIp: '',
         daily: {},
         history: [],
       };
@@ -5496,23 +5551,41 @@ ${body}
       store.set(VISIT_KEY, JSON.stringify(st));
     }
 
-    // ซิงค์ยอดเข้าชมรวมกับ Cloud Counter API แบบไม่ระบุตัวตน (นับผู้ใช้ทุกคนข้ามเครื่อง)
-    async function syncGlobalCounter(isNewSession = false) {
+    // ซิงค์ยอดเข้าชมรวมกับ Cloud Counter API แบบไม่ระบุตัวตน (ตรวจสอบ IP ไม่นับซ้ำใน 1 ชม.)
+    async function syncGlobalCounter(isCountCandidate = false, hourKey = localHourKey()) {
       if (typeof fetch !== 'function') return null;
       const dayKey = localDateKey();
-      const action = isNewSession ? 'hit' : 'get';
       const ns = window.__EOFFICE_COUNTER_NS__ || COUNTER_NAMESPACE;
       const syncBar = $('#vSyncBar');
       const syncText = $('#vSyncText');
       if (syncBar) syncBar.className = 'visit-sync-bar syncing';
-      if (syncText) syncText.textContent = '⏳ กำลังซิงค์ยอดเข้าชมจากคลาวด์...';
+      if (syncText) syncText.textContent = '⏳ กำลังตรวจ IP และซิงค์ยอดเข้าชม...';
 
       try {
+        const ip = await getVisitorIp();
         const headers = { Origin: location.origin || 'https://suwit321.github.io' };
         const signal = (typeof AbortSignal !== 'undefined' && AbortSignal.timeout)
           ? AbortSignal.timeout(4500)
           : undefined;
 
+        let shouldIncrement = isCountCandidate;
+
+        // ถ้ามี IP: ตรวจสอบกับ Cloud Counter API เพื่อล็อก IP ไม่ให้นับซ้ำในชั่วโมงเดียวกันข้ามเครื่อง
+        if (ip && isCountCandidate) {
+          const ipKey = safeIpKey(ip, hourKey);
+          try {
+            const ipRes = await fetch(`${COUNTER_API_BASE}/hit/${ns}-ip/${ipKey}`, { headers, signal });
+            if (ipRes.ok) {
+              const ipData = await ipRes.json();
+              // หากค่ามากกว่า 1 แสดงว่า IP นี้เคยถูกนับไปแล้วในชั่วโมงนี้จากเครื่องอื่น!
+              if (typeof ipData.value === 'number' && ipData.value > 1) {
+                shouldIncrement = false;
+              }
+            }
+          } catch {}
+        }
+
+        const action = shouldIncrement ? 'hit' : 'get';
         const [totRes, dayRes] = await Promise.allSettled([
           fetch(`${COUNTER_API_BASE}/${action}/${ns}/visits`, { headers, signal }).then(r => r.ok ? r.json() : null),
           fetch(`${COUNTER_API_BASE}/${action}/${ns}/visits-${dayKey}`, { headers, signal }).then(r => r.ok ? r.json() : null)
@@ -5534,15 +5607,24 @@ ${body}
           }
           st.isGlobalSynced = true;
           st.lastSyncedAt = new Date().toISOString();
+          if (ip) {
+            st.currentIp = ip;
+            if (st.history[0]) {
+              st.history[0].ip = maskIp(ip);
+              if (!shouldIncrement && isCountCandidate) st.history[0].isDuplicateHour = true;
+            }
+          }
           saveVisitorStats(st);
 
           if (syncBar) syncBar.className = 'visit-sync-bar';
-          if (syncText) syncText.textContent = '🌐 นับยอดเข้าชมจากผู้ใช้ทั้งหมด (Global Counter API)';
+          if (syncText) syncText.textContent = shouldIncrement
+            ? '🌐 นับยอดเข้าชมใหม่ (ไม่ซ้ำ IP ใน 1 ชม.)'
+            : '🌐 IP เดิมในชั่วโมงนี้ (ไม่นับซ้ำ • Global Counter)';
           const statsView = $('#visitStatsView');
           if (statsView && !statsView.hidden) {
             renderVisitorStats();
           }
-          return { total: st.totalVisits, today: st.daily[dayKey] };
+          return { total: st.totalVisits, today: st.daily[dayKey], isDuplicate: !shouldIncrement };
         } else {
           throw new Error('No data');
         }
@@ -5553,11 +5635,12 @@ ${body}
       return null;
     }
 
-    function recordPageVisit() {
+    function recordPageVisit(opts = {}) {
       const st = loadVisitorStats();
       const now = new Date();
       const nowIso = now.toISOString();
       const dayKey = localDateKey(now);
+      const hourKey = opts.hourKey || localHourKey(now);
       const env = detectVisitorEnv();
 
       let isNewSession = false;
@@ -5570,26 +5653,39 @@ ${body}
         isNewSession = st.totalVisits === 0;
       }
 
-      st.totalVisits = (st.totalVisits || 0) + 1;
+      // ตรวจสอบการเข้าชมซ้ำในชั่วโมงเดียวกัน (ไม่นับซ้ำ IP เดียวกันในชั่วโมงเดียวกัน)
+      const msSinceLast = st.lastCountedAt ? (now.getTime() - new Date(st.lastCountedAt).getTime()) : Infinity;
+      const isDuplicateHour = !opts.forceNewHour && ((msSinceLast < 3600 * 1000) || (st.lastCountedHour === hourKey));
+
+      let counted = false;
+      if (!isDuplicateHour || st.totalVisits === 0) {
+        st.totalVisits = (st.totalVisits || 0) + 1;
+        st.daily[dayKey] = (st.daily[dayKey] || 0) + 1;
+        st.lastCountedAt = nowIso;
+        st.lastCountedHour = hourKey;
+        counted = true;
+      }
+
       if (isNewSession || !st.uniqueSessions) {
         st.uniqueSessions = (st.uniqueSessions || 0) + 1;
       }
       if (!st.firstVisitAt) st.firstVisitAt = nowIso;
       st.lastVisitAt = nowIso;
-      st.daily[dayKey] = (st.daily[dayKey] || 0) + 1;
 
       st.history.unshift({
         ts: nowIso,
         ua: env.label,
         screen: env.screen,
         isNewSession,
+        isDuplicateHour: !counted,
+        ip: st.currentIp ? maskIp(st.currentIp) : 'ตรวจ IP...'
       });
       if (st.history.length > 50) st.history.length = 50;
 
       saveVisitorStats(st);
 
-      // ส่งคำขอนับยอดเข้าชมไปยัง Cloud Counter API แบบเบื้องหลัง (ไม่บล็อกหน้าเว็บ)
-      syncGlobalCounter(isNewSession);
+      // ส่งคำขอนับยอดเข้าชมไปยัง Cloud Counter API แบบเบื้องหลัง (ตรวจ IP ซ้ำใน 1 ชม.)
+      syncGlobalCounter(counted, hourKey);
 
       return st;
     }
@@ -5625,6 +5721,8 @@ ${body}
       $('#vLastVisit').textContent = fmtVisitDateTime(st.lastVisitAt);
       $('#vEnvInfo').textContent = env.label;
       $('#vScreenInfo').textContent = env.screen;
+      const ipEl = $('#vIpInfo');
+      if (ipEl) ipEl.textContent = st.currentIp ? maskIp(st.currentIp) : (st.history[0]?.ip || 'กำลังตรวจสอบ...');
 
       // กราฟย้อนหลัง 7 วัน
       const days7 = [];
@@ -5653,12 +5751,14 @@ ${body}
       const logs = st.history.slice(0, 30);
       $('#vLogCount').textContent = `แสดง ${logs.length} รายการล่าสุด`;
       $('#vHistoryBody').innerHTML = logs.map((row, idx) => {
-        const badge = row.isNewSession ? 'เซสชันใหม่' : 'เปิดซ้ำ';
+        const badgeClass = row.isDuplicateHour ? 'dup-hour' : 'counted';
+        const badgeText = row.isDuplicateHour ? 'ซ้ำใน 1 ชม.' : 'นับยอดใหม่';
+        const ipLabel = row.ip ? esc(row.ip) : '-';
         return `<tr>
           <td>${idx + 1}</td>
           <td>${esc(fmtVisitDateTime(row.ts))}</td>
-          <td>${esc(row.ua || '-')} <small style="color:#64748b">(${esc(row.screen || '')})</small></td>
-          <td><span class="visit-badge">${badge}</span></td>
+          <td><b>${ipLabel}</b> <small style="color:#64748b">(${esc(row.ua || '')})</small></td>
+          <td><span class="visit-badge ${badgeClass}">${badgeText}</span></td>
         </tr>`;
       }).join('');
     }
@@ -5720,18 +5820,19 @@ ${body}
     function exportVisitorCsv() {
       const st = loadVisitorStats();
       const rows = [
-        ['ลำดับ', 'วันเวลา (ISO)', 'วันเวลา (ไทย)', 'เบราว์เซอร์และระบบ', 'ความละเอียดหน้าจอ', 'สถานะเซสชัน'],
+        ['ลำดับ', 'วันเวลา (ISO)', 'วันเวลา (ไทย)', 'IP (ย่อ)', 'เบราว์เซอร์และระบบ', 'ความละเอียดหน้าจอ', 'สถานะการนับ'],
         ...st.history.map((r, i) => [
           i + 1,
           r.ts,
           fmtVisitDateTime(r.ts),
+          r.ip || '',
           r.ua || '',
           r.screen || '',
-          r.isNewSession ? 'เซสชันใหม่' : 'เปิดซ้ำ',
+          r.isDuplicateHour ? 'ซ้ำใน 1 ชม. (ไม่นับ)' : 'นับยอดใหม่',
         ]),
       ];
       const csv = '\uFEFF' + rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\r\n');
-      download(`eoffice-visitor-stats-${localDateKey()}.csv`, csv, 'text/csv;charset=utf-8');
+      download(`sw-eoffice-visitor-stats-${localDateKey()}.csv`, csv, 'text/csv;charset=utf-8');
       say('ดาวน์โหลดไฟล์ประวัติการเข้าชม CSV แล้ว');
     }
 
@@ -5955,6 +6056,8 @@ ${body}
         getStats: loadVisitorStats,
         recordVisit: recordPageVisit,
         syncCounter: syncGlobalCounter,
+        getIp: getVisitorIp,
+        maskIp: maskIp,
         openPopup: openVisitPopup,
         closePopup: closeVisitPopup,
         unlock: unlockVisitPopup,

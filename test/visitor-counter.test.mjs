@@ -45,6 +45,20 @@ describe('Hidden Red Dot Visitor Counter & PIN 4321 Popup (ตัวนับก
     assert.ok(distHeaders.includes('https://abacus.jasoncameron.dev'), 'dist/_headers CSP ต้องอนุญาต Counter API');
   });
 
+  test('ระบบป้องกันการนับซ้ำ: ตรวจสอบ IP เดียวกันไม่นับซ้ำในชั่วโมงเดียวกัน', () => {
+    assert.ok(html.includes('localHourKey'), 'ต้องมีฟังก์ชัน localHourKey');
+    assert.ok(html.includes('api64.ipify.org'), 'ต้องมีปลายทางดึง IP api64.ipify.org');
+    assert.ok(html.includes('maskIp'), 'ต้องมีฟังก์ชัน maskIp สำหรับซ่อน IP เพื่อความเป็นส่วนตัว');
+    assert.ok(distSingle.includes('localHourKey'), 'distSingle ต้องมี localHourKey');
+    assert.ok(distSingle.includes('isDuplicateHour'), 'distSingle ต้องมีตัวแปรตรวจ isDuplicateHour');
+
+    // ตรวจสอบ CSP อนุญาต api64.ipify.org และ api.ipify.org
+    const distIndex = readFileSync(join(root, 'dist/index.html'), 'utf8');
+    const distHeaders = readFileSync(join(root, 'dist/_headers'), 'utf8');
+    assert.ok(distIndex.includes('https://api64.ipify.org'), 'dist/index.html CSP ต้องอนุญาต api64.ipify.org');
+    assert.ok(distHeaders.includes('https://api64.ipify.org'), 'dist/_headers CSP ต้องอนุญาต api64.ipify.org');
+  });
+
   test('ทดสอบในเบราว์เซอร์จริง (Edge Headless): นับจำนวนเข้าชมอัตโนมัติ กดจุดแดง ตรวจสอบรหัสผิด/ถูก (4321) และแสดงรายละเอียด', async (t) => {
     const edgePath = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
     if (!existsSync(edgePath)) {
@@ -116,27 +130,33 @@ describe('Hidden Red Dot Visitor Counter & PIN 4321 Popup (ตัวนับก
         await new Promise(r => setTimeout(r, 100));
       }
 
-      // 1. ตรวจสอบว่าบันทึกการเข้าชมอัตโนมัติแล้ว และจำลองการเข้าชมเพิ่มอีก 2 ครั้งเพื่อดูสถิติ
+      // 1. ตรวจสอบว่าบันทึกการเข้าชมอัตโนมัติแล้ว และทดสอบว่าเข้าซ้ำในชั่วโมงเดียวกันไม่นับเพิ่ม แต่เข้าชั่วโมงใหม่นับเพิ่ม
       const initStats = await send('Runtime.evaluate', {
         expression: `(() => {
+          // เข้าชมซ้ำในชั่วโมงเดียวกัน -> ต้องไม่เพิ่ม totalVisits
           window.eofficeEditor.visitorStats.recordVisit();
-          window.eofficeEditor.visitorStats.recordVisit();
-          const st = window.eofficeEditor.visitorStats.getStats();
+          const stDup = window.eofficeEditor.visitorStats.getStats();
+
+          // เข้าชมในชั่วโมงใหม่ (forceNewHour) -> ต้องเพิ่ม totalVisits
+          window.eofficeEditor.visitorStats.recordVisit({ forceNewHour: true });
+          const stNew = window.eofficeEditor.visitorStats.getStats();
+
           const dot = document.querySelector('#visitDot');
           const r = dot.getBoundingClientRect();
           return {
-            totalVisits: st.totalVisits,
-            historyLen: st.history.length,
+            totalAfterDup: stDup.totalVisits,
+            totalFinal: stNew.totalVisits,
+            historyLen: stNew.history.length,
             dotRight: r.right,
-            dotBottom: r.bottom,
-            winW: window.innerWidth,
-            winH: window.innerHeight
+            winW: window.innerWidth
           };
         })()`,
         returnByValue: true
       });
 
-      assert.strictEqual(initStats.value.totalVisits, 3, 'ต้องนับจำนวนการเข้าชมได้ถูกต้อง (เริ่มต้น 1 + จำลองเพิ่ม 2 = 3)');
+      assert.strictEqual(initStats.value.totalAfterDup, 1, 'เข้าชมซ้ำในชั่วโมงเดียวกันต้องไม่นับซ้ำ (คงที่ 1)');
+      assert.strictEqual(initStats.value.totalFinal, 2, 'เข้าชมในชั่วโมงใหม่ต้องนับเพิ่มเป็น 2');
+      assert.strictEqual(initStats.value.historyLen, 3, 'ประวัติการเข้าชมต้องบันทึกทั้ง 3 ครั้ง');
       assert.ok(initStats.value.dotRight > initStats.value.winW - 40, 'จุดแดงต้องอยู่มุมขวาล่างในแถบสถานะ');
 
       // 2. คลิกที่จุดแดง #visitDot -> ต้องเปิดหน้าต่างถามรหัสผ่าน และยังไม่แสดงสถิติ
@@ -197,8 +217,8 @@ describe('Hidden Red Dot Visitor Counter & PIN 4321 Popup (ตัวนับก
 
       assert.strictEqual(unlockState.value.authHidden, true, 'เมื่อกรอกรหัส 4321 ถูกต้อง หน้ากรอกรหัสต้องซ่อนลง');
       assert.strictEqual(unlockState.value.statsHidden, false, 'เมื่อกรอกรหัส 4321 ถูกต้อง ต้องแสดงหน้ารายละเอียดการเข้าชม');
-      assert.ok(Number(unlockState.value.totalText.replace(/,/g, '')) >= 3, 'ยอดเข้าชมทั้งหมดต้องเป็นตัวเลข >= 3');
-      assert.ok(Number(unlockState.value.todayText.replace(/,/g, '')) >= 3, 'ยอดเข้าชมวันนี้ต้องเป็นตัวเลข >= 3');
+      assert.ok(Number(unlockState.value.totalText.replace(/,/g, '')) >= 2, 'ยอดเข้าชมทั้งหมดต้องเป็นตัวเลข >= 2');
+      assert.ok(Number(unlockState.value.todayText.replace(/,/g, '')) >= 2, 'ยอดเข้าชมวันนี้ต้องเป็นตัวเลข >= 2');
       assert.ok(unlockState.value.syncBarText.length > 0, 'ต้องมีข้อความสถานะซิงค์คลาวด์');
       assert.strictEqual(unlockState.value.hasRefreshBtn, true, 'ต้องมีปุ่มรีเฟรชยอดเข้าชม');
       assert.strictEqual(unlockState.value.chartBars, 7, 'ต้องแสดงกราฟย้อนหลัง 7 วันครบ 7 แท่ง');
