@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://www.gstatic.com https://apis.google.com https://accounts.google.com 'sha256-XKldTrvNHsBkKd4zBgWsgq0j2UIlNOgdCva5EhenFnA=' 'sha256-bjNbvI8tl8y+bAasiIIyVXON/+FsTDSS9qAipExqFpE=' 'sha256-DEvwVJy+9BIlSSfkUQnmM5Gb9xWwT0i9p4INq1+W+zE=' 'sha256-I8MZ29t83noIROQQRxki89DRsHvUdQ6HW1h8MWRyCcs=' 'sha256-pg3eCbLoCl53kucC+ESaIYsvUBs9vw1uQFkUtsRH388='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.googleusercontent.com https://*.gstatic.com; font-src 'self' data:; frame-src 'self' https://*.firebaseapp.com https://accounts.google.com; connect-src 'self' https://api.anthropic.com https://api.openai.com https://generativelanguage.googleapis.com https://*.googleapis.com https://*.firebaseio.com https://accounts.google.com http://localhost:* http://127.0.0.1:*; base-uri 'none'; form-action 'none'; object-src 'none'; manifest-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://www.gstatic.com https://apis.google.com https://accounts.google.com 'sha256-XKldTrvNHsBkKd4zBgWsgq0j2UIlNOgdCva5EhenFnA=' 'sha256-bjNbvI8tl8y+bAasiIIyVXON/+FsTDSS9qAipExqFpE=' 'sha256-3+nVcES7M1saJxATZEX3YHg0wfucUOCDK+XHRacoo7Y=' 'sha256-I8MZ29t83noIROQQRxki89DRsHvUdQ6HW1h8MWRyCcs=' 'sha256-nownm5bkrDGjv3IvF0dJR1sh9BB7c5kF8TsdkZKGkJk='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.googleusercontent.com https://*.gstatic.com; font-src 'self' data:; frame-src 'self' https://*.firebaseapp.com https://accounts.google.com; connect-src 'self' https://api.anthropic.com https://api.openai.com https://generativelanguage.googleapis.com https://*.googleapis.com https://*.firebaseio.com https://accounts.google.com http://localhost:* http://127.0.0.1:*; base-uri 'none'; form-action 'none'; object-src 'none'; manifest-src 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="robots" content="noindex,nofollow">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -2524,12 +2524,16 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
       </select></label>
     </div>
     <div class="row">
-      <label class="inline grow">ขนาดหน้ากระดาษ <select id="vwPaperWidth" class="grow" disabled>
-        <option value="16" selected>A4 มาตรฐานราชการ (กว้างพิมพ์ 16 ซม.)</option>
+      <label class="inline grow">ความกว้างพิมพ์ <select id="vwPaperWidth" class="grow">
+        <option value="16">16 ซม. (A4 แนวตั้ง — มาตรฐานราชการ)</option>
+        <option value="18">18 ซม. (กว้างปานกลาง)</option>
+        <option value="20">20 ซม. (กว้างพิเศษ)</option>
+        <option value="24.7">24.7 ซม. (A4 แนวนอน)</option>
+        <option value="custom" id="vwCustomOpt">กำหนดเอง (ลากกั้นขวา)</option>
       </select></label>
       <button type="button" class="tbtn" id="btnResetWidth" title="คืนค่า 16 ซม. (มาตรฐาน A4)">คืนค่า 16 ซม.</button>
     </div>
-    <p class="hint">หน้ากระดาษกำหนดเป็น A4 มาตรฐานราชการ (ซ้าย 3 ซม. ขวา 2 ซม. พื้นที่พิมพ์ 16 ซม.)</p>
+    <p class="hint">ลากตัวเลื่อนกั้นขวา (mk-right) ไปทางขวาเพื่อขยายความกว้างกระดาษได้อิสระ (ดับเบิลคลิกที่กั้นขวาเพื่อคืนค่า 16 ซม.)</p>
 
     <details class="tools-fold">
       <summary><span class="fold-icon">📏</span> เส้นช่วยจัดและเครื่องหมายซ่อน (¶, เส้นบรรทัด, ตาราง)</summary>
@@ -3932,8 +3936,17 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
       $('#vwParaNum').checked = s.paraNumbers;
       $('#vwLineNum').checked = s.lineNumbers;
       if ($('#vwMarginPreset')) $('#vwMarginPreset').value = ed.getMarginPreset?.() || 'standard';
-      const wSel = $('#vwPaperWidth');
-      if (wSel) wSel.value = '16';
+      const wVal = ed.textWidth?.() || 16;
+      const wSel = $('#vwPaperWidth'), wOpt = $('#vwCustomOpt');
+      if (wSel) {
+        if (['16', '18', '20', '24.7'].includes(String(wVal))) {
+          wSel.value = String(wVal);
+          if (wOpt) wOpt.textContent = 'กำหนดเอง (ลากกั้นขวา)';
+        } else {
+          if (wOpt) wOpt.textContent = `กำหนดเอง (${wVal} ซม.)`;
+          wSel.value = 'custom';
+        }
+      }
       $('#vwLineColors').innerHTML = s.lineColors.map((c, i) => `<label class="inline">สี ${i + 1} <input type="color" data-linecolor="${i}" value="${c}"></label>`).join('');
       $('#vwMarkList').innerHTML = MARK_TYPES.map(([k, label, sym]) => `<div class="row"><label class="inline grow"><input type="checkbox" data-mark="${k}"${s.marks[k] ? ' checked' : ''}> <b class="mk-sym" style="color:${s.markColors[k]}">${sym}</b> ${label}</label><input type="color" data-markcolor="${k}" value="${s.markColors[k]}" aria-label="สี${label}"></div>`).join('');
     }
@@ -3941,9 +3954,23 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
     $('#vwMarginPreset')?.addEventListener('change', e => {
       ed.setMarginPreset?.(e.target.value);
     });
-    document.addEventListener('eoffice:paperwidth', () => {
+    document.addEventListener('eoffice:paperwidth', e => {
       const sel = $('#vwPaperWidth');
-      if (sel) sel.value = '16';
+      if (!sel) return;
+      const w = e.detail?.width || ed.textWidth?.() || 16;
+      const opt = $('#vwCustomOpt');
+      if (['16', '18', '20', '24.7'].includes(String(w))) {
+        sel.value = String(w);
+        if (opt) opt.textContent = 'กำหนดเอง (ลากกั้นขวา)';
+      } else {
+        if (opt) opt.textContent = `กำหนดเอง (${w} ซม.)`;
+        sel.value = 'custom';
+      }
+    });
+    $('#vwPaperWidth')?.addEventListener('change', e => {
+      if (e.target.value !== 'custom' && ed.setTextWidth) {
+        ed.setTextWidth(+e.target.value);
+      }
     });
     $('#btnResetWidth')?.addEventListener('click', () => {
       if (ed.resetTextWidth) ed.resetTextWidth();
@@ -5627,7 +5654,8 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
     } catch { return base; }
   })();
   if (!PROFILES[settings.profile]) settings.profile = 'standard';
-  let rulerCm = 16;
+  let rulerCm = Number(settings.textWidth) || 16;
+  if (rulerCm < 10 || rulerCm > 45) rulerCm = 16;
   if (settings.marginPreset) {
     let pl = '3cm', pr = '2cm';
     if (settings.marginPreset === 'moderate') { pl = '2cm'; pr = '1.5cm'; }
@@ -5640,11 +5668,11 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
       document.body.style.setProperty('--pr', pr);
     }
   }
-  document.documentElement.style.setProperty('--text-w', '16cm');
-  document.documentElement.style.setProperty('--paper-w', 'calc(16cm + var(--pl) + var(--pr) + 2px)');
+  document.documentElement.style.setProperty('--text-w', `${rulerCm}cm`);
+  document.documentElement.style.setProperty('--paper-w', `calc(${rulerCm}cm + var(--pl) + var(--pr) + 2px)`);
   if (document.body) {
-    document.body.style.setProperty('--text-w', '16cm');
-    document.body.style.setProperty('--paper-w', 'calc(16cm + var(--pl) + var(--pr) + 2px)');
+    document.body.style.setProperty('--text-w', `${rulerCm}cm`);
+    document.body.style.setProperty('--paper-w', `calc(${rulerCm}cm + var(--pl) + var(--pr) + 2px)`);
   }
   document.body.classList.toggle('a4', settings.paper === 'a4');
   document.body.classList.toggle('grid-on', !!settings.grid);
@@ -8836,7 +8864,9 @@ ${body}
       const val = kind === 'first' ? m.first : kind === 'right' ? m.right : m.left;
       tip.hidden = false;
       tip.style.left = `${pos}cm`;
-      tip.textContent = `${LABEL[kind]} ${fmt(val)} ซม.`;
+      tip.textContent = (kind === 'right' && drag && drag.expanding)
+        ? `ขยายกั้นขวา ${fmt(rulerCm)} ซม. (พื้นที่พิมพ์ ${fmt(rulerCm)} ซม.)`
+        : `${LABEL[kind]} ${fmt(val)} ซม.`;
       guide.hidden = false;
       guide.style.left = `calc(var(--vr) + var(--edge-x) + ${pos}cm)`;
     }
@@ -8871,6 +8901,27 @@ ${body}
     function onMarkMove(e) {
       if (!drag || e.pointerId !== drag.id) return;
       const rawX = xToCm(e.clientX, e.altKey);
+      if (drag.kind === 'right' && rawX > rulerCm) {
+        drag.expanding = true;
+        const nextW = clamp(e.altKey ? Math.round(rawX * 20) / 20 : Math.round(rawX * 4) / 4, 10, 40);
+        setTextWidth(nextW, false);
+        drag.m = { ...drag.start, right: 0 };
+        placeMarks(drag.m);
+        showTip(drag.kind, drag.m);
+        return;
+      }
+      if (drag.kind === 'right' && drag.expanding) {
+        if (rawX >= drag.startW) {
+          const nextW = clamp(e.altKey ? Math.round(rawX * 20) / 20 : Math.round(rawX * 4) / 4, 10, 40);
+          setTextWidth(nextW, false);
+          drag.m = { ...drag.start, right: 0 };
+          placeMarks(drag.m);
+          showTip(drag.kind, drag.m);
+          return;
+        }
+        drag.expanding = false;
+        if (rulerCm !== drag.startW) setTextWidth(drag.startW, false);
+      }
       drag.m = dragResult(drag.kind, drag.start, rawX);
       placeMarks(drag.m);
       showTip(drag.kind, drag.m);
@@ -8883,6 +8934,9 @@ ${body}
       const d = drag;
       drag = null;
       hideTip();
+      if (d.kind === 'right' && rulerCm !== settings.textWidth) {
+        setTextWidth(rulerCm, true);
+      }
       if (e.type === 'pointerup' && changed(d.start, d.m)) commit(d.kind, d.m, d.r);
       else placeMarks(rm);
       schedule();
@@ -8892,11 +8946,16 @@ ${body}
       if (!mk || rulerEl.classList.contains('off') || e.button !== 0) return;
       e.preventDefault();
       try { mk.setPointerCapture(e.pointerId); } catch {}
-      drag = { kind: mk.dataset.kind, start: { ...rm }, m: { ...rm }, r: currentRange(), id: e.pointerId };
+      drag = { kind: mk.dataset.kind, start: { ...rm }, m: { ...rm }, r: currentRange(), id: e.pointerId, startW: rulerCm, expanding: false };
       showTip(drag.kind, rm);
       window.addEventListener('pointermove', onMarkMove);
       window.addEventListener('pointerup', endDrag);
       window.addEventListener('pointercancel', endDrag);
+    });
+    marks.querySelector('.mk-right')?.addEventListener('dblclick', e => {
+      e.preventDefault();
+      e.stopPropagation();
+      resetPaperWidth();
     });
     marks.addEventListener('keydown', e => {
       const mk = e.target.closest('.mk');
@@ -8909,8 +8968,8 @@ ${body}
       if (changed(rm, m)) { commit(kind, m, currentRange()); mk.focus(); schedule(); }
     });
 
-    // ---------- ขนาดกระดาษ A4 มาตรฐานราชการ (พื้นที่พิมพ์ 16 ซม.) ----------
-    function updatePaperWidthCss(cm = 16) {
+    // ---------- ความกว้างหน้ากระดาษ (ขยายได้ด้วยตัวเลื่อนกั้นขวา) ----------
+    function updatePaperWidthCss(cm) {
       document.documentElement.style.setProperty('--text-w', `${cm}cm`);
       document.documentElement.style.setProperty('--paper-w', `calc(${cm}cm + var(--pl) + var(--pr) + 2px)`);
       if (document.body) {
@@ -8919,25 +8978,28 @@ ${body}
       }
     }
 
-    function setTextWidth(cm = 16, commit = true) {
-      rulerCm = 16;
-      updatePaperWidthCss(16);
+    function setTextWidth(cm, commit = true) {
+      cm = round2(clamp(cm, 10, 45));
+      rulerCm = cm;
+      updatePaperWidthCss(rulerCm);
       buildRuler();
-      for (const el of marks.querySelectorAll('.mk')) el.setAttribute('aria-valuemax', '16');
+      for (const el of marks.querySelectorAll('.mk')) el.setAttribute('aria-valuemax', String(rulerCm));
       placeMarks(rm);
       vBuiltCm = 0;
       vscale.innerHTML = '';
       buildVRuler();
       if (commit) {
-        settings.textWidth = 16;
+        settings.textWidth = rulerCm;
         store.set(SETTINGS_KEY, JSON.stringify(settings));
         setupZoom();
-        document.dispatchEvent(new CustomEvent('eoffice:paperwidth', { detail: { width: 16 } }));
+        say(`ปรับความกว้างหน้ากระดาษเป็น ${rulerCm} ซม.${rulerCm === 16 ? ' (มาตรฐาน A4)' : ''}`);
+        document.dispatchEvent(new CustomEvent('eoffice:paperwidth', { detail: { width: rulerCm } }));
       }
     }
 
     function resetPaperWidth() {
       setTextWidth(16, true);
+      say('คืนค่าความกว้างหน้ากระดาษเป็น 16 ซม. (มาตรฐาน A4 หนังสือราชการ)');
     }
 
     function setMarginPreset(preset) {
@@ -8953,7 +9015,7 @@ ${body}
       }
       settings.marginPreset = preset;
       store.set(SETTINGS_KEY, JSON.stringify(settings));
-      updatePaperWidthCss(16);
+      updatePaperWidthCss(rulerCm);
       buildRuler();
       placeMarks(rm);
       say(`ปรับระยะขอบกระดาษ: ${preset === 'standard' ? 'มาตรฐาน A4' : preset === 'moderate' ? 'ปานกลาง' : preset === 'narrow' ? 'ขอบแคบ' : 'ชิดขอบ'}`);
