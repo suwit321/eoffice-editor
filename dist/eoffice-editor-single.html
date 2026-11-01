@@ -297,6 +297,13 @@ body.table-drawing-mode #editor .ql-editor{cursor:crosshair!important}
 .tbl-line-guide{position:absolute;pointer-events:none;z-index:35}
 .tbl-line-guide.col{border-left:2px dashed var(--accent)}
 .tbl-line-guide.row{border-top:2px dashed var(--accent)}
+.tbl-guide-badge{position:absolute;display:inline-flex;align-items:center;gap:5px;background:#0f172a;color:#fff;padding:2px 8px;border-radius:4px;font:600 11.5px/1.3 Consolas,"Segoe UI",sans-serif;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.35);pointer-events:none;z-index:36}
+.tbl-line-guide.col .tbl-guide-badge{top:4px;left:0;transform:translateX(-50%)}
+.tbl-line-guide.row .tbl-guide-badge{left:4px;top:0;transform:translateY(-50%)}
+.tbl-guide-badge .tbl-guide-icon{font-size:14px;font-weight:700;color:#38bdf8;line-height:1}
+.tbl-hover-pill{position:absolute;z-index:36;pointer-events:none;display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:#1e3a8a;color:#38bdf8;border:1.5px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.32);font-size:13px;font-weight:700;line-height:1;transform:translate(-50%,-50%);transition:transform .06s ease-out}
+body.tbl-resizing-col,body.tbl-resizing-col *,#editor.tbl-cursor-col,#editor.tbl-cursor-col *,#editor.tbl-cursor-col .ql-editor,#editor.tbl-cursor-col .ql-editor *{cursor:col-resize!important}
+body.tbl-resizing-row,body.tbl-resizing-row *,#editor.tbl-cursor-row,#editor.tbl-cursor-row *,#editor.tbl-cursor-row .ql-editor,#editor.tbl-cursor-row .ql-editor *{cursor:row-resize!important}
 
 /* หน้ากระดาษ A4: ขอบกระดาษสีจาง + กรอบขอบพิมพ์เส้นประจาง */
 .editor-box{position:relative}
@@ -744,7 +751,8 @@ body.ls-docked .desk{padding-left:240px}
           <div class="tbl-handle-resize" id="tblHandleResize" title="ลากเพื่อปรับขนาดตาราง" aria-label="ปรับขนาดตาราง">⤡</div>
         </div>
         <div class="tbl-draw-box" id="tblDrawBox" hidden><span id="tblDrawLabel">2 × 2</span></div>
-        <div class="tbl-line-guide" id="tblLineGuide" hidden></div>
+        <div class="tbl-line-guide" id="tblLineGuide" hidden><span class="tbl-guide-badge" id="tblGuideBadge"><span class="tbl-guide-icon" id="tblGuideIcon">↔</span><span id="tblGuideText"></span></span></div>
+        <div class="tbl-hover-pill" id="tblHoverPill" hidden>↔</div>
         <!-- ตัวจัดการรูปภาพแบบ Word (Overlay, มือจับ 8 ทิศ, แถบคำสั่งลอย, ครอบตัด) -->
         <div class="img-overlay" id="imgOverlay" hidden>
           <div class="img-size-badge" id="imgSizeBadge">0 × 0 px</div>
@@ -6262,6 +6270,8 @@ ${listCss}
       say('ล้างรูปแบบแล้ว');
     }
     function clip(kind) {
+      if (kind === 'cut') return cutToEoffice();
+      if (kind === 'copy') return copyToEoffice('auto');
       useRange(activeRange());
       let ok = false;
       try { ok = document.execCommand(kind); } catch { ok = false; }
@@ -7042,20 +7052,89 @@ ${listCss}
       return d;
     }
     const selRange = () => { const r = currentRange(); return r.length > 0 ? r : null; };
-    // mode: auto = มีข้อความที่เลือกอยู่ก็คัดลอกเฉพาะที่เลือก ไม่มีก็คัดลอกทั้งหน้า | page | sel
-    async function copyToEoffice(mode = 'auto') {
+    // ดึงข้อมูลส่งออกสำหรับ e-Office (ทั้ง HTML และข้อความธรรมดา) ตามโหมด: auto | page | sel
+    function getEofficeExport(mode = 'auto') {
       const r = selRange();
       const useSel = mode === 'sel' || (mode === 'auto' && r);
-      if (useSel && !r) { say('ยังไม่ได้เลือกข้อความ — ลากเลือกข้อความที่ต้องการก่อน'); return; }
-      if (!useSel && isEmpty()) { say('ยังไม่มีข้อความให้คัดลอก'); return; }
+      if (useSel && !r) return null;
+      if (!useSel && isEmpty()) return null;
       const html = useSel ? exportHtml(quill, selectionDelta(r)) : exportHtml();
       const text = (useSel ? quill.getText(r.index, r.length) : quill.getText()).replace(/\n+$/, '');
       const warn = copyAdvisor?.(html) || [];
       const what = useSel ? `ส่วนที่เลือก (${text.replace(/\s/g, '').length.toLocaleString()} ตัวอักษร)` : `หน้า ${cur + 1}`;
-      const ok = `คัดลอก${what} แล้ว (HTML + ข้อความ) — วางใน e-Office ด้วย Ctrl+V แล้วตรวจผลอีกครั้ง`
-        + (warn.length ? ` · ⚠ ตามผลทดสอบ e-Office จะไม่รองรับ: ${warn.join(', ')}` : '');
-      say(await writeClipboard(html, text) ? ok : 'คัดลอกอัตโนมัติไม่ได้ — คลิกในกล่องพิมพ์ กด Ctrl+A (หรือเลือกข้อความ) แล้ว Ctrl+C เอง');
+      return { html, text, warn, what, useSel, r };
     }
+    // mode: auto = มีข้อความที่เลือกอยู่ก็คัดลอกเฉพาะที่เลือก ไม่มีก็คัดลอกทั้งหน้า | page | sel
+    async function copyToEoffice(mode = 'auto') {
+      const exp = getEofficeExport(mode);
+      if (!exp) {
+        if (mode === 'sel') say('ยังไม่ได้เลือกข้อความ — ลากเลือกข้อความที่ต้องการก่อน');
+        else if (isEmpty()) say('ยังไม่มีข้อความให้คัดลอก');
+        return false;
+      }
+      const ok = `คัดลอก${exp.what} แล้ว (HTML + ข้อความ) — วางใน e-Office ด้วย Ctrl+V แล้วตรวจผลอีกครั้ง`
+        + (exp.warn.length ? ` · ⚠ ตามผลทดสอบ e-Office จะไม่รองรับ: ${exp.warn.join(', ')}` : '');
+      const success = await writeClipboard(exp.html, exp.text);
+      say(success ? ok : 'คัดลอกอัตโนมัติไม่ได้ — คลิกในกล่องพิมพ์ กด Ctrl+A (หรือเลือกข้อความ) แล้ว Ctrl+C เอง');
+      return success;
+    }
+    async function cutToEoffice() {
+      const r = selRange();
+      if (!r) { say('ยังไม่ได้เลือกข้อความ — ลากเลือกข้อความที่ต้องการตัดก่อน'); return false; }
+      const exp = getEofficeExport('sel');
+      if (!exp) return false;
+      const ok = await writeClipboard(exp.html, exp.text);
+      if (ok) {
+        quill.deleteText(r.index, r.length, 'user');
+        say(`ตัด${exp.what} แล้ว (รูปแบบ e-Office)`);
+        return true;
+      }
+      say('ไม่สามารถตัดได้ — ลองใช้ Ctrl+X แทน');
+      return false;
+    }
+
+    // ดักจับการคัดลอกและตัดทุกประเภท (Ctrl+C, Ctrl+X, คลิกขวาคัดลอก/ตัด) ในกล่องพิมพ์ข้อความ ให้คงรูปแบบ e-Office เสมอ
+    document.addEventListener('copy', e => {
+      const active = document.activeElement;
+      if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA') && !$('#editor')?.contains(active)) return;
+      const ed = $('#editor');
+      const isInside = ed && (ed.contains(active) || ed.contains(e.target) || (typeof quill !== 'undefined' && quill.hasFocus()));
+      if (!isInside) return;
+
+      const exp = getEofficeExport('auto');
+      if (!exp) return;
+      if (e.clipboardData) {
+        e.clipboardData.clearData();
+        e.clipboardData.setData('text/html', exp.html);
+        e.clipboardData.setData('text/plain', exp.text);
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        const warnMsg = exp.warn.length ? ` · ⚠ e-Office จะไม่รองรับ: ${exp.warn.join(', ')}` : '';
+        say(`คัดลอก${exp.what} แล้ว (รูปแบบ e-Office)${warnMsg}`);
+      }
+    }, true);
+
+    document.addEventListener('cut', e => {
+      const active = document.activeElement;
+      if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA') && !$('#editor')?.contains(active)) return;
+      const ed = $('#editor');
+      const isInside = ed && (ed.contains(active) || ed.contains(e.target) || (typeof quill !== 'undefined' && quill.hasFocus()));
+      if (!isInside) return;
+
+      const r = selRange();
+      if (!r || r.length === 0) return;
+      const exp = getEofficeExport('sel');
+      if (!exp) return;
+      if (e.clipboardData) {
+        e.clipboardData.clearData();
+        e.clipboardData.setData('text/html', exp.html);
+        e.clipboardData.setData('text/plain', exp.text);
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        quill.deleteText(r.index, r.length, 'user');
+        say(`ตัด${exp.what} แล้ว (รูปแบบ e-Office)`);
+      }
+    }, true);
     // ปุ่มคัดลอกเปลี่ยนป้ายตามว่ามีข้อความที่เลือกอยู่หรือไม่
     function renderCopyBtn() {
       const r = selRange(), b = $('#btnCopy');
@@ -7471,6 +7550,8 @@ ${body}
       const drawLabel = $('#tblDrawLabel');
       const cellColorInput = $('#tCellColor');
       const lineGuide = $('#tblLineGuide');
+      const guideBadge = $('#tblGuideBadge');
+      const hoverPill = $('#tblHoverPill');
 
       if (cellColorInput) {
         cellColorInput.addEventListener('input', e => setTableCellBg(e.target.value));
@@ -7549,16 +7630,37 @@ ${body}
         return best;
       }
 
-      // ตรวจจับการเลื่อนเมาส์ชี้เส้นตาราง ปรับเคอร์เซอร์เป็น col-resize / row-resize
+      // ตรวจจับการเลื่อนเมาส์ชี้เส้นตาราง ปรับเคอร์เซอร์และแสดงตัวอักษรสองหัว (↔ / ↕) เพื่อบอกสถานะ
       $('#editor').addEventListener('pointermove', e => {
         if (isBorderDragging || isDrawTableActive) return;
         const detected = detectTableBorder(e);
+        const editor = $('#editor');
         if (detected) {
           hoveredBorder = detected;
           document.body.style.cursor = detected.type === 'col' ? 'col-resize' : 'row-resize';
+          editor.classList.toggle('tbl-cursor-col', detected.type === 'col');
+          editor.classList.toggle('tbl-cursor-row', detected.type === 'row');
+          if (hoverPill) {
+            hoverPill.className = `tbl-hover-pill ${detected.type}`;
+            hoverPill.textContent = detected.type === 'col' ? '↔' : '↕';
+            hoverPill.title = detected.type === 'col' ? 'ลากเพื่อขยาย/เลื่อนคอลัมน์ (↔)' : 'ลากเพื่อขยาย/เลื่อนแถว (↕)';
+            const box = $('.editor-box');
+            const boxRect = box ? box.getBoundingClientRect() : { left: 0, top: 0, width: 800 };
+            const z = (box && box.offsetWidth ? boxRect.width / box.offsetWidth : 1) || 1;
+            if (detected.type === 'col') {
+              hoverPill.style.left = `${(detected.splitX - boxRect.left) / z}px`;
+              hoverPill.style.top = `${(e.clientY - boxRect.top) / z}px`;
+            } else {
+              hoverPill.style.left = `${(e.clientX - boxRect.left) / z}px`;
+              hoverPill.style.top = `${(detected.splitY - boxRect.top) / z}px`;
+            }
+            hoverPill.hidden = false;
+          }
         } else if (hoveredBorder) {
           hoveredBorder = null;
           document.body.style.cursor = '';
+          editor.classList.remove('tbl-cursor-col', 'tbl-cursor-row');
+          if (hoverPill) hoverPill.hidden = true;
         }
       });
 
@@ -7566,6 +7668,8 @@ ${body}
         if (!isBorderDragging && hoveredBorder) {
           hoveredBorder = null;
           document.body.style.cursor = '';
+          $('#editor').classList.remove('tbl-cursor-col', 'tbl-cursor-row');
+          if (hoverPill) hoverPill.hidden = true;
         }
       });
 
@@ -7579,6 +7683,10 @@ ${body}
         isBorderDragging = true;
         const table = dragBorder.table;
         activeTableEl = table;
+        if (hoverPill) hoverPill.hidden = true;
+        document.body.classList.add(dragBorder.type === 'col' ? 'tbl-resizing-col' : 'tbl-resizing-row');
+        $('#editor').classList.toggle('tbl-cursor-col', dragBorder.type === 'col');
+        $('#editor').classList.toggle('tbl-cursor-row', dragBorder.type === 'row');
 
         const box = $('.editor-box');
         const boxRect = box ? box.getBoundingClientRect() : { left: 0, top: 0, width: 800 };
@@ -7627,6 +7735,12 @@ ${body}
             lineGuide.style.top = `${(tblRect.top - boxRect.top) / z}px`;
             lineGuide.style.height = `${tblRect.height / z}px`;
             lineGuide.style.width = '2px';
+            const cIdx = dragBorder.colIndex;
+            const curW = Math.round(initialColWidths[cIdx]);
+            const curCm = (curW / CM).toFixed(2);
+            if (guideBadge) {
+              guideBadge.innerHTML = `<span class="tbl-guide-icon">↔</span> <span>คอลัมน์ ${cIdx + 1}: ${curCm} ซม.</span>`;
+            }
             lineGuide.hidden = false;
           } else {
             lineGuide.className = 'tbl-line-guide row';
@@ -7634,6 +7748,12 @@ ${body}
             lineGuide.style.top = `${(dragBorder.splitY - boxRect.top) / z}px`;
             lineGuide.style.width = `${tblRect.width / z}px`;
             lineGuide.style.height = '2px';
+            const rIdx = dragBorder.rowIndex;
+            const curH = Math.round(initialRowHeights[rIdx]);
+            const curCm = (curH / CM).toFixed(2);
+            if (guideBadge) {
+              guideBadge.innerHTML = `<span class="tbl-guide-icon">↕</span> <span>แถว ${rIdx + 1}: ${curCm} ซม.</span>`;
+            }
             lineGuide.hidden = false;
           }
         }
@@ -7662,6 +7782,11 @@ ${body}
 
             if (lineGuide) {
               lineGuide.style.left = `${startGuideLeft + currentDeltaX}px`;
+              const finalColW = Math.round(initialColWidths[cIdx] + currentDeltaX);
+              const finalColCm = (finalColW / CM).toFixed(2);
+              if (guideBadge) {
+                guideBadge.innerHTML = `<span class="tbl-guide-icon">↔</span> <span>คอลัมน์ ${cIdx + 1}: ${finalColCm} ซม.</span>`;
+              }
             }
           } else {
             const rawDeltaY = (ev.clientY - startY) / z;
@@ -7671,6 +7796,11 @@ ${body}
 
             if (lineGuide) {
               lineGuide.style.top = `${startGuideTop + currentDeltaY}px`;
+              const finalRowH = Math.round(initialRowHeights[rIdx] + currentDeltaY);
+              const finalRowCm = (finalRowH / CM).toFixed(2);
+              if (guideBadge) {
+                guideBadge.innerHTML = `<span class="tbl-guide-icon">↕</span> <span>แถว ${rIdx + 1}: ${finalRowCm} ซม.</span>`;
+              }
             }
           }
         };
@@ -7679,10 +7809,13 @@ ${body}
           isBorderDragging = false;
           hoveredBorder = null;
           document.body.style.cursor = '';
+          document.body.classList.remove('tbl-resizing-col', 'tbl-resizing-row');
+          $('#editor').classList.remove('tbl-cursor-col', 'tbl-cursor-row');
           window.removeEventListener('pointermove', onDragMove);
           window.removeEventListener('pointerup', onDragUp);
 
           if (lineGuide) lineGuide.hidden = true;
+          if (hoverPill) hoverPill.hidden = true;
 
           if (dragBorder.type === 'col') {
             resizeTableColumn(table, dragBorder.colIndex, currentDeltaX);
@@ -10447,6 +10580,10 @@ ${body}
         pages[i] = { delta, stack: emptyStack() };
         scheduleSave();
       },
+      // ระบบคัดลอก/ตัดรูปแบบ e-Office
+      copyToEoffice,
+      cutToEoffice,
+      getEofficeExport,
       // ฟังก์ชันตารางขั้นสูง (แบบ Word)
       insertTable,
       getActiveTable,

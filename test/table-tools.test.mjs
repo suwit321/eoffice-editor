@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { spawn } from 'node:child_process';
@@ -308,6 +308,8 @@ describe('Table Enhancement (เครื่องมือตาราง ว�
           });
           c0.dispatchEvent(evtCol);
           const cursorOnColBorder = document.body.style.cursor;
+          const hoverPillColText = document.querySelector('#tblHoverPill')?.textContent;
+          const hoverPillColHidden = document.querySelector('#tblHoverPill')?.hidden;
 
           const evtRow = new PointerEvent('pointermove', {
             clientX: c0Rect.left + 10,
@@ -316,6 +318,23 @@ describe('Table Enhancement (เครื่องมือตาราง ว�
           });
           c0.dispatchEvent(evtRow);
           const cursorOnRowBorder = document.body.style.cursor;
+          const hoverPillRowText = document.querySelector('#tblHoverPill')?.textContent;
+          const hoverPillRowHidden = document.querySelector('#tblHoverPill')?.hidden;
+
+          // เลื่อนเมาส์กลับมาที่ขอบคอลัมน์แล้วกดลากเพื่อตรวจสอบป้ายสถานะตัวอักษรสองหัว (↔)
+          c0.dispatchEvent(evtCol);
+          const evtDown = new PointerEvent('pointerdown', {
+            clientX: c0Rect.right - 2,
+            clientY: c0Rect.top + 10,
+            button: 0,
+            bubbles: true
+          });
+          document.querySelector('#editor').dispatchEvent(evtDown);
+          const dragGuideBadgeText = document.querySelector('#tblGuideBadge')?.textContent || '';
+          const isGuideLineVisible = !document.querySelector('#tblLineGuide')?.hidden;
+
+          // ปล่อยเมาส์
+          window.dispatchEvent(new PointerEvent('pointerup'));
 
           // เลื่อนเมาส์ออกจากขอบ
           const evtAway = new PointerEvent('pointermove', {
@@ -332,6 +351,12 @@ describe('Table Enhancement (เครื่องมือตาราง ว�
             diffH0: afterH0 - beforeH0,
             cursorOnColBorder,
             cursorOnRowBorder,
+            hoverPillColText,
+            hoverPillColHidden,
+            hoverPillRowText,
+            hoverPillRowHidden,
+            dragGuideBadgeText,
+            isGuideLineVisible,
             cursorAway
           };
         })()`,
@@ -343,7 +368,20 @@ describe('Table Enhancement (เครื่องมือตาราง ว�
       assert.ok(Math.abs(lineDragRes.value.diffH0 - 25) <= 2, `ความสูงแถว 0 ต้องเพิ่มขึ้น 25px (ได้ diff: ${lineDragRes.value.diffH0})`);
       assert.equal(lineDragRes.value.cursorOnColBorder, 'col-resize', 'เมื่อชี้ใกล้เส้นคอลัมน์ เคอร์เซอร์ต้องเป็น col-resize');
       assert.equal(lineDragRes.value.cursorOnRowBorder, 'row-resize', 'เมื่อชี้ใกล้เส้นแถว เคอร์เซอร์ต้องเป็น row-resize');
+      assert.equal(lineDragRes.value.hoverPillColHidden, false, 'เมื่อชี้ใกล้เส้นคอลัมน์ ต้องแสดงป้าย #tblHoverPill');
+      assert.equal(lineDragRes.value.hoverPillColText, '↔', 'ป้ายบอกสถานะคอลัมน์ต้องเป็นตัวอักษรสองหัวแนวนอน ↔');
+      assert.equal(lineDragRes.value.hoverPillRowHidden, false, 'เมื่อชี้ใกล้เส้นแถว ต้องแสดงป้าย #tblHoverPill');
+      assert.equal(lineDragRes.value.hoverPillRowText, '↕', 'ป้ายบอกสถานะแถวต้องเป็นตัวอักษรสองหัวแนวตั้ง ↕');
+      assert.equal(lineDragRes.value.isGuideLineVisible, true, 'ขณะกดลากเส้นตาราง ต้องแสดงเส้นกะระยะ #tblLineGuide');
+      assert.ok(lineDragRes.value.dragGuideBadgeText.includes('↔'), 'ป้ายเส้นกะระยะขณะลากคอลัมน์ต้องมีตัวอักษรสองหัว ↔ เพื่อบอกสถานะ');
       assert.equal(lineDragRes.value.cursorAway, '', 'เมื่อออกจากเส้นตาราง เคอร์เซอร์ต้องกลับเป็นค่าปกติ');
+
+      // ถ่ายภาพหน้าจอเก็บเป็น Artifact
+      const ssRes = await send('Page.captureScreenshot', { format: 'png' });
+      if (ssRes && ssRes.data) {
+        const artifactDir = 'C:\\Users\\suwit\\.gemini\\antigravity\\brain\\3e316c91-ec18-4b0a-9a1e-3224837de510';
+        writeFileSync(join(artifactDir, 'table-two-headed-arrow.png'), Buffer.from(ssRes.data, 'base64'));
+      }
 
       ws.close();
     } finally {
