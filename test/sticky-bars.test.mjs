@@ -37,6 +37,11 @@ describe('Sticky Toolbar & Menubar (การตรึงและปรับ�
     assert.match(distSingle, /\.head\{[^}]*position:sticky;top:var\(--topbar-h\)/);
   });
 
+  test('ปุ่ม Undo และ Redo ตรึงตำแหน่งไว้กึ่งกลางตายตัว (Fixed Center) บน .topbar ไม่เลื่อนตามการพิมพ์ชื่อเอกสาร', () => {
+    assert.match(html, /\.topcenter\{[^}]*position:absolute;left:50%;top:50%;transform:translate\(-50%,-50%\)/, '.topcenter ต้องตรึงที่กึ่งกลาง absolute left: 50%');
+    assert.match(distSingle, /\.topcenter\{[^}]*position:absolute;left:50%;top:50%;transform:translate\(-50%,-50%\)/, 'distSingle ต้องตรึง .topcenter ที่กึ่งกลางเช่นกัน');
+  });
+
   test('ย้ายปุ่ม "เพิ่มเติม ▾" และ "🎨" ไปไว้ในแถบคำสั่งบนสุด (.topbar .actions) เพื่อลดการตัดแถวในแถบเครื่องมือ', () => {
     const topbarActions = html.match(/<div class="actions">([\s\S]*?)<\/div>\s*<\/header>/)?.[1] || '';
     assert.ok(topbarActions.includes('id="btnMore"'), 'ต้องมี #btnMore ใน .topbar .actions');
