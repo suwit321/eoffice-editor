@@ -224,6 +224,68 @@ describe('Hidden Red Dot Visitor Counter & PIN 4321 Popup (ตัวนับก
       assert.strictEqual(unlockState.value.chartBars, 7, 'ต้องแสดงกราฟย้อนหลัง 7 วันครบ 7 แท่ง');
       assert.strictEqual(unlockState.value.logRows, 3, 'ตารางประวัติการเข้าชมต้องแสดงรายการเข้าชมครบ 3 รายการ');
 
+      // 5. ทดสอบการบันทึกประวัติสูงสุด 100 รายการ และการระบุเครื่องเดียวกัน vs เครื่องอื่น
+      const deviceTest = await send('Runtime.evaluate', {
+        expression: `(() => {
+          const vs = window.eofficeEditor.visitorStats;
+          const myDevId = vs.getDeviceId();
+
+          // จำลองการเข้าชมจากเครื่องอื่น (other device) 2 เครื่อง
+          vs.recordVisit({ forceNewHour: true, deviceId: 'DEV-REMOTE1' });
+          vs.recordVisit({ forceNewHour: true, deviceId: 'DEV-REMOTE2' });
+
+          // ตรวจสอบความจุประวัติสูงสุด 100 รายการ โดยจำลองเพิ่มข้อมูลจนเกิน 100
+          for (let i = 0; i < 110; i++) {
+            vs.recordVisit({ forceNewHour: true, deviceId: (i % 2 === 0) ? myDevId : 'DEV-REMOTE' + (i % 5) });
+          }
+          const stCapped = vs.getStats();
+
+          // รีเฟรชหน้าจอแสดงผล
+          vs.unlock('4321');
+          const doc = document;
+          const myBadgeText = doc.querySelector('#vMyDevBadge')?.textContent || '';
+          const totalInTable = doc.querySelectorAll('#vHistoryBody tr').length;
+          const thisRowsCount = doc.querySelectorAll('#vHistoryBody tr.row-this-device').length;
+          const otherRowsCount = doc.querySelectorAll('#vHistoryBody tr.row-other-device').length;
+
+          // ทดสอบตัวกรอง: กดเฉพาะเครื่องนี้ (#vFilterThis)
+          doc.querySelector('#vFilterThis')?.click();
+          const filteredThisCount = doc.querySelectorAll('#vHistoryBody tr').length;
+          const allAreThis = Array.from(doc.querySelectorAll('#vHistoryBody tr')).every(tr => tr.classList.contains('row-this-device'));
+
+          // ทดสอบตัวกรอง: กดเฉพาะเครื่องอื่น (#vFilterOther)
+          doc.querySelector('#vFilterOther')?.click();
+          const filteredOtherCount = doc.querySelectorAll('#vHistoryBody tr').length;
+          const allAreOther = Array.from(doc.querySelectorAll('#vHistoryBody tr')).every(tr => tr.classList.contains('row-other-device'));
+
+          // คืนค่าตัวกรองทั้งหมด (#vFilterAll)
+          doc.querySelector('#vFilterAll')?.click();
+
+          return {
+            myDevId,
+            historyLength: stCapped.history.length,
+            myBadgeText,
+            totalInTable,
+            thisRowsCount,
+            otherRowsCount,
+            filteredThisCount,
+            allAreThis,
+            filteredOtherCount,
+            allAreOther,
+          };
+        })()`,
+        returnByValue: true
+      });
+
+      assert.ok(deviceTest.value.myDevId.startsWith('DEV-'), 'รหัสเครื่องต้องขึ้นต้นด้วย DEV-');
+      assert.strictEqual(deviceTest.value.historyLength, 100, 'ประวัติการเข้าชมต้องบันทึกได้สูงสุด 100 รายการ');
+      assert.strictEqual(deviceTest.value.totalInTable, 100, 'ตารางต้องแสดงรายการสูงสุด 100 รายการ');
+      assert.ok(deviceTest.value.thisRowsCount > 0, 'ต้องพบรายการที่เป็นเครื่องนี้');
+      assert.ok(deviceTest.value.otherRowsCount > 0, 'ต้องพบรายการที่เป็นเครื่องอื่น');
+      assert.strictEqual(deviceTest.value.allAreThis, true, 'เมื่อเลือกกรองเครื่องนี้ ทุกแถวต้องเป็นคลาส row-this-device');
+      assert.strictEqual(deviceTest.value.allAreOther, true, 'เมื่อเลือกกรองเครื่องอื่น ทุกแถวต้องเป็นคลาส row-other-device');
+      assert.ok(deviceTest.value.myBadgeText.includes(deviceTest.value.myDevId), 'ป้ายด้านบนต้องแสดงรหัสเครื่องนี้');
+
       // ถ่ายภาพหน้าจอ Popup รายละเอียดการเข้าชมเก็บไว้ใน Artifact
       const ssRes = await send('Page.captureScreenshot', { format: 'png' });
       if (ssRes && ssRes.data) {

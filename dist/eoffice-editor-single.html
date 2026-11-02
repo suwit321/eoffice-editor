@@ -347,7 +347,7 @@ body.grid-on .editor-box{background-image:linear-gradient(to right,rgba(59,130,2
 /* หน้าต่าง Popup แสดงรหัสผ่านและรายละเอียดการเข้าชมเว็บไซต์ */
 .visit-modal{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;background:rgba(15,23,42,.45);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);padding:16px}
 .visit-modal[hidden]{display:none!important}
-.visit-dialog{background:#fff;border:1px solid #cbd5e1;border-radius:12px;box-shadow:0 16px 40px rgba(15,23,42,.24);width:100%;max-width:520px;max-height:calc(100vh - 32px);display:flex;flex-direction:column;overflow:hidden;font-size:13px;color:var(--ink)}
+.visit-dialog{background:#fff;border:1px solid #cbd5e1;border-radius:12px;box-shadow:0 16px 40px rgba(15,23,42,.24);width:100%;max-width:580px;max-height:calc(100vh - 32px);display:flex;flex-direction:column;overflow:hidden;font-size:13px;color:var(--ink)}
 .visit-dialog.auth-mode{max-width:340px}
 .visit-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#f8fafc;border-bottom:1px solid var(--line);font-weight:600;font-size:14px}
 .visit-head .visit-close{border:0;background:none;font-size:20px;line-height:1;color:var(--muted);cursor:pointer;padding:2px 6px;border-radius:4px}
@@ -374,11 +374,17 @@ body.grid-on .editor-box{background-image:linear-gradient(to right,rgba(59,130,2
 .visit-meta{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;padding:10px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;font-size:12px}
 .visit-meta div{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .visit-meta b{color:#475569;font-weight:600}
-.visit-log-wrap{max-height:160px;overflow-y:auto;border:1px solid #e2e8f0;border-radius:8px}
+.visit-dev-tag{display:inline-flex;align-items:center;gap:3px;padding:1px 7px;border-radius:5px;font-size:11px;font-weight:600;white-space:nowrap}
+.visit-dev-tag.current{background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd}
+.visit-dev-tag.other{background:#fef3c7;color:#92400e;border:1px solid #fde68a}
+.visit-filter-bar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;margin:2px 0 6px}
+.visit-log-wrap{max-height:220px;overflow-y:auto;border:1px solid #e2e8f0;border-radius:8px}
 .visit-log-tbl{width:100%;border-collapse:collapse;font-size:11.5px}
 .visit-log-tbl th,.visit-log-tbl td{padding:6px 8px;text-align:left;border-bottom:1px solid #f1f5f9}
 .visit-log-tbl th{position:sticky;top:0;background:#f1f5f9;color:#475569;font-weight:600}
 .visit-log-tbl tr:last-child td{border-bottom:0}
+.visit-log-tbl tr.row-this-device{background:rgba(224,242,254,.15)}
+.visit-log-tbl tr.row-other-device{background:rgba(254,243,199,.15)}
 .visit-badge{display:inline-block;padding:1px 6px;border-radius:999px;font-size:10.5px;background:#eff6ff;color:#1d4ed8;font-weight:600}
 .visit-badge.counted{background:#ecfdf5;color:#047857}
 .visit-badge.dup-hour{background:#fffbeb;color:#b45309}
@@ -1056,14 +1062,24 @@ body.ls-docked .desk{padding-left:240px}
       </div>
 
       <div>
-        <div class="visit-sec-title"><span>🕒 ประวัติการเข้าชมล่าสุด</span><small id="vLogCount" style="color:#64748b;font-weight:400"></small></div>
+        <div class="visit-sec-title"><span>🕒 ประวัติการเข้าชมล่าสุด (สูงสุด 100 รายการ)</span><small id="vLogCount" style="color:#64748b;font-weight:400"></small></div>
+        <div class="visit-filter-bar" id="vFilterBar">
+          <div style="display:flex;align-items:center;gap:4px">
+            <span style="color:#64748b;font-size:11px">อุปกรณ์:</span>
+            <button type="button" class="chip sm active" id="vFilterAll">ทั้งหมด</button>
+            <button type="button" class="chip sm" id="vFilterThis">💻 เครื่องนี้</button>
+            <button type="button" class="chip sm" id="vFilterOther">🖥️ เครื่องอื่น</button>
+          </div>
+          <span id="vMyDevBadge" class="visit-dev-tag current" title="รหัสประจำเครื่องนี้">💻 เครื่องนี้</span>
+        </div>
         <div class="visit-log-wrap">
           <table class="visit-log-tbl">
             <thead>
               <tr>
                 <th>#</th>
                 <th>วัน - เวลา</th>
-                <th>IP / อุปกรณ์</th>
+                <th>อุปกรณ์ / เครื่อง</th>
+                <th>IP / ระบบ</th>
                 <th>สถานะการนับ</th>
               </tr>
             </thead>
@@ -10019,9 +10035,24 @@ ${body}
     // ---------- ระบบตัวนับการเข้าชมเว็บไซต์ (จุดแดงซ่อนขวาล่าง + รหัสผ่าน 4321 + Global Counter API + ไม่นับซ้ำ IP ใน 1 ชม.) ----------
     const VISIT_KEY = 'eoffice-editor:visitor-stats';
     const VISIT_SESSION_KEY = 'eoffice-editor:visit-session';
+    const DEVICE_ID_KEY = 'eoffice-editor:device-id';
     const VISIT_PIN = '4321';
     const COUNTER_API_BASE = 'https://abacus.jasoncameron.dev';
     const COUNTER_NAMESPACE = 'sw-eoffice';
+
+    function getOrCreateDeviceId() {
+      try {
+        let id = localStorage.getItem(DEVICE_ID_KEY);
+        if (!id) {
+          const rand = Math.floor(Math.random() * 0xFFFFFF).toString(16).padStart(6, '0').toUpperCase();
+          id = `DEV-${rand}`;
+          localStorage.setItem(DEVICE_ID_KEY, id);
+        }
+        return id;
+      } catch {
+        return 'DEV-LOCAL';
+      }
+    }
 
     function localDateKey(d = new Date()) {
       const y = d.getFullYear();
@@ -10099,6 +10130,7 @@ ${body}
     }
 
     function loadVisitorStats() {
+      const myDevId = getOrCreateDeviceId();
       try {
         const raw = store.get(VISIT_KEY);
         if (raw) {
@@ -10107,6 +10139,8 @@ ${body}
             parsed.daily = parsed.daily && typeof parsed.daily === 'object' ? parsed.daily : {};
             parsed.history = Array.isArray(parsed.history) ? parsed.history : [];
             parsed.uniqueSessions = Number(parsed.uniqueSessions) || 1;
+            parsed.deviceId = parsed.deviceId || myDevId;
+            parsed.history.forEach(r => { if (!r.deviceId) r.deviceId = myDevId; });
             return parsed;
           }
         }
@@ -10120,6 +10154,7 @@ ${body}
         lastCountedAt: '',
         lastCountedHour: '',
         currentIp: '',
+        deviceId: myDevId,
         daily: {},
         history: [],
       };
@@ -10215,11 +10250,13 @@ ${body}
 
     function recordPageVisit(opts = {}) {
       const st = loadVisitorStats();
+      const myDevId = getOrCreateDeviceId();
       const now = new Date();
       const nowIso = now.toISOString();
       const dayKey = localDateKey(now);
       const hourKey = opts.hourKey || localHourKey(now);
       const env = detectVisitorEnv();
+      const devId = opts.deviceId || myDevId;
 
       let isNewSession = false;
       try {
@@ -10254,11 +10291,12 @@ ${body}
         ts: nowIso,
         ua: env.label,
         screen: env.screen,
+        deviceId: devId,
         isNewSession,
         isDuplicateHour: !counted,
         ip: st.currentIp ? maskIp(st.currentIp) : 'ตรวจ IP...'
       });
-      if (st.history.length > 50) st.history.length = 50;
+      if (st.history.length > 100) st.history.length = 100;
 
       saveVisitorStats(st);
 
@@ -10282,8 +10320,11 @@ ${body}
       return `${day} ${mo} ${yr} ${hh}:${mm}:${ss}`;
     }
 
+    let vFilterMode = 'all'; // 'all' | 'this' | 'other'
+
     function renderVisitorStats() {
       const st = loadVisitorStats();
+      const myDevId = getOrCreateDeviceId();
       const todayKey = localDateKey(new Date());
       const todayVisits = st.daily[todayKey] || 0;
       const dayKeys = Object.keys(st.daily);
@@ -10301,6 +10342,13 @@ ${body}
       $('#vScreenInfo').textContent = env.screen;
       const ipEl = $('#vIpInfo');
       if (ipEl) ipEl.textContent = st.currentIp ? maskIp(st.currentIp) : (st.history[0]?.ip || 'กำลังตรวจสอบ...');
+
+      // แสดง Badge ประจำเครื่องนี้
+      const myBadgeEl = $('#vMyDevBadge');
+      if (myBadgeEl) {
+        myBadgeEl.textContent = `💻 เครื่องนี้: ${myDevId}`;
+        myBadgeEl.title = `รหัสประจำเครื่องของเบราว์เซอร์นี้: ${myDevId}`;
+      }
 
       // กราฟย้อนหลัง 7 วัน
       const days7 = [];
@@ -10325,20 +10373,64 @@ ${body}
         </div>`;
       }).join('');
 
-      // ตารางประวัติการเข้าชมล่าสุด
-      const logs = st.history.slice(0, 30);
-      $('#vLogCount').textContent = `แสดง ${logs.length} รายการล่าสุด`;
-      $('#vHistoryBody').innerHTML = logs.map((row, idx) => {
+      // ประวัติการเข้าชมสูงสุด 100 รายการ และระบุเครื่องเดียวกัน
+      const allLogs = st.history.slice(0, 100);
+      const otherDevMap = new Map();
+      let otherCounter = 1;
+      allLogs.forEach(r => {
+        const dId = r.deviceId || myDevId;
+        if (dId !== myDevId && !otherDevMap.has(dId)) {
+          otherDevMap.set(dId, `เครื่อง #${otherCounter++}`);
+        }
+      });
+
+      const thisDevCount = allLogs.filter(r => (r.deviceId || myDevId) === myDevId).length;
+      const otherDevCount = allLogs.filter(r => (r.deviceId || myDevId) !== myDevId).length;
+      const totalDevs = 1 + otherDevMap.size;
+
+      // ปรับปุ่ม Filter & ยอดนับ
+      const btnAll = $('#vFilterAll');
+      const btnThis = $('#vFilterThis');
+      const btnOther = $('#vFilterOther');
+      if (btnAll) {
+        btnAll.textContent = `ทั้งหมด (${allLogs.length})`;
+        btnAll.classList.toggle('active', vFilterMode === 'all');
+      }
+      if (btnThis) {
+        btnThis.textContent = `💻 เครื่องนี้ (${thisDevCount})`;
+        btnThis.classList.toggle('active', vFilterMode === 'this');
+      }
+      if (btnOther) {
+        btnOther.textContent = `🖥️ เครื่องอื่น (${otherDevCount})`;
+        btnOther.classList.toggle('active', vFilterMode === 'other');
+      }
+
+      const filteredLogs = allLogs.filter(r => {
+        const isThis = (r.deviceId || myDevId) === myDevId;
+        if (vFilterMode === 'this') return isThis;
+        if (vFilterMode === 'other') return !isThis;
+        return true;
+      });
+
+      $('#vLogCount').textContent = `แสดง ${filteredLogs.length}/${allLogs.length} รายการ (พบ ${totalDevs} อุปกรณ์)`;
+      $('#vHistoryBody').innerHTML = filteredLogs.length ? filteredLogs.map((row, idx) => {
+        const dId = row.deviceId || myDevId;
+        const isThis = dId === myDevId;
+        const devBadge = isThis
+          ? `<span class="visit-dev-tag current" title="เข้าชมจากเครื่องนี้">💻 เครื่องนี้ <small style="font-weight:400;font-size:9.5px">(${esc(dId)})</small></span>`
+          : `<span class="visit-dev-tag other" title="เข้าชมจากเครื่องอื่น (${esc(dId)})">🖥️ ${otherDevMap.get(dId) || 'เครื่องอื่น'} <small style="font-weight:400;font-size:9.5px">(${esc(dId)})</small></span>`;
         const badgeClass = row.isDuplicateHour ? 'dup-hour' : 'counted';
         const badgeText = row.isDuplicateHour ? 'ซ้ำใน 1 ชม.' : 'นับยอดใหม่';
         const ipLabel = row.ip ? esc(row.ip) : '-';
-        return `<tr>
+        const rowClass = isThis ? 'row-this-device' : 'row-other-device';
+        return `<tr class="${rowClass}">
           <td>${idx + 1}</td>
           <td>${esc(fmtVisitDateTime(row.ts))}</td>
+          <td>${devBadge}</td>
           <td><b>${ipLabel}</b> <small style="color:#64748b">(${esc(row.ua || '')})</small></td>
           <td><span class="visit-badge ${badgeClass}">${badgeText}</span></td>
         </tr>`;
-      }).join('');
+      }).join('') : `<tr><td colspan="5" style="text-align:center;color:#94a3b8;padding:16px">ไม่พบข้อมูลตามเงื่อนไขที่เลือก</td></tr>`;
     }
 
     function openVisitPopup() {
@@ -10397,21 +10489,38 @@ ${body}
 
     function exportVisitorCsv() {
       const st = loadVisitorStats();
+      const myDevId = getOrCreateDeviceId();
+      const otherDevMap = new Map();
+      let otherCounter = 1;
+      st.history.forEach(r => {
+        const dId = r.deviceId || myDevId;
+        if (dId !== myDevId && !otherDevMap.has(dId)) {
+          otherDevMap.set(dId, `เครื่อง #${otherCounter++}`);
+        }
+      });
+
       const rows = [
-        ['ลำดับ', 'วันเวลา (ISO)', 'วันเวลา (ไทย)', 'IP (ย่อ)', 'เบราว์เซอร์และระบบ', 'ความละเอียดหน้าจอ', 'สถานะการนับ'],
-        ...st.history.map((r, i) => [
-          i + 1,
-          r.ts,
-          fmtVisitDateTime(r.ts),
-          r.ip || '',
-          r.ua || '',
-          r.screen || '',
-          r.isDuplicateHour ? 'ซ้ำใน 1 ชม. (ไม่นับ)' : 'นับยอดใหม่',
-        ]),
+        ['ลำดับ', 'วันเวลา (ISO)', 'วันเวลา (ไทย)', 'รหัสเครื่อง (Device ID)', 'สถานะเครื่อง', 'IP (ย่อ)', 'เบราว์เซอร์และระบบ', 'ความละเอียดหน้าจอ', 'สถานะการนับ'],
+        ...st.history.slice(0, 100).map((r, i) => {
+          const dId = r.deviceId || myDevId;
+          const isThis = dId === myDevId;
+          const devStatus = isThis ? 'เครื่องนี้' : (otherDevMap.get(dId) || 'เครื่องอื่น');
+          return [
+            i + 1,
+            r.ts,
+            fmtVisitDateTime(r.ts),
+            dId,
+            devStatus,
+            r.ip || '',
+            r.ua || '',
+            r.screen || '',
+            r.isDuplicateHour ? 'ซ้ำใน 1 ชม. (ไม่นับ)' : 'นับยอดใหม่',
+          ];
+        }),
       ];
       const csv = '\uFEFF' + rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\r\n');
       download(`sw-eoffice-visitor-stats-${localDateKey()}.csv`, csv, 'text/csv;charset=utf-8');
-      say('ดาวน์โหลดไฟล์ประวัติการเข้าชม CSV แล้ว');
+      say('ดาวน์โหลดไฟล์ประวัติการเข้าชม CSV แล้ว (สูงสุด 100 รายการ)');
     }
 
     // บันทึกการเข้าชมทันทีที่เปิดหน้าเว็บ
@@ -10430,6 +10539,9 @@ ${body}
         $('#visitPinErr').hidden = true;
       }
     });
+    $('#vFilterAll')?.addEventListener('click', () => { vFilterMode = 'all'; renderVisitorStats(); });
+    $('#vFilterThis')?.addEventListener('click', () => { vFilterMode = 'this'; renderVisitorStats(); });
+    $('#vFilterOther')?.addEventListener('click', () => { vFilterMode = 'other'; renderVisitorStats(); });
     $('#visitExportCsv')?.addEventListener('click', exportVisitorCsv);
     $('#visitResetBtn')?.addEventListener('click', resetVisitorStats);
     $('#vRefreshBtn')?.addEventListener('click', () => {
@@ -10636,6 +10748,9 @@ ${body}
         syncCounter: syncGlobalCounter,
         getIp: getVisitorIp,
         maskIp: maskIp,
+        getDeviceId: getOrCreateDeviceId,
+        setFilterMode: mode => { vFilterMode = mode; renderVisitorStats(); },
+        getFilterMode: () => vFilterMode,
         openPopup: openVisitPopup,
         closePopup: closeVisitPopup,
         unlock: unlockVisitPopup,
