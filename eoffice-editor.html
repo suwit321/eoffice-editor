@@ -34,7 +34,7 @@ button,select,input{font:inherit;color:inherit}
 
 /* แถบคำสั่งบนสุด */
 .topbar{position:sticky;top:0;z-index:60;display:flex;align-items:center;gap:8px;height:var(--topbar-h);padding:0 10px;background:var(--panel);border-bottom:1px solid var(--line);white-space:nowrap}
-.brand{display:flex;align-items:center;gap:8px;min-width:0;flex:1 1 0;max-width:calc(50% - 56px)}
+.brand{display:flex;align-items:center;gap:8px;min-width:0;flex:1 1 0;max-width:calc(50% - 76px)}
 .brand h1{margin:0;font-size:14.5px;font-weight:700;display:inline-flex;align-items:center;gap:7px;flex:none;color:#0f172a;letter-spacing:-0.2px}
 .brand-logo{display:inline-flex;align-items:center;justify-content:center;line-height:0;flex-shrink:0}
 .brand-icon{display:block;filter:drop-shadow(0 1px 3px rgba(30,58,138,.3))}
@@ -54,6 +54,8 @@ button,select,input{font:inherit;color:inherit}
 .topcenter .tc-redo:hover:not(:disabled){background:#bfdbfe;border-color:#2563eb}
 .topcenter .tc-save{background:#dcfce7;border-color:#86efac;color:#15803d}
 .topcenter .tc-save:hover{background:#bbf7d0;border-color:#15803d}
+.topcenter .tc-addpage{margin-left:10px;background:#f3e8ff;border-color:#d8b4fe;color:#7e22ce}
+.topcenter .tc-addpage:hover:not(:disabled){background:#e9d5ff;border-color:#7e22ce}
 .topcenter .tb:disabled{opacity:.4;background:#f1f5f9;border-color:#e2e8f0;color:#64748b}
 .btn{height:26px;padding:0 8px;font-size:13px;border:1px solid var(--line-strong);border-radius:5px;background:#fff;cursor:pointer;white-space:nowrap}
 #btnMore{padding:0 7px;font-weight:700}
@@ -549,6 +551,7 @@ body.ls-docked .desk{padding-left:240px}
   <symbol id="i-copy" viewBox="0 0 20 20"><g fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M7.5 6.3V2.8h6.2l3.1 3.1v8.4h-4.3"/><path d="M3.2 6.3h6.2l3.1 3.1v7.8H3.2z"/></g></symbol>
   <symbol id="i-undo" viewBox="0 0 20 20"><path d="M8.2 4.2 3 9l5.2 4.8v-3.1c3.4-.2 6.1.8 8.3 3.8-.6-4.4-3.4-7.3-8.3-7.6z"/></symbol>
   <symbol id="i-redo" viewBox="0 0 20 20"><path transform="matrix(-1 0 0 1 20 0)" d="M8.2 4.2 3 9l5.2 4.8v-3.1c3.4-.2 6.1.8 8.3 3.8-.6-4.4-3.4-7.3-8.3-7.6z"/></symbol>
+  <symbol id="i-addpage" viewBox="0 0 20 20"><path d="M5 2.5h6l4 4V16.5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M11 2.5v4a.5.5 0 0 0 .5.5h4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M7 12h6M10 9v6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
   <symbol id="i-table" viewBox="0 0 20 20"><g fill="none" stroke="currentColor" stroke-width="1.3"><rect x="2.8" y="3.3" width="14.4" height="13.4"/><path d="M2.8 7.8h14.4M2.8 12.2h14.4M7.6 3.3v13.4M12.4 3.3v13.4"/></g></symbol>
   <symbol id="i-link" viewBox="0 0 20 20"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M8.6 11.4a3 3 0 0 0 4.2 0l3-3a3 3 0 0 0-4.2-4.2l-1.2 1.2"/><path d="M11.4 8.6a3 3 0 0 0-4.2 0l-3 3a3 3 0 0 0 4.2 4.2l1.2-1.2"/></g></symbol>
   <symbol id="i-image" viewBox="0 0 20 20"><rect x="2.5" y="3.5" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.3"/><circle cx="7" cy="7.6" r="1.5"/><path d="M3.8 15.2 8 10.6l2.6 2.7 2.4-2.5 3.2 4.4z"/></symbol>
@@ -590,10 +593,11 @@ body.ls-docked .desk{padding-left:240px}
     </h1>
     <input type="text" id="docName" class="docname" aria-label="ชื่อเอกสาร" title="ชื่อเอกสาร ใช้เป็นชื่อไฟล์ตอนบันทึก — ถ้าเว้นว่าง จะตั้งเป็นวันเวลาที่บันทึกครั้งแรก" placeholder="ชื่อเอกสาร" maxlength="80">
   </div>
-  <div class="topcenter" role="group" aria-label="ย้อนกลับ ทำซ้ำ และบันทึก">
+  <div class="topcenter" role="group" aria-label="ย้อนกลับ ทำซ้ำ บันทึก และเพิ่มหน้าใหม่">
     <button type="button" class="tb tc-undo" id="btnUndo" aria-label="ย้อนกลับ" title="ย้อนกลับ (Ctrl+Z)"><svg aria-hidden="true"><use href="#i-undo"/></svg><span>ย้อนกลับ</span></button>
     <button type="button" class="tb tc-redo" id="btnRedo" aria-label="ทำซ้ำ" title="ทำซ้ำ (Ctrl+Y)"><svg aria-hidden="true"><use href="#i-redo"/></svg><span>ทำซ้ำ</span></button>
     <button type="button" class="tb tc-save" id="btnQuickSave" aria-label="บันทึก" title="บันทึก (Ctrl+S) — ถ้าผูกไฟล์ไว้จะบันทึกทับไฟล์ ไม่งั้นดาวน์โหลดไฟล์ร่าง"><svg aria-hidden="true" viewBox="0 0 20 20"><path d="M4 3h9.5L17 6.5V16a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zm2 1.5v4h6v-4zM6 11v5h8v-5z"/></svg><span>บันทึก</span></button>
+    <button type="button" class="tb tc-addpage" id="btnQuickAddPage" aria-label="เพิ่มหน้าใหม่" title="เพิ่มหน้าใหม่ (ต่อจากหน้านี้)"><svg aria-hidden="true"><use href="#i-addpage"/></svg><span>เพิ่มหน้าใหม่</span></button>
   </div>
   <div class="actions">
     <div class="fm">
@@ -5219,6 +5223,7 @@ ${body}
     }
     $('#btnOpenMenu').addEventListener('click', () => $('[data-cmd=open]').click());
     $('#btnAddPageMenu').addEventListener('click', () => addPage());
+    $('#btnQuickAddPage')?.addEventListener('click', () => addPage());
     $('#btnCloudSave')?.addEventListener('click', async () => {
       const c = window.eofficeCloud;
       if (!c || !c.getUser()) {
