@@ -2602,12 +2602,15 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
     // ================= คำห้ามตัด =================
     const NOBREAK_KEY = 'eoffice-editor:nobreak';
     const NOBREAK_DEFAULT = [
-      'ผู้อำนวยการ', 'รองผู้อำนวยการ', 'ผู้ว่าราชการจังหวัด', 'รองผู้ว่าราชการจังหวัด', 'ปลัดกระทรวง', 'รองปลัดกระทรวง', 'ปลัดจังหวัด',
+      'ลงวันที่', 'ข้อหารือ', 'คำปรึกษา', 'หน่วยรับตรวจ', 'ข้อสอบถาม',
+      'ผู้อำนวยการ', 'รองผู้อำนวยการ', 'ผู้ว่าราชการจังหวัด', 'รองผู้ว่าราชการจังหวัด', 'ผู้ว่าการ', 'ปลัดกระทรวง', 'รองปลัดกระทรวง', 'ปลัดจังหวัด',
       'คณะกรรมการ', 'คณะอนุกรรมการ', 'คณะทำงาน', 'คณะรัฐมนตรี', 'นายกรัฐมนตรี', 'รัฐมนตรีว่าการกระทรวง', 'ผู้บังคับบัญชา', 'ผู้ตรวจราชการ',
       'ผู้รับผิดชอบ', 'ผู้เกี่ยวข้อง', 'ผู้ประสานงาน', 'ส่วนราชการ', 'หน่วยงาน', 'สำนักงาน', 'องค์กรปกครองส่วนท้องถิ่น', 'องค์การบริหารส่วนจังหวัด',
       'องค์การบริหารส่วนตำบล', 'เทศบาลนคร', 'เทศบาลเมือง', 'เทศบาลตำบล', 'ปีงบประมาณ', 'งบประมาณ', 'พระราชบัญญัติ', 'พระราชกฤษฎีกา',
       'ระเบียบสำนักนายกรัฐมนตรี', 'ข้าราชการ', 'พนักงานราชการ', 'ลูกจ้างประจำ', 'ประชาสัมพันธ์', 'แผนปฏิบัติราชการ', 'ยุทธศาสตร์',
       'จัดซื้อจัดจ้าง', 'ประสิทธิภาพ', 'ประสิทธิผล', 'ท้องถิ่น', 'ส่งเสริม', 'ราชอาณาจักร', 'พุทธศักราช', 'การเลือกตั้ง',
+      'เจ้าหน้าที่', 'การมอบหมาย', 'มอบหมาย', 'ปฏิบัติงาน', 'อิเล็กทรอนิกส์', 'ฐานข้อมูล', 'นวัตกรรม', 'สำนักวิชาการ', 'หนังสือราชการ',
+      'ตอบข้อสอบถาม', 'ตอบข้อหารือ'
     ];
     const NB_GROUPS = [['ตำแหน่ง', '#2563eb'], ['หน่วยงาน', '#16a34a'], ['ชื่อบุคคล', '#c026d3'], ['ศัพท์ราชการ', '#ea580c'], ['ทั่วไป', '#64748b']];
     const NB_COLOR = Object.fromEntries(NB_GROUPS);
@@ -2619,8 +2622,18 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
     let nbItems = (() => {
       try {
         const v = JSON.parse(store.get(NOBREAK_KEY) || 'null');
-        if (Array.isArray(v)) return v.map(w => toItem(cleanWord(w))).filter(i => i.w.length > 1);          // รูปแบบเก่า: รายการคำล้วน
-        if (v?.items) return v.items.map(i => toItem(cleanWord(i.w), i.g, i.on, i.t)).filter(i => i.w.length > 1);
+        if (Array.isArray(v)) {
+          const loaded = v.map(w => toItem(cleanWord(w))).filter(i => i.w.length > 1);
+          const existing = new Set(loaded.map(i => i.w));
+          for (const def of NOBREAK_DEFAULT) if (!existing.has(def)) loaded.push(toItem(def));
+          return loaded;
+        }
+        if (v?.items) {
+          const loaded = v.items.map(i => toItem(cleanWord(i.w), i.g, i.on, i.t)).filter(i => i.w.length > 1);
+          const existing = new Set(loaded.map(i => i.w));
+          for (const def of NOBREAK_DEFAULT) if (!existing.has(def)) loaded.push(toItem(def));
+          return loaded;
+        }
       } catch { /* ใช้ชุดตั้งต้น */ }
       return defaultItems();
     })();

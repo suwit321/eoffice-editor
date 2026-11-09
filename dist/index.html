@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://www.gstatic.com https://apis.google.com https://accounts.google.com 'sha256-XKldTrvNHsBkKd4zBgWsgq0j2UIlNOgdCva5EhenFnA=' 'sha256-bjNbvI8tl8y+bAasiIIyVXON/+FsTDSS9qAipExqFpE=' 'sha256-GSsoahsqchlVAfwu1yyppC4y3yNruwwRsZXT/DRlcXI=' 'sha256-I8MZ29t83noIROQQRxki89DRsHvUdQ6HW1h8MWRyCcs=' 'sha256-WMFVEyHpbpaMdIMZDo6k4/Lqg3ZH1ISbvxoGsW8fkQI='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.googleusercontent.com https://*.gstatic.com; font-src 'self' data:; frame-src 'self' https://*.firebaseapp.com https://accounts.google.com; connect-src 'self' https://api.anthropic.com https://api.openai.com https://generativelanguage.googleapis.com https://*.googleapis.com https://*.firebaseio.com https://accounts.google.com https://abacus.jasoncameron.dev https://api64.ipify.org https://api.ipify.org http://localhost:* http://127.0.0.1:*; base-uri 'none'; form-action 'none'; object-src 'none'; manifest-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://www.gstatic.com https://apis.google.com https://accounts.google.com 'sha256-XKldTrvNHsBkKd4zBgWsgq0j2UIlNOgdCva5EhenFnA=' 'sha256-bjNbvI8tl8y+bAasiIIyVXON/+FsTDSS9qAipExqFpE=' 'sha256-FShtpQWZyO7k8sTX3IBED7xpMVg7ZZ8+EHNXjYo4b+4=' 'sha256-I8MZ29t83noIROQQRxki89DRsHvUdQ6HW1h8MWRyCcs=' 'sha256-Q27Hu9o4xMNhzAau/zMERMZ5oZazc4MNQPte/bU2GdU='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.googleusercontent.com https://*.gstatic.com; font-src 'self' data:; frame-src 'self' https://*.firebaseapp.com https://accounts.google.com; connect-src 'self' https://api.anthropic.com https://api.openai.com https://generativelanguage.googleapis.com https://*.googleapis.com https://*.firebaseio.com https://accounts.google.com https://abacus.jasoncameron.dev https://api64.ipify.org https://api.ipify.org http://localhost:* http://127.0.0.1:*; base-uri 'none'; form-action 'none'; object-src 'none'; manifest-src 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="robots" content="noindex,nofollow">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -457,6 +457,14 @@ body.grid-on .editor-box{background-image:linear-gradient(to right,rgba(59,130,2
 .ls-ai-out[hidden]{display:none}
 .ls-ai-out ul{margin:3px 0;padding-left:16px}
 .ls-ai-out .chip{margin-top:3px}
+.ls-eoffice-safe{margin:4px 8px 3px;padding:5px 8px;border-radius:8px;background:rgba(239,246,255,.85);border:1px solid rgba(59,130,246,.35)}
+.ls-eoffice-safe .ls-safe-head{font-size:11.5px;font-weight:700;color:#1e40af;display:flex;align-items:center;justify-content:space-between;margin-bottom:3px}
+.ls-eoffice-safe .chips{padding:0;gap:3px}
+.ls-eoffice-safe .chip{font-size:11px;height:21px;padding:0 6px;border-radius:10px;background:#fff;border-color:rgba(59,130,246,.4);color:#1e3a8a}
+.ls-eoffice-safe .chip:hover{background:#dbeafe}
+.ls-eoffice-safe .chip[aria-checked="true"]{background:linear-gradient(90deg,#2563eb,#3b82f6);border-color:transparent;color:#fff;font-weight:700}
+.ls-lock-btn{width:100%;height:24px;border-radius:12px;background:linear-gradient(90deg,#0d9488,#0284c7);border:0;color:#fff;font-size:11.5px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:4px;box-shadow:0 1px 2px rgba(13,148,136,.25);transition:opacity .15s}
+.ls-lock-btn:hover{opacity:.9}
 .lh-menu{background:linear-gradient(160deg,rgba(255,255,255,.86),rgba(255,228,230,.82));border-color:rgba(239,68,68,.4);box-shadow:0 8px 28px rgba(190,30,50,.24)}
 .lh-menu .menu-title{background:linear-gradient(90deg,#ef4444,#f43f5e 55%,#f97316)}
 .lh-menu .menu-row select{border-color:rgba(239,68,68,.45)}
@@ -869,6 +877,16 @@ body.ls-docked .desk{padding-left:240px}
   <div class="chips">
     <button type="button" class="chip" data-ls-set="-0.05">แคบมาก</button><button type="button" class="chip" data-ls-set="-0.03">แคบ</button><button type="button" class="chip" data-ls-set="-0.015">แคบเล็กน้อย</button><button type="button" class="chip" data-ls-set="0">ปกติ</button><button type="button" class="chip" data-ls-set="0.015">กว้างเล็กน้อย</button><button type="button" class="chip" data-ls-set="0.03">กว้าง</button><button type="button" class="chip" data-ls-set="0.05">กว้างมาก</button><button type="button" class="chip" data-ls-set="0.1">กว้างพิเศษ</button><button type="button" class="chip" data-ls-set="0.2">ห่างมาก</button>
   </div>
+  <div class="ls-eoffice-safe">
+    <div class="ls-safe-head"><span>🛡️ โหมดเซฟ e-Office (บีบฟอนต์)</span><span style="font-size:10px;font-weight:normal;color:#3b82f6;">ไม่ถูก e-Office ลบ 100%</span></div>
+    <div class="chips">
+      <button type="button" class="chip" data-fs-safe="15.9" title="บีบฟอนต์ 15.9 pt: ดึงคำขึ้นบรรทัดแบบเนียนที่สุด e-Office ไม่ลบทิ้ง">15.9 pt</button>
+      <button type="button" class="chip" data-fs-safe="15.85" title="บีบฟอนต์ 15.85 pt: ดึงคำ 1-2 คำขึ้นบรรทัด (แนะนำสำหรับ e-Office)">15.85 pt</button>
+      <button type="button" class="chip" data-fs-safe="15.8" title="บีบฟอนต์ 15.8 pt: ดึงคำยาวขึ้นบรรทัด e-Office ไม่ลบทิ้ง">15.8 pt</button>
+      <button type="button" class="chip" data-fs-safe="16" title="คืนขนาดฟอนต์มาตรฐาน 16 pt">16 pt ปกติ</button>
+    </div>
+  </div>
+  <div class="menu-row" style="margin:2px 0;"><button type="button" class="ls-lock-btn" id="lsLockWords" title="ล็อกคำราชการสำคัญ (ลงวันที่, ข้อหารือ, คำปรึกษา ฯลฯ) ด้วย Word Joiner ไม่ให้เบราว์เซอร์ตัดคำขาดกลางท่อน">🔒 ล็อกคำราชการ (ลงวันที่, ข้อหารือ ฯลฯ)</button></div>
   <button type="button" class="mi lh-show" role="menuitemcheckbox" data-act="numbers" data-val="showLsNum">แสดงช่องไฟบนกระดาษ<small>ป้ายสีม่วงทุกย่อหน้า</small></button>
   <div class="menu-row"><button type="button" class="chip ai" id="lsAi" title="ให้ AI วิเคราะห์ช่องไฟของย่อหน้า (ต้องตั้งค่าในแท็บผู้ช่วย AI ของเครื่องมือเสริม)">🤖 AI วิเคราะห์ช่องไฟ</button></div>
   <div class="ls-ai-out" id="lsAiOut" hidden></div>
@@ -4041,12 +4059,15 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
     // ================= คำห้ามตัด =================
     const NOBREAK_KEY = 'eoffice-editor:nobreak';
     const NOBREAK_DEFAULT = [
-      'ผู้อำนวยการ', 'รองผู้อำนวยการ', 'ผู้ว่าราชการจังหวัด', 'รองผู้ว่าราชการจังหวัด', 'ปลัดกระทรวง', 'รองปลัดกระทรวง', 'ปลัดจังหวัด',
+      'ลงวันที่', 'ข้อหารือ', 'คำปรึกษา', 'หน่วยรับตรวจ', 'ข้อสอบถาม',
+      'ผู้อำนวยการ', 'รองผู้อำนวยการ', 'ผู้ว่าราชการจังหวัด', 'รองผู้ว่าราชการจังหวัด', 'ผู้ว่าการ', 'ปลัดกระทรวง', 'รองปลัดกระทรวง', 'ปลัดจังหวัด',
       'คณะกรรมการ', 'คณะอนุกรรมการ', 'คณะทำงาน', 'คณะรัฐมนตรี', 'นายกรัฐมนตรี', 'รัฐมนตรีว่าการกระทรวง', 'ผู้บังคับบัญชา', 'ผู้ตรวจราชการ',
       'ผู้รับผิดชอบ', 'ผู้เกี่ยวข้อง', 'ผู้ประสานงาน', 'ส่วนราชการ', 'หน่วยงาน', 'สำนักงาน', 'องค์กรปกครองส่วนท้องถิ่น', 'องค์การบริหารส่วนจังหวัด',
       'องค์การบริหารส่วนตำบล', 'เทศบาลนคร', 'เทศบาลเมือง', 'เทศบาลตำบล', 'ปีงบประมาณ', 'งบประมาณ', 'พระราชบัญญัติ', 'พระราชกฤษฎีกา',
       'ระเบียบสำนักนายกรัฐมนตรี', 'ข้าราชการ', 'พนักงานราชการ', 'ลูกจ้างประจำ', 'ประชาสัมพันธ์', 'แผนปฏิบัติราชการ', 'ยุทธศาสตร์',
       'จัดซื้อจัดจ้าง', 'ประสิทธิภาพ', 'ประสิทธิผล', 'ท้องถิ่น', 'ส่งเสริม', 'ราชอาณาจักร', 'พุทธศักราช', 'การเลือกตั้ง',
+      'เจ้าหน้าที่', 'การมอบหมาย', 'มอบหมาย', 'ปฏิบัติงาน', 'อิเล็กทรอนิกส์', 'ฐานข้อมูล', 'นวัตกรรม', 'สำนักวิชาการ', 'หนังสือราชการ',
+      'ตอบข้อสอบถาม', 'ตอบข้อหารือ'
     ];
     const NB_GROUPS = [['ตำแหน่ง', '#2563eb'], ['หน่วยงาน', '#16a34a'], ['ชื่อบุคคล', '#c026d3'], ['ศัพท์ราชการ', '#ea580c'], ['ทั่วไป', '#64748b']];
     const NB_COLOR = Object.fromEntries(NB_GROUPS);
@@ -4058,8 +4079,18 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
     let nbItems = (() => {
       try {
         const v = JSON.parse(store.get(NOBREAK_KEY) || 'null');
-        if (Array.isArray(v)) return v.map(w => toItem(cleanWord(w))).filter(i => i.w.length > 1);          // รูปแบบเก่า: รายการคำล้วน
-        if (v?.items) return v.items.map(i => toItem(cleanWord(i.w), i.g, i.on, i.t)).filter(i => i.w.length > 1);
+        if (Array.isArray(v)) {
+          const loaded = v.map(w => toItem(cleanWord(w))).filter(i => i.w.length > 1);
+          const existing = new Set(loaded.map(i => i.w));
+          for (const def of NOBREAK_DEFAULT) if (!existing.has(def)) loaded.push(toItem(def));
+          return loaded;
+        }
+        if (v?.items) {
+          const loaded = v.items.map(i => toItem(cleanWord(i.w), i.g, i.on, i.t)).filter(i => i.w.length > 1);
+          const existing = new Set(loaded.map(i => i.w));
+          for (const def of NOBREAK_DEFAULT) if (!existing.has(def)) loaded.push(toItem(def));
+          return loaded;
+        }
       } catch { /* ใช้ชุดตั้งต้น */ }
       return defaultItems();
     })();
@@ -5895,11 +5926,12 @@ body.scratch-open .topbar,body.scratch-open .desk,body.scratch-open .statusbar{m
         return FONTS.find(x => normFont(x.value) === first)?.value || '';
       }
     }
-    // ขนาด: เก็บเป็น pt เสมอ (แปลง px จากข้อความที่วางมาให้เป็น pt)
+    // ขนาด: เก็บเป็น pt เสมอ (แปลง px จากข้อความที่วางมาให้เป็น pt รองรับทศนิยม 0.05 pt สำหรับ micro font-size)
     const toPt = v => {
       const m = /^(\d*\.?\d+)(pt|px)$/.exec(String(v || '').trim());
       if (!m) return '';
-      const n = Math.round(parseFloat(m[1]) * (m[2] === 'px' ? 0.75 : 1) * 2) / 2;
+      const raw = parseFloat(m[1]) * (m[2] === 'px' ? 0.75 : 1);
+      const n = Math.round(raw * 20) / 20;
       return n >= 4 && n <= 96 ? `${n}pt` : '';
     };
     class SizeAttributor extends StyleAttributor {
@@ -6126,6 +6158,20 @@ ${listCss}
       st.push({ delta: added.reduceRight((acc, e) => acc.compose(e.delta), new Delta()), range: added[0].range });
     }
     let lsSession = null;       // { start: ความยาวกองย้อนกลับตอนเปิดแผง, r: ช่วงที่เลือกตอนเปิด }
+    function updateSafeFsButtons() {
+      const scopeEl = $('#lsScope');
+      const t = lsTarget(scopeEl?.value || 'para', lsSession?.r || currentRange());
+      if (!t || !t.length) {
+        for (const c of $$('#m-charspace [data-fs-safe]')) c.setAttribute('aria-checked', 'false');
+        return;
+      }
+      const f = quill.getFormat(t.index, t.length);
+      const curSize = typeof f.size === 'string' ? parseFloat(f.size) : (f.size ? null : 16);
+      for (const c of $$('#m-charspace [data-fs-safe]')) {
+        const v = parseFloat(c.dataset.fsSafe);
+        c.setAttribute('aria-checked', String(curSize !== null && Math.abs(curSize - v) < 0.02));
+      }
+    }
     function lsShow(v) {
       const mixed = v == null;
       $('#lsVal').textContent = mixed ? 'หลายค่า' : lsSigned(v);
@@ -6135,6 +6181,7 @@ ${listCss}
       $('#lsRange').value = mixed ? 0 : v;
       if (document.activeElement !== $('#lsCustom')) $('#lsCustom').value = mixed ? '' : lsRound(v);
       for (const c of $$('#m-charspace [data-ls-set]')) c.setAttribute('aria-checked', String(!mixed && Math.abs(+c.dataset.lsSet - v) < 1e-6));
+      updateSafeFsButtons();
     }
     function lsSet(v) {
       if (!lsSession) return;
@@ -6788,6 +6835,23 @@ ${listCss}
     // getSemanticHTML แปลงเว้นวรรคทุกตัวเป็น &nbsp; จึงแยกไม่ออกว่าตัวไหนผู้ใช้ตั้งใจใส่ (Ctrl+Shift+Space)
     // ก่อนส่งออกจึงแทน &nbsp; ที่ตั้งใจด้วยอักขระสำรอง NB แล้วค่อยคืนกลับหลังแปลงเว้นวรรคเสร็จ
     const NB = '';
+    const WJ = '⁠'; // \u2060 Word Joiner: อักขระล่องหนห้ามเบราว์เซอร์ตัดบรรทัด
+    const AUTO_JOIN_WORDS = [
+      'ลงวันที่', 'ข้อหารือ', 'คำปรึกษา', 'หน่วยรับตรวจ', 'ข้อสอบถาม',
+      'ผู้ว่าการ', 'เจ้าหน้าที่', 'การมอบหมาย', 'มอบหมาย', 'ปฏิบัติงาน',
+      'อิเล็กทรอนิกส์', 'ฐานข้อมูล', 'นวัตกรรม', 'ประสิทธิภาพ', 'มาตรฐาน',
+      'สำนักวิชาการ', 'หนังสือราชการ', 'พระราชบัญญัติ', 'พระราชกฤษฎีกา', 'พุทธศักราช'
+    ];
+    const thWords = new Intl.Segmenter('th', { granularity: 'word' });
+    const joinedCache = new Map();
+    function toJoinedWord(w) {
+      if (joinedCache.has(w)) return joinedCache.get(w);
+      const segs = [...thWords.segment(w)].map(x => x.segment);
+      const joined = segs.join(WJ);
+      joinedCache.set(w, joined);
+      return joined;
+    }
+    let noBreakWords = [];
     // โปรไฟล์การส่งออกจากผลทดสอบการวางใน e-Office (ตั้งโดย eoffice-tools.js แท็บ “ทดสอบวาง”)
     const exportProfile = { stripWJ: false, tabsAsSpaces: false };
     let copyAdvisor = null;         // (html) => ข้อความเตือนที่จะต่อท้ายสถานะหลังคัดลอก
@@ -6921,11 +6985,20 @@ ${listCss}
         });
         n.replaceWith(frag);
       }
-      // \u0E04\u0E37\u0E19\u0E40\u0E27\u0E49\u0E19\u0E27\u0E23\u0E23\u0E04\u0E2B\u0E49\u0E32\u0E21\u0E15\u0E31\u0E14\u0E1A\u0E23\u0E23\u0E17\u0E31\u0E14\u0E17\u0E35\u0E48\u0E1C\u0E39\u0E49\u0E43\u0E0A\u0E49\u0E15\u0E31\u0E49\u0E07\u0E43\u0E08\u0E43\u0E2A\u0E48 \u0E41\u0E25\u0E30\u0E16\u0E2D\u0E14 Word Joiner \u0E16\u0E49\u0E32\u0E1C\u0E25\u0E17\u0E14\u0E2A\u0E2D\u0E1A\u0E01\u0E32\u0E23\u0E27\u0E32\u0E07\u0E1A\u0E2D\u0E01\u0E27\u0E48\u0E32 e-Office \u0E44\u0E21\u0E48\u0E23\u0E2D\u0E07\u0E23\u0E31\u0E1A
+      // คืนเว้นวรรคห้ามตัดบรรทัดที่ผู้ใช้ตั้งใจใส่ และถอด Word Joiner ถ้าผลทดสอบการวางบอกว่า e-Office ไม่รองรับ
+      // หรือฝัง Word Joiner อัตโนมัติในคำราชการสำคัญ เพื่อไม่ให้เบราว์เซอร์หั่นคำขาดกลางท่อน
       const nbWalker = doc.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+      const allNbWords = [...new Set([...AUTO_JOIN_WORDS, ...(noBreakWords || [])])].filter(w => w && w.length > 1);
+      allNbWords.sort((a, b) => b.length - a.length);
       for (let n = nbWalker.nextNode(); n; n = nbWalker.nextNode()) {
         if (n.data.includes(NB)) n.data = n.data.replaceAll(NB, '\u00A0');
-        if (exportProfile.stripWJ && n.data.includes('\u2060')) n.data = n.data.replaceAll('\u2060', '');
+        if (exportProfile.stripWJ) {
+          if (n.data.includes(WJ)) n.data = n.data.replaceAll(WJ, '');
+        } else {
+          for (const w of allNbWords) {
+            if (n.data.includes(w)) n.data = n.data.replaceAll(w, toJoinedWord(w));
+          }
+        }
       }
       const setIf = (el, prop, val) => { if (!el.style.getPropertyValue(prop)) el.style.setProperty(prop, val); };
       const fontDefaults = el => {
@@ -6942,6 +7015,57 @@ ${listCss}
         if (p.style.textAlign === 'justify') setIf(p, 'text-justify', 'inter-character');
       }
       for (const li of root.querySelectorAll('li')) fontDefaults(li);
+
+      // รองรับ MSO Word Filter ใน e-Office: ใส่ mso-letter-spacing ควบคู่กับ letter-spacing เสมอ
+      for (const el of root.querySelectorAll('[style*="letter-spacing"], [style*="letterSpacing"]')) {
+        const ls = el.style.letterSpacing;
+        if (!ls || ls === 'normal' || ls === '0px') continue;
+        const fs = parseFloat(el.style.fontSize) || 16;
+        let ptVal = 0;
+        if (ls.endsWith('em')) ptVal = parseFloat(ls) * fs;
+        else if (ls.endsWith('pt')) ptVal = parseFloat(ls);
+        else if (ls.endsWith('px')) ptVal = parseFloat(ls) * 0.75;
+        const ptStr = `${Math.round(ptVal * 100) / 100}pt`;
+        const curStyle = el.getAttribute('style') || '';
+        if (!curStyle.includes('mso-letter-spacing')) {
+          el.setAttribute('style', `${curStyle}${curStyle.endsWith(';') ? ' ' : '; '}mso-letter-spacing: ${ptStr};`);
+        }
+      }
+      // ถ้าย่อหน้ามี span ที่ใช้ letter-spacing หรือ micro font-size เกิน 80% ให้ส่งต่อไปยังระดับแท็ก <p> ด้วย
+      // เพื่อป้องกันกรณี e-Office ลบแท็ก <span> ทิ้ง (Tag unwrapping) แต่ยอมเก็บสไตล์ระดับบล็อก <p>
+      for (const p of root.querySelectorAll('p,li')) {
+        const pLen = p.textContent.length;
+        if (pLen > 0) {
+          const lsSpans = p.querySelectorAll('[style*="letter-spacing"]');
+          if (lsSpans.length > 0) {
+            const firstLs = lsSpans[0].style.letterSpacing;
+            const allSameLs = [...lsSpans].every(s => s.style.letterSpacing === firstLs);
+            const lsTextLen = [...lsSpans].reduce((a, s) => a + s.textContent.length, 0);
+            if (allSameLs && lsTextLen >= pLen * 0.8) {
+              p.style.setProperty('letter-spacing', firstLs);
+              const fs = parseFloat(p.style.fontSize) || 16;
+              let ptVal = 0;
+              if (firstLs.endsWith('em')) ptVal = parseFloat(firstLs) * fs;
+              else if (firstLs.endsWith('pt')) ptVal = parseFloat(firstLs);
+              else if (firstLs.endsWith('px')) ptVal = parseFloat(firstLs) * 0.75;
+              const ptStr = `${Math.round(ptVal * 100) / 100}pt`;
+              const pCurStyle = p.getAttribute('style') || '';
+              if (!pCurStyle.includes('mso-letter-spacing')) {
+                p.setAttribute('style', `${pCurStyle}${pCurStyle.endsWith(';') ? ' ' : '; '}mso-letter-spacing: ${ptStr};`);
+              }
+            }
+          }
+          const szSpans = p.querySelectorAll('[style*="font-size"]');
+          if (szSpans.length > 0) {
+            const firstSz = szSpans[0].style.fontSize;
+            const allSameSz = [...szSpans].every(s => s.style.fontSize === firstSz);
+            const szTextLen = [...szSpans].reduce((a, s) => a + s.textContent.length, 0);
+            if (allSameSz && szTextLen >= pLen * 0.8) {
+              p.style.setProperty('font-size', firstSz);
+            }
+          }
+        }
+      }
       // ย่อหน้าว่าง (บรรทัดเว้น) ต้องมี <br> ไม่เช่นนั้นจะยุบหายเมื่อวางใน e-Office
       for (const el of root.querySelectorAll('p,li')) if (!el.textContent && !el.querySelector('img,br')) el.append(doc.createElement('br'));
       for (const list of root.querySelectorAll('ol,ul')) { setIf(list, 'margin-top', '0'); setIf(list, 'margin-bottom', '0'); }
@@ -8748,7 +8872,27 @@ ${body}
       const t = lsTarget($('#lsScope').value, lsSession.r);
       if (b.dataset.lsStep) lsSet((lsCurrent(t) ?? 0) + +b.dataset.lsStep);
       else if (b.dataset.lsSet != null) lsSet(+b.dataset.lsSet);
-      else if (b.hasAttribute('data-ls-revert')) {
+      else if (b.dataset.fsSafe != null) {
+        if (!t.length) { say('ยังไม่มีข้อความในย่อหน้านี้'); return; }
+        const rawV = b.dataset.fsSafe;
+        const isNormal = rawV === '16' || rawV === '16pt';
+        quill.formatText(t.index, t.length, 'size', isNormal ? false : `${rawV}pt`, 'user');
+        updateSafeFsButtons();
+        say(isNormal ? 'คืนขนาดฟอนต์มาตรฐาน 16 pt' : `บีบฟอนต์ ${rawV} pt (เซฟ e-Office — ไม่ถูกลบ 100%) — ${$('#lsScope').selectedOptions[0].textContent}`);
+      } else if (b.id === 'lsLockWords') {
+        if (!t.length) { say('ยังไม่มีข้อความในส่วนที่เลือก'); return; }
+        const wordsToBind = [...new Set([...AUTO_JOIN_WORDS, ...(noBreakWords || [])])].filter(w => w && w.length > 1);
+        const subDelta = quill.getContents(t.index, t.length);
+        const { change, count } = joinChange(subDelta, wordsToBind, 0, subDelta.length());
+        if (count > 0) {
+          const fullChange = new Delta().retain(t.index).concat(change);
+          quill.updateContents(fullChange, 'user');
+          scheduleOverlay();
+          say(`ล็อกคำราชการแล้ว ${count} จุด (Word Joiner) ใน${$('#lsScope').selectedOptions[0].textContent}`);
+        } else {
+          say(`คำราชการใน${$('#lsScope').selectedOptions[0].textContent} ถูกล็อกไว้เรียบร้อยแล้ว`);
+        }
+      } else if (b.hasAttribute('data-ls-revert')) {
         mergeHistorySince(lsSession.start);
         if (quill.history.stack.undo.length > lsSession.start) quill.history.undo();
         quill.history.cutoff();
@@ -9398,11 +9542,7 @@ ${body}
     // วัดย่อหน้าบนหน้าจอ: จำนวนบรรทัด และอัตราที่เว้นวรรคถูกยืดมากที่สุด (การจัดเสมอหน้าหลังของภาษาไทยยืดได้เฉพาะเว้นวรรค)
     const measureCtx = document.createElement('canvas').getContext('2d');
     const graphemes = new Intl.Segmenter('th', { granularity: 'grapheme' });
-    const thWords = new Intl.Segmenter('th', { granularity: 'word' });
-    const WJ = '⁠';        // Word Joiner: อักขระล่องหนที่ห้ามเบราว์เซอร์ตัดบรรทัดตรงนั้น
     const INVISIBLE = /[⁠​]/g;
-    // คำห้ามตัด (จัดการในแท็บ "คำห้ามตัด" ของเครื่องมือเสริม)
-    let noBreakWords = [];
 
     // ---------- ผูกคำด้วย Word Joiner โดยใช้ Intl.Segmenter ----------
     // Segmenter ใช้พจนานุกรม ICU ชุดเดียวกับที่เบราว์เซอร์ตัดบรรทัด ขอบเขตคำที่ได้จึงเป็นจุดที่เบราว์เซอร์อาจตัดจริง
